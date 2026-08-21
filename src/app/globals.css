@@ -57,3 +57,40 @@
 ::-webkit-scrollbar-thumb:hover {
   background: theme('colors.envoy.text.tertiary');
 }
+
+/* Print Media Styles for High-Fidelity PDF Export */
+@media print {
+  html, body {
+    background-color: white !important;
+    color: black !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+  
+  /* Hide all UI containers */
+  header, aside, footer, nav, button, select, .no-print, [role="dialog"] {
+    display: none !important;
+  }
+  
+  /* Reset layout constraints */
+  main, div {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Isolate only the A4 Sheet */
+  #envoy-a4-sheet {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+}

@@ -94,7 +94,7 @@ export function A4Canvas({
           style={{ transform: `scale(${zoom})` }}
         >
           {/* A4 Sheet Dimensions: 210mm x 297mm (Standard resolution equivalent ~794px x 1123px) */}
-          <div className="w-[794px] min-h-[1123px] bg-white text-gray-900 overflow-hidden relative print:shadow-none">
+          <div id="envoy-a4-sheet" className="w-[794px] min-h-[1123px] bg-white text-gray-900 overflow-hidden relative print:shadow-none">
             
             {/* Active Template Render */}
             <TemplateRenderer 

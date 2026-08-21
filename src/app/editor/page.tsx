@@ -12,6 +12,8 @@ import {
   ArrowLeft, Download, Loader, Eye, History
 } from 'lucide-react'
 import { v4 as uuid } from 'uuid'
+import { generateDocxBlob } from '@/lib/export/docx'
+import { generatePlainText } from '@/lib/export/txt'
 
 function EditorWorkspace() {
   const router = useRouter()
@@ -38,6 +40,7 @@ function EditorWorkspace() {
   const [loading, setLoading] = useState(true)
   const [zoom, setZoom] = useState(0.85)
   const [editingSection, setEditingSection] = useState<DocumentSectionConfig | null>(null)
+  const [showExportMenu, setShowExportMenu] = useState(false)
   
   // AI related state
   const [conversation, setConversation] = useState<AIConversation | null>(null)
@@ -475,13 +478,76 @@ function EditorWorkspace() {
             <span>History ({versions.length})</span>
           </button>
 
-          <button
-            onClick={() => showNotification?.('Export engine preparing download...', 'info')}
-            className="flex items-center gap-2 bg-[#6366f1] text-[#050507] hover:opacity-90 transition-opacity px-4 py-1.5 rounded-md font-bold text-xs shadow-md"
-          >
-            <Download size={13} />
-            <span>Export</span>
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              className="flex items-center gap-2 bg-[#6366f1] text-[#050507] hover:opacity-90 transition-opacity px-4 py-1.5 rounded-md font-bold text-xs shadow-md"
+            >
+              <Download size={13} />
+              <span>Export</span>
+            </button>
+
+            {showExportMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-[#0c0c10] border border-[#252535] rounded-md shadow-lg z-50 py-1 text-xs">
+                <button
+                  onClick={() => {
+                    setShowExportMenu(false)
+                    window.print()
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-[#16161f] text-[#f2f2f7] hover:text-[#00d4ff] transition-all font-semibold"
+                >
+                  Download PDF (Printable)
+                </button>
+                <button
+                  onClick={async () => {
+                    setShowExportMenu(false)
+                    if (!profile || !document) return
+                    try {
+                      const blob = await generateDocxBlob(profile, document)
+                      const url = URL.createObjectURL(blob)
+                      const a = window.document.createElement('a')
+                      a.href = url
+                      a.download = `${profile.identity.name.replace(/\s+/g, '_')}_Resume.docx`
+                      window.document.body.appendChild(a)
+                      a.click()
+                      window.document.body.removeChild(a)
+                      URL.revokeObjectURL(url)
+                    } catch (err) {
+                      console.error('Word export failed:', err)
+                      alert('Word document generation failed. Please check logs.')
+                    }
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-[#16161f] text-[#f2f2f7] hover:text-[#00d4ff] transition-all font-semibold"
+                >
+                  Download Word (.docx)
+                </button>
+                <button
+                  onClick={() => {
+                    setShowExportMenu(false)
+                    if (!profile) return
+                    try {
+                      const text = generatePlainText(profile)
+                      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
+                      const url = URL.createObjectURL(blob)
+                      const a = window.document.createElement('a')
+                      a.href = url
+                      a.download = `${profile.identity.name.replace(/\s+/g, '_')}_Resume_ATS.txt`
+                      window.document.body.appendChild(a)
+                      a.click()
+                      window.document.body.removeChild(a)
+                      URL.revokeObjectURL(url)
+                    } catch (err) {
+                      console.error('Text export failed:', err)
+                      alert('Plain text generation failed.')
+                    }
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-[#16161f] text-[#f2f2f7] hover:text-[#00d4ff] transition-all font-semibold"
+                >
+                  Download Plain Text (.txt)
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -666,10 +732,6 @@ function EditorWorkspace() {
   )
 }
 
-function showNotification(message: string, type: 'success' | 'error' | 'info' = 'success') {
-  // Global simple alert notification
-  alert(`${type.toUpperCase()}: ${message}`)
-}
 
 export default function EditorPage() {
   return (
