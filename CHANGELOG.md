@@ -181,3 +181,20 @@ This changelog tracks the implementation status of major milestones in the produ
 ### Recovery Commit:
 - Phase 9 Commit: `8cb2856`
 
+---
+
+## [Phase 10] Job Tailoring
+**Status**: Completed  
+**Date**: August 22, 2026
+
+### Completed Implementation:
+- Created serverless API Route `/api/jobs/extract/route.ts` which performs structured JSON parsing (via Gemini/OpenAI provider schema or deterministic local fallback) to extract company, role, seniority, requiredSkills, preferredSkills, keywords, responsibilities, qualifications, technologies, and softSkills.
+- Wired `/editor/page.tsx`'s `handleUpdateJobTarget` function to query `/api/jobs/extract` to obtain fully populated `JobTarget` payloads, saving them in local/remote databases.
+- Integrated automatic matching score recalculation: updating a job target automatically triggers a post request to the ATS engine `/api/ats` with the newly saved target, updating the matching indexes and keyword lists dynamically in real time.
+
+### Next Milestone:
+- [Phase 11] Document Ingestion
+
+### Recovery Commit:
+- Phase 10 Commit: `WIP`
+

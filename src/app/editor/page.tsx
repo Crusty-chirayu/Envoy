@@ -223,23 +223,67 @@ function EditorWorkspace() {
     }
   }
 
-  // Update target job posting
+  // Update target job posting using backend extraction route
   const handleUpdateJobTarget = async (desc: string) => {
     if (!document || !profile) return
-    const newTarget: JobTarget = {
-      id: uuid(),
-      userId: document.userId,
-      documentId: document.id,
-      title: 'Target Position',
-      description: desc,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-    await dbJobTargets.save(newTarget)
-    setJobTarget(newTarget)
     
-    // Associate with document
-    updateDocument({ targetJobId: newTarget.id })
+    try {
+      const response = await fetch('/api/jobs/extract', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ description: desc }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to extract job metrics: ${response.status}`)
+      }
+
+      const parsed = await response.json()
+      
+      const newTarget: JobTarget = {
+        id: uuid(),
+        userId: document.userId,
+        documentId: document.id,
+        title: parsed.role || 'Target Role',
+        company: parsed.company || 'Target Company',
+        description: desc,
+        extracted: parsed.extracted || undefined,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      
+      await dbJobTargets.save(newTarget)
+      setJobTarget(newTarget)
+      
+      // Associate with document
+      updateDocument({ targetJobId: newTarget.id })
+
+      // Automatically recalculate ATS matching metrics
+      const atsResponse = await fetch('/api/ats', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          profile,
+          document,
+          jobTarget: newTarget,
+        }),
+      })
+
+      if (atsResponse.ok) {
+        const report = await atsResponse.json()
+        await dbATSReports.save(report)
+        setAtsReport(report)
+      }
+      
+      alert('Job target updated and ATS matching recalculated successfully!')
+    } catch (err: unknown) {
+      console.error('Job target update failed:', err)
+      alert(`Job target update failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    }
   }
 
   // Execute backend algorithmic ATS check
