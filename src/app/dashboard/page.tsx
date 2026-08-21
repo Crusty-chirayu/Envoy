@@ -8,7 +8,7 @@ import { dbProfile, dbDocuments, checkDemoMode } from '@/lib/db'
 import type { ProfessionalProfile, EnvoyDocument, ExperienceEntry, EducationEntry, SkillGroup, ProjectEntry, AppUser, DocumentType, TemplateId } from '@/types'
 import { 
   Plus, FileText, User, LogOut, CheckCircle, 
-  Trash2, Cloud, CloudOff, AlertCircle, Edit, Briefcase, GraduationCap, Code, FolderGit, Layout
+  Trash2, Cloud, CloudOff, AlertCircle, Edit, Briefcase, GraduationCap, Code, FolderGit, Layout, Upload, Loader
 } from 'lucide-react'
 import { v4 as uuid } from 'uuid'
 
@@ -36,6 +36,49 @@ export default function DashboardPage() {
 
   // Notification states
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
+
+  // Document Ingestion state & handler
+  const [isIngesting, setIsIngesting] = useState(false)
+
+  const handleIngestFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsIngesting(true)
+    showNotification('Ingesting resume file...', 'info')
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/ingest', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errData = await response.json()
+        throw new Error(errData.error || `Upload failed with status ${response.status}`)
+      }
+
+      const parsedProfile = await response.json()
+      
+      const finalProfile = {
+        ...parsedProfile,
+        userId: user?.id || 'demo-user-id-1234'
+      }
+
+      await dbProfile.save(finalProfile)
+      setProfileState(finalProfile)
+      showNotification('Resume parsed and master profile updated successfully!', 'success')
+    } catch (err: unknown) {
+      console.error('Ingestion failed:', err)
+      showNotification(err instanceof Error ? err.message : 'Ingestion failed', 'error')
+      alert(`Resume ingestion failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    } finally {
+      setIsIngesting(false)
+    }
+  }
 
   // Load initial data
   useEffect(() => {
@@ -582,9 +625,49 @@ export default function DashboardPage() {
           {/* MASTER CANONICAL PROFILE TAB */}
           {activeTab === 'profile' && profile && (
             <div className="space-y-6">
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight">Canonical Master Profile</h1>
-                <p className="text-sm text-[#9898b3] mt-1">This structured data is the single source of truth. All resumes and portfolio pages derive details directly from here.</p>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl font-bold tracking-tight">Canonical Master Profile</h1>
+                  <p className="text-sm text-[#9898b3] mt-1">This structured data is the single source of truth. All resumes and portfolio pages derive details directly from here.</p>
+                </div>
+              </div>
+
+              {/* Document Ingestion / File Drop uploader */}
+              <div className="p-5 bg-[#0c0c10]/80 border border-dashed border-[#252535] hover:border-[#6366f1]/50 rounded-xl transition-all relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[#6366f1] flex items-center justify-center shrink-0">
+                    <Upload size={18} className={isIngesting ? "animate-pulse" : ""} />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-gray-200">Import existing Resume / CV</h3>
+                    <p className="text-[11px] text-[#9898b3] mt-0.5">Drag & drop or upload a PDF/DOCX file. Envoy AI extracts and structures your profile automatically.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                  {isIngesting ? (
+                    <div className="flex items-center gap-2 text-xs text-[#00d4ff] font-bold">
+                      <Loader className="animate-spin text-[#00d4ff]" size={13} />
+                      <span>Parsing document with AI...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <input
+                        type="file"
+                        id="resume-upload"
+                        accept=".pdf,.docx,.txt"
+                        onChange={handleIngestFile}
+                        className="hidden"
+                      />
+                      <label
+                        htmlFor="resume-upload"
+                        className="bg-[#16161f] border border-[#252535] hover:border-[#6366f1] text-[#f2f2f7] hover:text-[#6366f1] transition-all px-4 py-2 rounded-md font-bold text-xs cursor-pointer inline-flex items-center gap-2"
+                      >
+                        <span>Upload File</span>
+                      </label>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Sub-tabs horizontal bar */}

@@ -198,3 +198,21 @@ This changelog tracks the implementation status of major milestones in the produ
 ### Recovery Commit:
 - Phase 10 Commit: `33146ae`
 
+---
+
+## [Phase 11] Document Ingestion
+**Status**: Completed  
+**Date**: August 22, 2026
+
+### Completed Implementation:
+- Installed `mammoth` and `pdf-parse` libraries to handle document parsing of DOCX and PDF formats.
+- Created `src/types/shims.d.ts` shims file to declare type definitions for mammoth and pdf-parse modules.
+- Created serverless API Route `/api/ingest/route.ts` which accepts binary file uploads, extracts plain text from PDF and DOCX documents, and uses structured AI schema normalization to map them into a canonical `ProfessionalProfile` structure (with full fallback heuristic local parsing support).
+- Integrated drag & drop file upload widget in the master Canonical Profile header area in `src/app/dashboard/page.tsx`, allowing users to parse existing resumes to dynamically update their master profiles with zero manual entry.
+
+### Next Milestone:
+- [Phase 12] Version History
+
+### Recovery Commit:
+- Phase 11 Commit: `WIP`
+
