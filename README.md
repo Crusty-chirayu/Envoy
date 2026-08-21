@@ -99,10 +99,10 @@ Each stage hands a structured artifact to the next — never raw text — so not
 
 ## 🏗️ System Architecture
 
-```
+
 <img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/736fb964-a456-4cc7-836a-fb13e5ae6d4e" />
 
-```
+
 
 <br/>
 
