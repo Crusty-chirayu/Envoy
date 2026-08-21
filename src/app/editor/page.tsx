@@ -150,17 +150,50 @@ function EditorWorkspace() {
     setIsThinking(true)
     setStreamText('')
 
-    // Simulated stream callback (Phase 7 will replace this with real streaming endpoint)
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: updatedMessages,
+          profile,
+          document,
+          jobTarget,
+          atsReport,
+          selectedSectionId: editingSection?.id,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`AI Agent endpoint responded with status ${response.status}`)
+      }
+
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error('AI response body is null or not readable')
+      }
+
       setIsThinking(false)
-      const mockReply = `I've analyzed your context. Let's optimize this section to highlight business outcomes and technical stack ownership.`
-      setStreamText(mockReply)
+
+      const decoder = new TextDecoder()
+      let accumulatedText = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value, { stream: true })
+        accumulatedText += chunk
+        setStreamText(accumulatedText)
+      }
 
       const assistantMsg: AIMessage = {
         id: uuid(),
         conversationId: conversation.id,
         role: 'assistant',
-        content: mockReply,
+        content: accumulatedText,
         createdAt: new Date().toISOString(),
       }
 
@@ -171,8 +204,27 @@ function EditorWorkspace() {
           messages: [...prev.messages, assistantMsg],
         }
       })
+    } catch (err: any) {
+      console.error('Streaming connection failed:', err)
+      const errorMsg = `[ERROR] Streaming connection failed: ${err?.message || 'Please check API configurations.'}`
+      const assistantMsg: AIMessage = {
+        id: uuid(),
+        conversationId: conversation.id,
+        role: 'assistant',
+        content: errorMsg,
+        createdAt: new Date().toISOString(),
+      }
+      setConversation(prev => {
+        if (!prev) return null
+        return {
+          ...prev,
+          messages: [...prev.messages, assistantMsg],
+        }
+      })
+    } finally {
+      setIsThinking(false)
       setStreamText('')
-    }, 2000)
+    }
   }
 
   // Update target job posting
