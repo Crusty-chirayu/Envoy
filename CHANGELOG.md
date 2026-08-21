@@ -216,3 +216,23 @@ This changelog tracks the implementation status of major milestones in the produ
 ### Recovery Commit:
 - Phase 11 Commit: `389ec74`
 
+---
+
+## [Phase 12] Version History
+**Status**: Completed  
+**Date**: August 22, 2026
+
+### Completed Implementation:
+- Implemented visual version history timeline and rollback checkpoints in the Editor Page (`src/app/editor/page.tsx`).
+- Created a version history button in the editor header, displaying a counter of available snapshots.
+- Created a full version history modal showing all checkpoints recorded for the active document.
+- Implemented visual metadata summary and content breakdown details (name, headline, experience count, skills count, project count) for the selected snapshot.
+- Built a rollback function (`handleRollbackVersion`) that updates the active Zustand store profile and document states and persists them to the local/Supabase database.
+- Ensured React ESLint check passing by properly escaping all double quotes inside JSX blocks.
+
+### Next Milestone:
+- [Phase 13] Export System
+
+### Recovery Commit:
+- Phase 12 Commit: `WIP`
+

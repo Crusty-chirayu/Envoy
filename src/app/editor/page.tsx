@@ -7,9 +7,9 @@ import { dbDocuments, dbProfile, checkDemoMode, dbATSReports, dbJobTargets, dbVe
 import { useDocumentStore } from '@/stores/document'
 import { A4Canvas } from '@/components/A4Canvas'
 import { AgentSidebar } from '@/components/AgentSidebar'
-import type { DocumentSectionConfig, AIConversation, AIMessage, JobTarget, ATSReport, TemplateId } from '@/types'
+import type { DocumentSectionConfig, AIConversation, AIMessage, JobTarget, ATSReport, TemplateId, DocumentVersion } from '@/types'
 import { 
-  ArrowLeft, Download, Loader, Eye
+  ArrowLeft, Download, Loader, Eye, History
 } from 'lucide-react'
 import { v4 as uuid } from 'uuid'
 
@@ -46,6 +46,33 @@ function EditorWorkspace() {
   const [jobTarget, setJobTarget] = useState<JobTarget | null>(null)
   const [atsReport, setAtsReport] = useState<ATSReport | null>(null)
 
+  // Version History states
+  const [versions, setVersions] = useState<DocumentVersion[]>([])
+  const [showVersionsModal, setShowVersionsModal] = useState(false)
+  const [selectedVersion, setSelectedVersion] = useState<DocumentVersion | null>(null)
+
+  // Rollback to selected snapshot version
+  const handleRollbackVersion = async (version: DocumentVersion) => {
+    if (!window.confirm(`Are you sure you want to rollback to version "${version.label}"? All unsaved active changes will be overwritten.`)) {
+      return
+    }
+
+    try {
+      setProfile(version.profileSnapshot)
+      setDocument(version.documentSnapshot)
+
+      await dbProfile.save(version.profileSnapshot)
+      await dbDocuments.save(version.documentSnapshot)
+
+      alert('Rollback successful! The workspace has been reverted to the selected snapshot.')
+      setShowVersionsModal(false)
+      setSelectedVersion(null)
+    } catch (err: unknown) {
+      console.error('Rollback failed:', err)
+      alert(`Rollback failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    }
+  }
+
   // Sync ref for debouncing
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -79,6 +106,10 @@ function EditorWorkspace() {
           const matched = targets.find(t => t.id === doc.targetJobId)
           if (matched) setJobTarget(matched)
         }
+
+        // Load versions list
+        const list = await dbVersions.getForDocument(doc.id)
+        setVersions(list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
 
         // Initialize empty conversation
         setConversation({
@@ -428,6 +459,22 @@ function EditorWorkspace() {
             </select>
           </div>
 
+          {/* Version History Trigger Button */}
+          <button
+            onClick={async () => {
+              if (documentId) {
+                const list = await dbVersions.getForDocument(documentId)
+                setVersions(list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
+              }
+              setShowVersionsModal(true)
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#16161f] border border-[#252535] text-xs text-[#9898b3] hover:text-[#00d4ff] hover:border-[#00d4ff]/30 transition-all font-semibold"
+            title="Version Checkpoints"
+          >
+            <History size={13} />
+            <span>History ({versions.length})</span>
+          </button>
+
           <button
             onClick={() => showNotification?.('Export engine preparing download...', 'info')}
             className="flex items-center gap-2 bg-[#6366f1] text-[#050507] hover:opacity-90 transition-opacity px-4 py-1.5 rounded-md font-bold text-xs shadow-md"
@@ -512,6 +559,104 @@ function EditorWorkspace() {
                 <span>{editingSection.visible ? 'Visible on Document' : 'Hidden on Document'}</span>
                 {editingSection.visible ? <Eye size={14} /> : <Eye size={14} className="opacity-55" />}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VERSION HISTORY MODAL OVERLAY */}
+      {showVersionsModal && (
+        <div className="fixed inset-0 bg-[#050507]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-[720px] max-h-[80vh] bg-[#0c0c10] border border-[#1e1e2e] rounded-xl flex flex-col overflow-hidden shadow-2xl">
+            <div className="p-4 border-b border-[#1e1e2e] flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-sm text-[#f2f2f7]">Document Version History</h3>
+                <p className="text-[10px] text-[#9898b3] mt-0.5">View and restore past snapshots of this document and profile.</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowVersionsModal(false)
+                  setSelectedVersion(null)
+                }}
+                className="text-xs text-[#9898b3] hover:text-[#f2f2f7] font-semibold"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="flex-1 flex overflow-hidden min-h-0">
+              {/* Left Side: Versions List */}
+              <div className="w-1/2 border-r border-[#1e1e2e] overflow-y-auto p-4 space-y-3">
+                {versions.length === 0 ? (
+                  <div className="text-center py-8 text-xs text-[#5c5c7a]">
+                    No past snapshots recorded for this document yet. Checkpoints are automatically captured during key changes.
+                  </div>
+                ) : (
+                  versions.map(ver => (
+                    <button
+                      key={ver.id}
+                      onClick={() => setSelectedVersion(ver)}
+                      className={`w-full text-left p-3 rounded-lg border transition-all flex flex-col gap-1 ${
+                        selectedVersion?.id === ver.id
+                          ? 'bg-[#16161f] border-[#00d4ff]'
+                          : 'bg-[#050507]/40 border-[#252535] hover:border-[#1e1e2e]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-[#f2f2f7] truncate max-w-[70%]">{ver.label}</span>
+                        <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[#111118] text-[#00d4ff]">
+                          {ver.trigger}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-[#5c5c7a]">
+                        {new Date(ver.createdAt).toLocaleString()}
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
+
+              {/* Right Side: Version Details & Rollback action */}
+              <div className="w-1/2 p-4 overflow-y-auto bg-[#050507]/20 flex flex-col justify-between">
+                {selectedVersion ? (
+                  <div className="space-y-4 h-full flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="p-3 bg-[#111118] border border-[#252535] rounded-lg space-y-2">
+                        <div className="text-[10px] font-extrabold text-[#00d4ff] uppercase tracking-wider">Snapshot Metadata</div>
+                        <div className="text-xs text-gray-200 font-bold">{selectedVersion.label}</div>
+                        <div className="text-[10px] text-[#9898b3]">
+                          Created: {new Date(selectedVersion.createdAt).toLocaleString()}
+                        </div>
+                        {selectedVersion.description && (
+                          <div className="text-[11px] text-[#9898b3] italic border-l-2 border-[#6366f1] pl-2 mt-1">
+                            &quot;{selectedVersion.description}&quot;
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-3 bg-[#111118] border border-[#252535] rounded-lg space-y-1">
+                        <div className="text-[10px] font-extrabold text-[#00d4ff] uppercase tracking-wider mb-2">Content Included</div>
+                        <div className="text-xs text-gray-300">Name: {selectedVersion.profileSnapshot.identity.name}</div>
+                        <div className="text-xs text-gray-300">Headline: {selectedVersion.profileSnapshot.identity.headline || 'None'}</div>
+                        <div className="text-xs text-gray-300">Experience entries: {selectedVersion.profileSnapshot.experience.length}</div>
+                        <div className="text-xs text-gray-300">Skills categories: {selectedVersion.profileSnapshot.skills.length}</div>
+                        <div className="text-xs text-gray-300">Projects: {selectedVersion.profileSnapshot.projects.length}</div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleRollbackVersion(selectedVersion)}
+                      className="w-full bg-[#ef4444] text-[#050507] hover:opacity-90 transition-opacity py-2 rounded-lg font-bold text-xs shadow-md mt-auto"
+                    >
+                      Revert Workspace to this Snapshot
+                    </button>
+                  </div>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-center text-xs text-[#5c5c7a] p-6">
+                    Select a snapshot from the timeline to view its contents and perform rollback.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
