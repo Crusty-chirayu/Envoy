@@ -47,5 +47,23 @@ This changelog tracks the implementation status of major milestones in the produ
 - [Phase 3] Authentication + Authorization
 
 ### Recovery Commit:
-- Phase 2 Commit: `7746093`
+- Phase 2 Commit: `98e549e`
+
+---
+
+## [Phase 3] Authentication & Authorization
+**Status**: Completed  
+**Date**: August 21, 2026
+
+### Completed Implementation:
+- Created `src/lib/auth.ts` implementing a unified authentication adapter.
+- Configured double auth paths: in Demo Mode, simulates a user session locally using `localStorage` and polling listeners; in Cloud Mode, interfaces with Supabase Auth (`signUp`, `signInWithPassword`, `signOut`, `getUser`, `onAuthStateChange`).
+- Added route handler `src/app/api/auth/callback/route.ts` for handling OAuth code-to-session exchange.
+- Confirmed `src/middleware.ts` correctly blocks access to `/dashboard`, `/editor`, `/settings`, `/portfolio` for unauthenticated sessions in Cloud Mode, while allowing complete bypass in Demo Mode.
+
+### Next Milestone:
+- [Phase 4] Canonical Professional Profile
+
+### Recovery Commit:
+- Phase 3 Commit: `WIP`
 
