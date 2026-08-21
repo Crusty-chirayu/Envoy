@@ -1,7 +1,7 @@
 import React from 'react'
 import type { ProfessionalProfile, EnvoyDocument, DocumentSectionConfig } from '@/types'
 import { TemplateRenderer } from './TemplateRenderer'
-import { ArrowUp, ArrowDown, EyeOff, Eye, Trash2, Edit2, ZoomIn, ZoomOut, Maximize2, Minimize2 } from 'lucide-react'
+import { ArrowUp, ArrowDown, EyeOff, Eye, Edit2, ZoomIn, ZoomOut } from 'lucide-react'
 
 interface A4CanvasProps {
   profile: ProfessionalProfile
@@ -10,7 +10,6 @@ interface A4CanvasProps {
   setZoom: (z: number) => void
   onEditSection: (section: DocumentSectionConfig) => void
   onToggleVisibility: (sectionId: string) => void
-  onDeleteSection: (sectionId: string) => void
   onReorder: (from: number, to: number) => void
 }
 
@@ -21,7 +20,6 @@ export function A4Canvas({
   setZoom,
   onEditSection,
   onToggleVisibility,
-  onDeleteSection,
   onReorder,
 }: A4CanvasProps) {
   // Sort sections by order
@@ -110,7 +108,7 @@ export function A4Canvas({
 
             {/* Visual Section Hovers (Only visible on screen in editor) */}
             <div className="absolute inset-0 pointer-events-none">
-              {document.sections.map((sec, idx) => {
+              {document.sections.map((sec) => {
                 // Determine order position in rendered output
                 return (
                   <div key={sec.id} className="relative group/canvas-hover">

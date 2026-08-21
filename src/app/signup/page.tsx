@@ -39,8 +39,8 @@ export default function SignupPage() {
           router.refresh()
         }, 1000)
       }
-    } catch (err: any) {
-      setError(err?.message || 'An unexpected error occurred')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred')
     } finally {
       setLoading(false)
     }

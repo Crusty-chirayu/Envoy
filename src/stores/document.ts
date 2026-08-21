@@ -13,7 +13,6 @@ import type {
   EnvoyDocument,
   DocumentVersion,
   DiffBatch,
-  DocumentDiff,
   SaveStatus,
   ATSReport,
   JobTarget,

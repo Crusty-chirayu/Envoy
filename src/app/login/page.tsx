@@ -42,8 +42,8 @@ function LoginForm() {
           router.refresh()
         }, 800)
       }
-    } catch (err: any) {
-      setError(err?.message || 'An unexpected error occurred')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred')
     } finally {
       setLoading(false)
     }
@@ -127,7 +127,7 @@ function LoginForm() {
         </form>
 
         <div className="mt-8 text-center text-sm text-[#9898b3]">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link href="/signup" className="text-[#6366f1] hover:underline font-semibold">
             Create one
           </Link>

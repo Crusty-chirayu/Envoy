@@ -141,5 +141,25 @@ This changelog tracks the implementation status of major milestones in the produ
 - [Phase 8] Structured AI Tools & Diff System
 
 ### Recovery Commit:
-- Phase 7 Commit: `02a0e47`
+- Phase 7 Commit: `e1ac531`
+
+---
+
+## [Phase 8] Structured AI Tools & Diff/Review System
+**Status**: Completed  
+**Date**: August 21, 2026
+
+### Completed Implementation:
+- Implemented structured AI suggestions using parsed JSON code block extraction, allowing the AI to propose direct updates to profile components (e.g. summary rewrites, bullet points).
+- Built side-by-side Diff review panels inside `src/components/AgentSidebar.tsx` with red decoration highlights for deleted items, green highlights for added items, and explanation cards.
+- Integrated review action controllers enabling direct "Accept suggestion" (which modifies document/profile stores) and "Reject suggestion" (discarding proposed states safely).
+- Added "Edit suggestion" text area widget to refine the AI's proposal block dynamically before applying it.
+- Configured version snapshot checkpoints: accepting a suggestion takes a document/profile snapshot using `createVersion` and stores it dynamically via `dbVersions.save`.
+- Cleaned up ESLint unused imports and variables across login, signup, dashboard, template renderer, and db persistence files, ensuring zero lint errors.
+
+### Next Milestone:
+- [Phase 9] ATS Engine
+
+### Recovery Commit:
+- Phase 8 Commit: `WIP`
 

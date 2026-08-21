@@ -1,7 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { Logo } from '@/components/Logo'
-import { ArrowRight, Sparkles, BookOpen, Send, ShieldCheck, ShieldAlert, Cpu } from 'lucide-react'
+import { ArrowRight, Sparkles, BookOpen, Cpu } from 'lucide-react'
 
 export default function LandingPage() {
   return (

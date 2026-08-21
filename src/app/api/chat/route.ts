@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     })
 
     // Combine system context messages with the conversation history
-    const history = messages.map((m: any) => ({
+    const history = messages.map((m: ChatMessage) => ({
       role: m.role,
       content: m.content
     }))
@@ -52,15 +52,24 @@ export async function POST(request: Request) {
       (providerName === 'openrouter' && !hasOpenRouter)
 
     if (isMissingKey || process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
-      // Return simulated mock stream response
-      const mockResponseText = `[SIMULATED ASSISTANT] Thank you for your inquiry regarding "${document.title}". 
-I am running in local simulation mode because no active ${providerName.toUpperCase()} API key was found in the environment.
+      const currentSummary = profile.summary || 'I am a software engineer.'
+      const proposedSummary = `Senior Software Architect and Engineer with a track record of building high-performance systems. Designed and deployed a dual-mode local/cloud persistence database layer, reducing average response latency by 35% and supporting 10,000+ local session transactions.`
 
-Here is a recommended enhancement:
-- Under Technical Skills, group languages by proficiency.
-- Quantify your professional experience bullets. For example: "Led deployment of new database adapter" could be upgraded to: "Designed and deployed a dual-mode local/cloud persistence database layer, reducing average response latency by 35% and supporting 10,000+ local session transactions."
+      const mockResponseText = `[SIMULATED ASSISTANT] I have analyzed your resume context and target profile.
+To optimize your visibility to hiring systems and highlight architectural execution, here is a proposed rewrite of your professional summary.
 
-To experience real-time AI suggestions, please add your keys to your .env.local file.`
+\`\`\`json
+{
+  "action": "propose_edit",
+  "data": {
+    "sectionType": "summary",
+    "field": "summary",
+    "originalValue": ${JSON.stringify(currentSummary)},
+    "newValue": ${JSON.stringify(proposedSummary)},
+    "explanation": "Elevates summary impact with quantitative metrics (latency reduction, transaction volumes) and clear architecture ownership indicators."
+  }
+}
+\`\`\``
 
       const encoder = new TextEncoder()
       const words = mockResponseText.split(/(\s+)/)
@@ -110,8 +119,8 @@ To experience real-time AI suggestions, please add your keys to your .env.local 
       }
     })
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Chat API Error:', err)
-    return NextResponse.json({ error: err?.message || 'An unexpected error occurred inside the AI Agent endpoint' }, { status: 500 })
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'An unexpected error occurred inside the AI Agent endpoint' }, { status: 500 })
   }
 }

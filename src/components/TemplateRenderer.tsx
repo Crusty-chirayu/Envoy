@@ -1,6 +1,6 @@
 import React from 'react'
-import type { ProfessionalProfile, EnvoyDocument, SectionType, ExperienceEntry, EducationEntry, SkillGroup, ProjectEntry, CertificationEntry } from '@/types'
-import { Mail, Phone, MapPin, Link as LinkIcon, Linkedin, Github, Globe } from 'lucide-react'
+import type { ProfessionalProfile, EnvoyDocument, SectionType } from '@/types'
+import { Mail, Phone, MapPin, Linkedin, Github } from 'lucide-react'
 
 interface TemplateRendererProps {
   profile: ProfessionalProfile
@@ -305,7 +305,7 @@ export function TemplateRenderer({ profile, document, onSelectSection }: Templat
           </h1>
           {identity.headline && (
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">
-              // {identity.headline}
+              {'// ' + identity.headline}
             </p>
           )}
           

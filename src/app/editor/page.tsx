@@ -3,15 +3,13 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Logo } from '@/components/Logo'
-import { authService } from '@/lib/auth'
-import { dbDocuments, dbProfile, checkDemoMode, dbATSReports, dbJobTargets } from '@/lib/db'
+import { dbDocuments, dbProfile, checkDemoMode, dbATSReports, dbJobTargets, dbVersions } from '@/lib/db'
 import { useDocumentStore } from '@/stores/document'
 import { A4Canvas } from '@/components/A4Canvas'
 import { AgentSidebar } from '@/components/AgentSidebar'
-import type { EnvoyDocument, ProfessionalProfile, DocumentSectionConfig, AIConversation, AIMessage, JobTarget, ATSReport, TemplateId } from '@/types'
+import type { DocumentSectionConfig, AIConversation, AIMessage, JobTarget, ATSReport, TemplateId } from '@/types'
 import { 
-  ArrowLeft, ChevronDown, Check, Download, Share2, 
-  Settings, Loader, Eye, RefreshCw, Sparkles, HelpCircle 
+  ArrowLeft, Download, Loader, Eye
 } from 'lucide-react'
 import { v4 as uuid } from 'uuid'
 import { analyzeATS } from '@/lib/ats/analyzer'
@@ -25,18 +23,17 @@ function EditorWorkspace() {
   const profile = useDocumentStore(s => s.profile)
   const document = useDocumentStore(s => s.document)
   const saveStatus = useDocumentStore(s => s.saveStatus)
-  const lastSavedAt = useDocumentStore(s => s.lastSavedAt)
   const setProfile = useDocumentStore(s => s.setProfile)
   const setDocument = useDocumentStore(s => s.setDocument)
   const updateProfile = useDocumentStore(s => s.updateProfile)
   const updateDocument = useDocumentStore(s => s.updateDocument)
   const updateSection = useDocumentStore(s => s.updateSection)
   const toggleSectionVisibility = useDocumentStore(s => s.toggleSectionVisibility)
-  const removeSection = useDocumentStore(s => s.removeSection)
   const reorderSections = useDocumentStore(s => s.reorderSections)
   const setTemplate = useDocumentStore(s => s.setTemplate)
   const setSaveStatus = useDocumentStore(s => s.setSaveStatus)
   const markSaved = useDocumentStore(s => s.markSaved)
+  const createVersion = useDocumentStore(s => s.createVersion)
 
   // Local state
   const [loading, setLoading] = useState(true)
@@ -204,9 +201,9 @@ function EditorWorkspace() {
           messages: [...prev.messages, assistantMsg],
         }
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Streaming connection failed:', err)
-      const errorMsg = `[ERROR] Streaming connection failed: ${err?.message || 'Please check API configurations.'}`
+      const errorMsg = `[ERROR] Streaming connection failed: ${err instanceof Error ? err.message : 'Please check API configurations.'}`
       const assistantMsg: AIMessage = {
         id: uuid(),
         conversationId: conversation.id,
@@ -252,6 +249,56 @@ function EditorWorkspace() {
     const report = analyzeATS(profile, document, document.userId, jobTarget || undefined)
     await dbATSReports.save(report)
     setAtsReport(report)
+  }
+
+  // Apply AI proposal modifications directly to Canonical Profile state
+  const handleAcceptProposal = (proposal: {
+    sectionType: string
+    itemId?: string
+    field: string
+    newValue: string | string[]
+    explanation?: string
+  }) => {
+    if (!profile || !document) return
+
+    // 1. Create a version checkpoint before applying the AI change
+    const versionLabel = `AI Auto-Save: ${proposal.sectionType} rewrite`
+    const description = `Pre-modification snapshot captured automatically before applying AI suggestion: "${proposal.explanation || ''}"`
+    const newVer = createVersion(versionLabel, 'ai_accept', description)
+    if (newVer) {
+      dbVersions.save(newVer, document.userId)
+    }
+
+    const updatedProfile = { ...profile }
+
+    if (proposal.sectionType === 'summary') {
+      updatedProfile.summary = proposal.newValue as string
+    } else if (proposal.sectionType === 'experience' && proposal.itemId) {
+      updatedProfile.experience = profile.experience.map(exp => {
+        if (exp.id === proposal.itemId) {
+          return { ...exp, [proposal.field]: proposal.newValue }
+        }
+        return exp
+      })
+    } else if (proposal.sectionType === 'skills' && proposal.itemId) {
+      updatedProfile.skills = profile.skills.map(skill => {
+        if (skill.id === proposal.itemId) {
+          return { ...skill, [proposal.field]: proposal.newValue }
+        }
+        return skill
+      })
+    } else if (proposal.sectionType === 'projects' && proposal.itemId) {
+      updatedProfile.projects = profile.projects.map(proj => {
+        if (proj.id === proposal.itemId) {
+          return { ...proj, [proposal.field]: proposal.newValue }
+        }
+        return proj
+      })
+    }
+
+    // Update store state which sets saveStatus to unsaved and triggers autosave
+    updateProfile(updatedProfile)
+    alert('AI proposal accepted and applied to Canonical Profile successfully!')
   }
 
   if (loading || !document || !profile) {
@@ -341,6 +388,7 @@ function EditorWorkspace() {
           onSendMessage={handleSendMessage}
           onUpdateJobTarget={handleUpdateJobTarget}
           onRunATSAnalysis={handleRunATSAnalysis}
+          onAcceptProposal={handleAcceptProposal}
         />
 
         {/* Right Side Canvas Page */}
@@ -351,7 +399,6 @@ function EditorWorkspace() {
           setZoom={setZoom}
           onEditSection={(sec) => setEditingSection(sec)}
           onToggleVisibility={(id) => toggleSectionVisibility(id)}
-          onDeleteSection={(id) => removeSection(id)}
           onReorder={(from, to) => reorderSections(from, to)}
         />
 

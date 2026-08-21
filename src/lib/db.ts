@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * ENVOY Unified Database Abstraction Layer
  *
@@ -27,7 +28,6 @@ import type {
   JobTarget,
   ATSReport,
   PortfolioSite,
-  ShareLink,
   UserPreferences,
 } from '@/types'
 

@@ -4,12 +4,11 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Logo } from '@/components/Logo'
 import { authService } from '@/lib/auth'
-import { dbProfile, dbDocuments, checkDemoMode, dbPortfolios } from '@/lib/db'
-import { useDocumentStore } from '@/stores/document'
-import type { ProfessionalProfile, EnvoyDocument, ExperienceEntry, EducationEntry, SkillGroup, ProjectEntry, CertificationEntry, AppUser, DocumentType, TemplateId } from '@/types'
+import { dbProfile, dbDocuments, checkDemoMode } from '@/lib/db'
+import type { ProfessionalProfile, EnvoyDocument, ExperienceEntry, EducationEntry, SkillGroup, ProjectEntry, AppUser, DocumentType, TemplateId } from '@/types'
 import { 
-  Plus, FileText, User, Settings, LogOut, CheckCircle, 
-  Trash2, ExternalLink, Sparkles, Cloud, CloudOff, AlertCircle, Edit, Briefcase, GraduationCap, Code, FolderGit, Award, Layout
+  Plus, FileText, User, LogOut, CheckCircle, 
+  Trash2, Cloud, CloudOff, AlertCircle, Edit, Briefcase, GraduationCap, Code, FolderGit, Layout
 } from 'lucide-react'
 import { v4 as uuid } from 'uuid'
 
@@ -66,6 +65,7 @@ export default function DashboardPage() {
       }
     }
     init()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
 
   const showNotification = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -162,7 +162,7 @@ export default function DashboardPage() {
     saveProfile(updated)
   }
 
-  const updateExperience = (id: string, field: keyof ExperienceEntry, value: any) => {
+  const updateExperience = (id: string, field: keyof ExperienceEntry, value: string | string[] | boolean | undefined) => {
     if (!profile) return
     const updatedExpList = profile.experience.map(exp => {
       if (exp.id === id) {
@@ -206,7 +206,7 @@ export default function DashboardPage() {
     saveProfile(updated)
   }
 
-  const updateEducation = (id: string, field: keyof EducationEntry, value: any) => {
+  const updateEducation = (id: string, field: keyof EducationEntry, value: string | boolean | undefined) => {
     if (!profile) return
     const updatedEduList = profile.education.map(edu => {
       if (edu.id === id) {
@@ -248,7 +248,7 @@ export default function DashboardPage() {
     saveProfile(updated)
   }
 
-  const updateSkillGroup = (id: string, field: keyof SkillGroup, value: any) => {
+  const updateSkillGroup = (id: string, field: keyof SkillGroup, value: string | string[] | undefined) => {
     if (!profile) return
     const updatedSkillGroups = profile.skills.map(group => {
       if (group.id === id) {
@@ -291,7 +291,7 @@ export default function DashboardPage() {
     saveProfile(updated)
   }
 
-  const updateProject = (id: string, field: keyof ProjectEntry, value: any) => {
+  const updateProject = (id: string, field: keyof ProjectEntry, value: string | string[] | undefined) => {
     if (!profile) return
     const updatedProjList = profile.projects.map(proj => {
       if (proj.id === id) {

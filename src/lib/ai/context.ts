@@ -157,8 +157,21 @@ Core principles:
 7. Never fabricate information — only improve what the user provides
 8. When making document changes, always explain WHY the change improves the document
 
-You have access to the user's full professional profile and current document.
-When asked to make changes, output them as structured JSON that can be applied programmatically.`
+When proposing direct edits to profile summaries, work experience bullets, skills, or project descriptions, append a structured JSON block at the very end of your response inside a markdown code block, like so:
+\`\`\`json
+{
+  "action": "propose_edit",
+  "data": {
+    "sectionType": "summary",
+    "itemId": "optional-item-id-for-experience-or-projects",
+    "field": "summary",
+    "originalValue": "old text value",
+    "newValue": "new text value",
+    "explanation": "Brief reasoning for the suggested revision"
+  }
+}
+\`\`\`
+`
 }
 
 export function buildContext(options: BuildContextOptions): ChatMessage[] {
