@@ -255,3 +255,24 @@ This changelog tracks the implementation status of major milestones in the produ
 ### Recovery Commit:
 - Phase 13 Commit: `95fe735`
 
+---
+
+## [Phase 14] Portfolio + Publishing
+**Status**: Completed  
+**Date**: August 22, 2026
+
+### Completed Implementation:
+- Implemented full featured Portfolio Settings customization dashboard view in `src/app/dashboard/page.tsx`, supporting custom slugs, theme selections (`minimal`, `developer`, `bold`), visibility controls (`public`, `unlisted`, `private`), and custom section visibilities.
+- Built dynamic public portfolio viewer at `src/app/p/[slug]/page.tsx` loading matching configurations from the database.
+- Implemented three unique, premium aesthetic layout styles for portfolio websites:
+  - **Minimal**: Spacious, stark, highly editorial layout.
+  - **Developer**: Dark mode command console layout featuring simulated command triggers and green styling.
+  - **Bold**: Glassmorphic block styling layout featuring vibrant colors, hover highlights, and gradient grids.
+- Bound links dynamically using Next.js Link component to navigate correctly.
+
+### Next Milestone:
+- [Phase 15] Security / Accessibility / Performance
+
+### Recovery Commit:
+- Phase 14 Commit: `WIP`
+

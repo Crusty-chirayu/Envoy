@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Logo } from '@/components/Logo'
 import { authService } from '@/lib/auth'
-import { dbProfile, dbDocuments, checkDemoMode } from '@/lib/db'
-import type { ProfessionalProfile, EnvoyDocument, ExperienceEntry, EducationEntry, SkillGroup, ProjectEntry, AppUser, DocumentType, TemplateId } from '@/types'
+import { dbProfile, dbDocuments, checkDemoMode, dbPortfolios } from '@/lib/db'
+import type { ProfessionalProfile, EnvoyDocument, ExperienceEntry, EducationEntry, SkillGroup, ProjectEntry, AppUser, DocumentType, TemplateId, PortfolioSite, PortfolioTheme, PortfolioVisibility } from '@/types'
 import { 
   Plus, FileText, User, LogOut, CheckCircle, 
   Trash2, Cloud, CloudOff, AlertCircle, Edit, Briefcase, GraduationCap, Code, FolderGit, Layout, Upload, Loader
@@ -22,6 +22,7 @@ export default function DashboardPage() {
 
   // Store profile/doc state
   const [profile, setProfileState] = useState<ProfessionalProfile | null>(null)
+  const [portfolio, setPortfolioState] = useState<PortfolioSite | null>(null)
   const [documents, setDocuments] = useState<EnvoyDocument[]>([])
   
   // Dashboard navigation
@@ -154,6 +155,38 @@ export default function DashboardPage() {
     // 2. Get documents
     const userDocs = await dbDocuments.getAll(userId)
     setDocuments(userDocs)
+
+    // 3. Get portfolio or create default
+    let userPortfolio = await dbPortfolios.getByUserId(userId)
+    if (!userPortfolio) {
+      const defaultPortfolio: PortfolioSite = {
+        id: uuid(),
+        userId,
+        profileId: userProfile.id,
+        slug: userProfile.identity.name.toLowerCase().replace(/\s+/g, '-') || 'john-doe',
+        title: `${userProfile.identity.name}'s Portfolio`,
+        theme: 'minimal',
+        accentColor: '#6366f1',
+        visibility: 'public',
+        sections: [
+          { id: uuid(), type: 'hero', visible: true, order: 0, title: 'Introduction' },
+          { id: uuid(), type: 'about', visible: true, order: 1, title: 'About' },
+          { id: uuid(), type: 'experience', visible: true, order: 2, title: 'Work Experience' },
+          { id: uuid(), type: 'projects', visible: true, order: 3, title: 'Featured Projects' },
+          { id: uuid(), type: 'skills', visible: true, order: 4, title: 'Technical Skills' },
+          { id: uuid(), type: 'education', visible: true, order: 5, title: 'Education' },
+          { id: uuid(), type: 'contact', visible: true, order: 6, title: 'Get In Touch' },
+        ],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      await dbPortfolios.save(defaultPortfolio)
+      userPortfolio = defaultPortfolio
+    }
+    
+    if (userPortfolio) {
+      setPortfolioState(userPortfolio)
+    }
   }
 
   // Handle Logout
@@ -1145,7 +1178,7 @@ export default function DashboardPage() {
           )}
 
           {/* PORTFOLIO SETTINGS TAB */}
-          {activeTab === 'portfolio' && (
+          {activeTab === 'portfolio' && portfolio && (
             <div className="space-y-6">
               <div>
                 <h1 className="text-2xl font-bold tracking-tight">Portfolio Settings</h1>
@@ -1153,43 +1186,114 @@ export default function DashboardPage() {
               </div>
 
               <div className="bg-[#0c0c10]/40 border border-[#1e1e2e] rounded-xl p-6 space-y-6">
-                <div className="p-4 rounded-md bg-[#111118]/60 border border-[#252535] flex items-start gap-3">
-                  <AlertCircle size={18} className="text-[#00d4ff] shrink-0 mt-0.5" />
-                  <div className="text-xs text-[#9898b3]">
-                    <span className="font-bold text-[#f2f2f7]">Live Portfolio builder integration is coming.</span> In Connected Mode, details are published to <code className="text-[#00d4ff]">/p/[slug]</code>. You can customize the path and template settings below.
+                
+                {/* Live Link Block */}
+                <div className="p-4 rounded-md bg-[#111118]/60 border border-[#252535] flex items-center justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle size={18} className="text-[#00d4ff] shrink-0 mt-0.5" />
+                    <div className="text-xs text-[#9898b3]">
+                      <span className="font-bold text-[#f2f2f7]">Your portfolio is LIVE!</span> Any changes saved below are instantly published.
+                    </div>
                   </div>
+                  <a 
+                    href={`/p/${portfolio.slug}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs text-[#00d4ff] hover:underline font-bold"
+                  >
+                    View Published Site →
+                  </a>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  {/* Slug input */}
                   <div>
                     <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Custom Slug</label>
                     <div className="flex">
-                      <span className="bg-[#111118] border border-[#252535] border-r-0 rounded-l-md px-3 py-2 text-sm text-[#5c5c7a] select-none flex items-center">
-                        envoy.app/p/
+                      <span className="bg-[#111118] border border-[#252535] border-r-0 rounded-l-md px-3 py-2 text-xs text-[#5c5c7a] select-none flex items-center">
+                        /p/
                       </span>
                       <input 
                         type="text"
-                        defaultValue={profile?.identity.name.toLowerCase().replace(/\s+/g, '-') || 'john-doe'}
-                        className="flex-1 bg-[#111118]/80 border border-[#252535] rounded-r-md py-2 px-3 text-sm text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
+                        value={portfolio.slug}
+                        onChange={(e) => setPortfolioState({ ...portfolio, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                        className="flex-1 bg-[#111118]/80 border border-[#252535] rounded-r-md py-2 px-3 text-xs text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
                       />
                     </div>
                   </div>
 
+                  {/* Theme Select */}
                   <div>
                     <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Portfolio Theme</label>
-                    <select className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]">
-                      <option value="minimal">Minimal (Elegant Typography)</option>
-                      <option value="developer">Developer (Sleek Console)</option>
-                      <option value="bold">Creative Grid</option>
+                    <select 
+                      value={portfolio.theme}
+                      onChange={(e) => setPortfolioState({ ...portfolio, theme: e.target.value as PortfolioTheme })}
+                      className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-xs text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
+                    >
+                      <option value="minimal">Minimal (Elegant Editorial)</option>
+                      <option value="developer">Developer (IDE Console Layout)</option>
+                      <option value="bold">Creative Grid (Vibrant Blocks)</option>
+                    </select>
+                  </div>
+
+                  {/* Visibility Select */}
+                  <div>
+                    <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Visibility Status</label>
+                    <select 
+                      value={portfolio.visibility}
+                      onChange={(e) => setPortfolioState({ ...portfolio, visibility: e.target.value as PortfolioVisibility })}
+                      className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-xs text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
+                    >
+                      <option value="public">Public (Indexed & Searchable)</option>
+                      <option value="unlisted">Unlisted (Direct Link Only)</option>
+                      <option value="private">Private (Owner Only Access)</option>
                     </select>
                   </div>
                 </div>
 
+                {/* Section Visibility Controls */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold text-[#f2f2f7] uppercase tracking-wider">Visible Sections & Order</h3>
+                  <div className="space-y-2">
+                    {portfolio.sections.map((sec, idx) => (
+                      <div key={sec.id} className="flex items-center justify-between p-3 bg-[#111118]/40 border border-[#1e1e2e] rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-[#5c5c7a] font-mono">#{idx + 1}</span>
+                          <span className="text-xs font-bold text-gray-200 capitalize">{sec.title || sec.type}</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const updated = [...portfolio.sections]
+                            updated[idx] = { ...sec, visible: !sec.visible }
+                            setPortfolioState({ ...portfolio, sections: updated })
+                          }}
+                          className={`text-[10px] px-2.5 py-1 rounded font-bold uppercase transition-all ${
+                            sec.visible 
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              : 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
+                          }`}
+                        >
+                          {sec.visible ? 'Visible' : 'Hidden'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Save action button */}
                 <button
-                  onClick={() => showNotification('Portfolio site settings updated', 'success')}
-                  className="bg-[#6366f1] text-[#050507] font-bold text-sm px-4 py-2 rounded-md hover:opacity-90 transition-opacity"
+                  onClick={async () => {
+                    try {
+                      await dbPortfolios.save(portfolio)
+                      showNotification('Portfolio settings successfully saved and published!', 'success')
+                    } catch (err) {
+                      console.error('Save portfolio failed:', err)
+                      showNotification('Save failed', 'error')
+                    }
+                  }}
+                  className="bg-[#6366f1] text-[#050507] font-extrabold text-xs px-5 py-2.5 rounded-md hover:opacity-90 transition-opacity shadow-md shadow-[#6366f1]/20"
                 >
-                  Save Settings
+                  Save and Publish Portfolio
                 </button>
               </div>
             </div>
