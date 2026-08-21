@@ -163,3 +163,21 @@ This changelog tracks the implementation status of major milestones in the produ
 ### Recovery Commit:
 - Phase 8 Commit: `c78803d`
 
+---
+
+## [Phase 9] ATS Engine
+**Status**: Completed  
+**Date**: August 22, 2026
+
+### Completed Implementation:
+- Created serverless API Route `/api/ats/route.ts` which consumes `src/lib/ats/analyzer.ts` and processes ATS score metrics, keyword matches, structure checks, and formatting risks.
+- Wired `/editor/page.tsx`'s `handleRunATSAnalysis` function to make backend API calls to `/api/ats` instead of running calculations client-side.
+- Verified that all scans are persisted correctly in the database and updated in the Zustand store.
+- Cleared all unused imports in `/editor/page.tsx` that were no longer required.
+
+### Next Milestone:
+- [Phase 10] Job Tailoring
+
+### Recovery Commit:
+- Phase 9 Commit: `WIP`
+

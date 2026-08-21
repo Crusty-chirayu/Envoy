@@ -12,7 +12,6 @@ import {
   ArrowLeft, Download, Loader, Eye
 } from 'lucide-react'
 import { v4 as uuid } from 'uuid'
-import { analyzeATS } from '@/lib/ats/analyzer'
 
 function EditorWorkspace() {
   const router = useRouter()
@@ -243,12 +242,34 @@ function EditorWorkspace() {
     updateDocument({ targetJobId: newTarget.id })
   }
 
-  // Execute local algorithmic ATS check
+  // Execute backend algorithmic ATS check
   const handleRunATSAnalysis = async () => {
     if (!profile || !document) return
-    const report = analyzeATS(profile, document, document.userId, jobTarget || undefined)
-    await dbATSReports.save(report)
-    setAtsReport(report)
+    
+    try {
+      const response = await fetch('/api/ats', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          profile,
+          document,
+          jobTarget,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`ATS Engine responded with status ${response.status}`)
+      }
+
+      const report = await response.json()
+      await dbATSReports.save(report)
+      setAtsReport(report)
+    } catch (err: unknown) {
+      console.error('ATS scan failed:', err)
+      alert(`ATS Scan failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    }
   }
 
   // Apply AI proposal modifications directly to Canonical Profile state
