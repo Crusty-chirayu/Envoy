@@ -104,5 +104,24 @@ This changelog tracks the implementation status of major milestones in the produ
 - [Phase 6] AI Provider Abstraction
 
 ### Recovery Commit:
-- Phase 5 Commit: `04fc07d`
+- Phase 5 Commit: `2462806`
+
+---
+
+## [Phase 6] AI Provider Abstraction
+**Status**: Completed  
+**Date**: August 21, 2026
+
+### Completed Implementation:
+- Implemented Google Gemini support within `src/lib/ai/provider.ts` via the `GeminiProvider` class.
+- Configured dynamic chat message format mapping for system instruction parts, user inputs, and assistant model outputs.
+- Developed SSE-based content chunk decoding for Google's `streamGenerateContent` endpoint using TextDecoder lines buffer.
+- Added structured JSON fallback completion via Zod system schema rules integration.
+- Expanded `getAIProvider()` factory router cases to instantiate `GeminiProvider` when `ENVOY_AI_PROVIDER=gemini` is declared.
+
+### Next Milestone:
+- [Phase 7] Real AI Agent + Streaming
+
+### Recovery Commit:
+- Phase 6 Commit: `d0c9da5`
 

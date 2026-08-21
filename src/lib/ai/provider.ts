@@ -421,6 +421,177 @@ class OpenRouterProvider implements AIProvider {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Gemini Provider
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class GeminiProvider implements AIProvider {
+  readonly name: AIProviderName = 'gemini'
+  readonly model: string
+
+  constructor() {
+    this.model = process.env.GEMINI_MODEL ?? 'gemini-1.5-pro'
+  }
+
+  private getApiKey(): string {
+    const apiKey = process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY
+    if (!apiKey) {
+      throw new Error('GOOGLE_AI_API_KEY or GEMINI_API_KEY environment variable is not set')
+    }
+    return apiKey
+  }
+
+  private mapMessages(messages: ChatMessage[]) {
+    const systemMessages = messages.filter(m => m.role === 'system')
+    const chatMessages = messages.filter(m => m.role !== 'system')
+
+    const contents = chatMessages.map(m => ({
+      role: m.role === 'user' ? 'user' : 'model',
+      parts: [{ text: m.content }],
+    }))
+
+    const systemInstruction = systemMessages.length > 0 ? {
+      parts: [{ text: systemMessages.map(m => m.content).join('\n') }],
+    } : undefined
+
+    return { contents, systemInstruction }
+  }
+
+  async complete(messages: ChatMessage[], options: AIRequestOptions = {}): Promise<string> {
+    const apiKey = this.getApiKey()
+    const { contents, systemInstruction } = this.mapMessages(messages)
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents,
+          systemInstruction,
+          generationConfig: {
+            temperature: options.temperature ?? 0.7,
+            maxOutputTokens: options.maxTokens ?? 4096,
+          },
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(`Gemini API error ${response.status}: ${error}`)
+    }
+
+    const data = await response.json() as {
+      candidates?: Array<{
+        content?: {
+          parts?: Array<{ text?: string }>
+        }
+      }>
+    }
+
+    return data.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
+  }
+
+  async stream(messages: ChatMessage[], options: AIRequestOptions = {}): Promise<ReadableStream<string>> {
+    const apiKey = this.getApiKey()
+    const { contents, systemInstruction } = this.mapMessages(messages)
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:streamGenerateContent?alt=sse&key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents,
+          systemInstruction,
+          generationConfig: {
+            temperature: options.temperature ?? 0.7,
+            maxOutputTokens: options.maxTokens ?? 4096,
+          },
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(`Gemini API error ${response.status}: ${error}`)
+    }
+
+    if (!response.body) {
+      throw new Error('Gemini response has no body')
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+
+    return new ReadableStream<string>({
+      async pull(controller) {
+        let buffer = ''
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) {
+            controller.close()
+            return
+          }
+
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || ''
+
+          for (const line of lines) {
+            const trimmed = line.trim()
+            if (!trimmed || !trimmed.startsWith('data: ')) continue
+
+            try {
+              const json = JSON.parse(trimmed.slice(6)) as {
+                candidates?: Array<{
+                  content?: {
+                    parts?: Array<{ text?: string }>
+                  }
+                }>
+              }
+              const chunkText = json.candidates?.[0]?.content?.parts?.[0]?.text
+              if (chunkText) {
+                controller.enqueue(chunkText)
+              }
+            } catch {
+              // Ignore partial chunk parse error
+            }
+          }
+        }
+      },
+    })
+  }
+
+  async structured<T>(
+    messages: ChatMessage[],
+    jsonSchema: Record<string, unknown>,
+    options: AIRequestOptions = {}
+  ): Promise<T> {
+    const systemInstruction: ChatMessage = {
+      role: 'system',
+      content: `Respond with valid JSON only. No markdown formatting. Schema: ${JSON.stringify(jsonSchema)}`,
+    }
+
+    const text = await this.complete([systemInstruction, ...messages], {
+      ...options,
+      temperature: 0.1,
+    })
+
+    try {
+      const cleaned = text.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim()
+      return JSON.parse(cleaned) as T
+    } catch {
+      throw new Error(`Gemini returned invalid JSON structure: ${text.slice(0, 200)}`)
+    }
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Provider Factory
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -438,13 +609,16 @@ export function getAIProvider(): AIProvider {
     case 'anthropic':
       _instance = new AnthropicProvider()
       break
+    case 'gemini':
+      _instance = new GeminiProvider()
+      break
     case 'openrouter':
       _instance = new OpenRouterProvider()
       break
     default:
       throw new Error(
         `Unknown AI provider: "${providerName}". ` +
-        `Set ENVOY_AI_PROVIDER to one of: openai, anthropic, openrouter`
+        `Set ENVOY_AI_PROVIDER to one of: openai, anthropic, gemini, openrouter`
       )
   }
 
