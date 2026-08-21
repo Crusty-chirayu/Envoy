@@ -205,9 +205,9 @@ Full guidelines live in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 | | Name | GitHub | Focus |
 |---|---|---|---|
-| 🧠 | **Chirayu** | [@Crusty-chirayu](https://github.com/Crusty-chirayu) | Core Architecture |
-| 🎯 | **Sagar Khanal Sharma** | [@Sagar-Khanal](https://github.com/Sagar-Khanal) | Core Architecture |
-| ⚙️ | **Prakash Bohara** | [@Prakash0788](https://github.com/Prakash0788) | Core Architecture |
+| 🧠 | **Chirayu** | [@Crusty-chirayu](https://github.com/Crusty-chirayu) | Core Architecture/Developer/Designer |
+| 🎯 | **Sagar Khanal Sharma** | [@Sagar-Khanal](https://github.com/Sagar-Khanal) | Testing/Structure planner |
+| ⚙️ | **Prakash Bohara** | [@Prakash0788](https://github.com/Prakash0788) | Documentation/Key-generation and Research |
 
 </div>
 
