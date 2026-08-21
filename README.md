@@ -159,15 +159,8 @@ Once the stack is finalized, this section gets swapped for exact, tested command
 
 Three builders, one repo, zero stepping on each other's work:
 
-```
-main   ────────────────────────────────────────────────────────●   (Release)
-        \                                                    /
-dev      └──────●─────────────────●─────────────────●───────●    (Integration)
-                  \               /                 /
-feature/*            [Chirayu] ──┘                 /
-feature/*              [Sagar] ────────────────────┘
-feature/*            [Prakash] ────────────────────|
-```
+<img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/2420d967-d541-4371-af83-ea3ef3fc7a86" />
+
 
 - **`main`** — production-ready, protected, no direct pushes.
 - **`dev`** — integration branch; every finished feature lands here before release.
