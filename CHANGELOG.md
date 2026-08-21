@@ -22,7 +22,30 @@ This changelog tracks the implementation status of major milestones in the produ
 - The project lacks an App router structure, layout, views, server APIs, and UI components in the repository baseline.
 
 ### Next Milestone:
-- [Phase 1] Architecture + Domain Model
+- [Phase 2] Database & Persistence Abstraction
 
 ### Recovery Commit:
-- Baseline Commit: `64bf9ec`
+- Phase 1 Commit: `6c6d793`
+
+---
+
+## [Phase 2] Database & Persistence Abstraction
+**Status**: Completed  
+**Date**: August 21, 2026
+
+### Completed Implementation:
+- Created `src/lib/db.ts` implementing a unified database persistence interface.
+- Programmed a runtime dispatcher that reads environment configuration via `checkDemoMode()`.
+- If Demo Mode is active, delegates data operations to `src/lib/storage/local.ts` to read/write from local storage.
+- If Cloud Mode is active, calls Supabase browser client client-side.
+- Added type-safe key transformations to map frontend camelCase entity shapes to snake_case table columns for documents, profiles, versions, preferences, targets, and reports.
+
+### Architecture Decisions:
+- **Client-Side Dispatching**: Ensured the store and components call `dbProfile`, `dbDocuments`, etc. directly. The persistence logic handles isolation transparently without front-end awareness.
+
+### Next Milestone:
+- [Phase 3] Authentication + Authorization
+
+### Recovery Commit:
+- Phase 2 Commit: `7746093`
+
