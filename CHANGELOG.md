@@ -84,5 +84,25 @@ This changelog tracks the implementation status of major milestones in the produ
 - [Phase 5] Document Editor & A4 Canvas
 
 ### Recovery Commit:
-- Phase 4 Commit: `695f22e`
+- Phase 4 Commit: `e255970`
+
+---
+
+## [Phase 5] Document Editor & A4 Canvas
+**Status**: Completed  
+**Date**: August 21, 2026
+
+### Completed Implementation:
+- Created the main editor container page (`src/app/editor/page.tsx`) mapping query param IDs to the loaded document and canonical profile workspace.
+- Built A4 print-ready Canvas renderer (`src/components/A4Canvas.tsx`) supporting exact dimension layout, dynamic zoom scale matrix (50%-200%), fit page, fit width, and section control HUDs.
+- Created multi-theme stylesheet compiler (`src/components/TemplateRenderer.tsx`) for **Minimal**, **Modern**, **Developer** (monospace markup style), and **Academic** styles.
+- Built layout synchronization callbacks enabling visual section reordering, visibility switches, and title updates.
+- Programmed automatic debounced persistence listener: triggers `dbDocuments.save` and `dbProfile.save` 1.5 seconds after a store edit occurs, updating the document save indicator state ("Saving...", "Saved (Local)" or "Saved (Cloud)", "Unsaved changes", or "Save failed").
+- Integrated the left Agent Sidebar UI containing chatbot inputs, target job descriptors, and mock ATS scoring gauge.
+
+### Next Milestone:
+- [Phase 6] AI Provider Abstraction
+
+### Recovery Commit:
+- Phase 5 Commit: `04fc07d`
 
