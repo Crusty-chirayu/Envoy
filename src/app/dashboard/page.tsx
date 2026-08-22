@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Logo } from '@/components/Logo'
 import { authService } from '@/lib/auth'
 import { dbProfile, dbDocuments, checkDemoMode, dbPortfolios } from '@/lib/db'
+import { DEFAULT_PORTFOLIO_VISIBILITY, resolvePublishedAt } from '@/lib/portfolio/visibility'
 import type { ProfessionalProfile, EnvoyDocument, ExperienceEntry, EducationEntry, SkillGroup, ProjectEntry, AppUser, DocumentType, TemplateId, PortfolioSite, PortfolioTheme, PortfolioVisibility } from '@/types'
 import { 
   Plus, FileText, User, LogOut, CheckCircle, 
@@ -179,7 +180,7 @@ export default function DashboardPage() {
         accentColor: '#6366f1',
         // Privacy default (audit finding S7): portfolios start PRIVATE.
         // Publishing requires an explicit user action in Portfolio Setup.
-        visibility: 'private',
+        visibility: DEFAULT_PORTFOLIO_VISIBILITY,
         sections: [
           { id: uuid(), type: 'hero', visible: true, order: 0, title: 'Introduction' },
           { id: uuid(), type: 'about', visible: true, order: 1, title: 'About' },
@@ -1335,9 +1336,10 @@ export default function DashboardPage() {
                     try {
                       const siteToSave = {
                         ...portfolio,
-                        publishedAt:
-                          portfolio.publishedAt ??
-                          (portfolio.visibility !== 'private' ? new Date().toISOString() : undefined),
+                        publishedAt: resolvePublishedAt({
+                          visibility: portfolio.visibility,
+                          currentPublishedAt: portfolio.publishedAt,
+                        }),
                         updatedAt: new Date().toISOString(),
                       }
                       setPortfolioState(siteToSave)

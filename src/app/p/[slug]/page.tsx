@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { dbPortfolios, dbProfile } from '@/lib/db'
+import { isPortfolioPubliclyViewable } from '@/lib/portfolio/visibility'
 import type { PortfolioSite, ProfessionalProfile } from '@/types'
 import { 
   Mail, Phone, MapPin, Linkedin, Github, ExternalLink
@@ -46,7 +47,8 @@ export default function PublicPortfolioPage() {
     )
   }
 
-  if (!site || !profile || site.visibility === 'private') {
+  // Privacy gate (audit finding S7): private sites are never publicly rendered.
+  if (!site || !profile || !isPortfolioPubliclyViewable(site.visibility)) {
     return (
       <div className="min-h-screen bg-[#050507] text-[#f2f2f7] flex flex-col items-center justify-center p-6 text-center">
         <h1 className="text-3xl font-extrabold tracking-tight mb-2">404 - Portfolio Not Found</h1>

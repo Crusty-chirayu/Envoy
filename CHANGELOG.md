@@ -373,9 +373,13 @@ This changelog tracks the implementation status of major milestones in the produ
 - Added an inline privacy warning when Public/Unlisted is selected, stating exactly what becomes exposed and to whom.
 - The status banner now tells the truth: private sites show "Your portfolio is PRIVATE" with publish instructions instead of the unconditional "LIVE!" message.
 - Existing users' already-public portfolios are intentionally left untouched (no retroactive data changes); new defaults apply going forward.
+- Extracted the privacy contract into `src/lib/portfolio/visibility.ts` as the single source of truth, consumed by all three enforcement points: dashboard creation (`DEFAULT_PORTFOLIO_VISIBILITY`), the publish save path (`resolvePublishedAt`: first non-private save stamps, republishing keeps the original timestamp, private saves never fabricate one), and the public `/p/[slug]` render gate (`isPortfolioPubliclyViewable`: private sites can never be publicly rendered; public/unlisted remain accessible).
+- Persistence verified in both modes: cloud mapping round-trips `visibility`/`published_at` (`db.ts`), the DB column default is already `'private'`, and RLS exposes only `public`/`unlisted` rows to anonymous reads (no auth/RLS changes made). Demo/offline mode stores portfolios under `envoy:portfolio:*` with visibility + publish state intact; there the `/p/[slug]` page gate is the enforcement point (no RLS exists locally).
+- `UserPreferences.allowPublicPortfolio` remains an account-level flag that is intentionally NOT wired as a publish gate: no UI exists to enable it, so gating on it would make explicit publishing impossible. The per-site explicit publish action supersedes it as the consent mechanism.
+- Added `src/lib/portfolio/visibility.test.ts` — 16 focused tests pinning the contract: creation default is private; explicit publish stamps `publishedAt` (public and unlisted) while republish/edit preserves the original timestamp; unpublished portfolios cannot be publicly rendered; published portfolios remain publicly accessible; demo/offline localStorage round-trips preserve visibility + publish state via `dbPortfolios`.
 
 ### Validation (S7):
-- `npx vitest run` — PASS (26/26)
+- `npx vitest run` — PASS (42/42 across proposal, jobs/extract, and portfolio-visibility suites)
 - `npm run typecheck` — PASS
 - `npm run lint` — PASS
 - `npm run build` — PASS
