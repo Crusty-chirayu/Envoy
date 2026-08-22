@@ -509,3 +509,72 @@ This changelog tracks the implementation status of major milestones in the produ
 ### Recovery Commit:
 - Hotfix Commit: see git log (`fix: repair Supabase signup trigger search path`)
 
+---
+
+## [UI/UX Polish] Cohesive Premium Design Pass
+**Status**: Completed  
+**Date**: August 23, 2026
+
+A full-application visual refinement pass. No backend, auth, security, AI, ATS, schema, or API changes; no new dependencies; all existing functionality and Phase-15 performance work preserved.
+
+### Design System Foundation (`globals.css`)
+- Added a shared **component layer**: `surface-card` / `surface-card-hover` / `surface-inset` / `panel-section` elevated surfaces with inner top-highlight shadows; `accent-hairline` gradient hairline detail for hero cards.
+- Normalized **buttons**: grouped base (`btn` + variants) with `btn-primary` (signature indigo→cyan gradient with slow background-position drift + elevation on hover), `btn-secondary`, `btn-ghost`, `btn-danger`, `btn-success`, `btn-sm`; consistent focus-visible rings, active press states, disabled handling.
+- Element-level **form control defaults** (input/textarea/select): unified dark surface, border, radius, placeholder color, indigo focus ring with soft glow — utilities still override where specified, giving instant consistency app-wide.
+- **Chips/badges** system (`chip-cyan/indigo/success/warning/danger/neutral`), sidebar `nav-item(+active)` with inset indicator bar, `segmented` control primitives, heading patterns (`heading-page/sub`, `eyebrow`), `.text-gradient` display text.
+- Text selection tint, Firefox scrollbar parity, refined scrollbar track; existing focus-visible, reduced-motion, skip-link, and print rules fully preserved.
+
+### New Shared Component
+- `src/components/AuthShell.tsx`: single implementation of the auth chrome (ambient glows, elevated card with accent hairline, brand mark, error/success banners with roles) consumed by `/login`, `/signup`, `/reset` — eliminating triplicated markup.
+
+### Landing Page
+- Rebuilt hero hierarchy: eyebrow badge, balanced headline with gradient key phrase, constrained supporting copy, dual CTA row with arrow-shift micro-interaction, and a real-capability trust strip (free to start · demo mode · export formats).
+- New "How It Thinks" numbered pipeline section (Ingest → Tailor → Deliver) using a hairline-grid layout; feature cards upgraded to hover-lift surfaces with per-accent icon tiles; added closing About statement card with repeated CTAs.
+- Single restrained ambient glow + faint engineering grid texture replacing multiple blobs; sticky blurred nav with labeled regions; footer with brand mark and labeled nav.
+- Destinations unchanged: Create Free Account → `/signup`, Try Demo Mode → `/dashboard`.
+
+### Auth UI
+- All three screens rebuilt on AuthShell with consistent spacing/hierarchy; password visibility toggles (Eye/EyeOff with `aria-label` + `aria-pressed`) on login/signup/reset-new-password; autocomplete hints (`email`, `current-password`, `new-password`, `name`); loading spinners inside submit buttons; all handlers and flows byte-preserved.
+
+### Dashboard
+- Header mode chip normalized to the chip system; ghost sign-out button.
+- **Mobile navigation gap fixed**: sidebar is hidden below `md`, so a sticky segmented tab bar (Documents / Profile / Portfolio, `role="tablist"`) now provides reachable navigation at small widths.
+- Sidebar progress card with animated gradient bar + `role="progressbar"` semantics; nav items use the shared nav-item system with active inset indicator.
+- Documents grid: hover-lift cards with accent hairline, type chips, monospace dates, refined empty state with icon tile; Create actions use the primary button system.
+- Profile editor: segmented sub-tabs with counts; add-entry buttons standardized; uploader banner retained.
+- Portfolio settings: visibility banner now communicates state honestly (Private neutral chip vs Public/Unlisted success chip + tinted panel); save button uses primary system; publishing logic untouched.
+- Toast notifications now map icon/color to type (success/error/info) — previously every toast rendered a green check even for errors.
+
+### Editor Workspace
+- Header: responsive document title input, save-status indicators as dot/spinner pills (saved/saving/unsaved/error).
+- Export dropdown: proper `role="menu"`/`menuitem`, entrance animation, click-outside-to-close via a scoped listener (using `window.document` to avoid the store's `document` shadowing).
+- Version history modal: responsive width (`max-w-3xl`), surface card + hairline, scale-in entrance, danger-styled rollback button.
+- A4 canvas toolbar: zoom controls grouped in a segmented pill with live percentage, fit buttons as secondary buttons (hidden on very small screens).
+
+### AI Features Presentation
+- Agent panes converted to the segmented control (keeps `aria-pressed`).
+- Chat: calmer user bubbles (indigo-tinted surface instead of heavy solid gradient), branded empty state with suggested prompts as inset cards, thinking indicator uses the dedicated `thinking-dots` animation with staggered delays and `role="status"`.
+- Proposal diff cards: cyan chip header showing target `sectionType · field`, fade-in entrance, Cancel/Edit/Accept actions standardized to button system (success variant for apply/accept). Validation-gate logic untouched.
+
+### ATS Experience
+- Overall score presented as an animated SVG ring gauge (gradient stroke, tabular numerals, accessible label) driven by the existing deterministic `overallScore`.
+- Subscores as tiles with mini progress bars + `role="progressbar"` labels; issue severity badges use chip-danger/chip-warning; refined empty state with Scan action.
+
+### Portfolio
+- Public 404 and loader states branded (logo mark, ambient glow, secondary-button home link, labeled spinner); the three public themes and the public/private projection boundary are untouched.
+
+### Accessibility Preservation
+- All pre-existing roles/live-regions/labels/dialog semantics kept; additions are strictly additive (`role="tablist"/tab/aria-selected`, `aria-current`, `aria-expanded/haspopup`, menu roles, progressbar semantics, decorative icons marked `aria-hidden`). Global `:focus-visible` ring and `prefers-reduced-motion` kill-switch remain active over every new transition/animation.
+
+### Performance Preservation
+- No new dependencies; no new client-component boundaries; dynamic `docx` import, memoized `TemplateRenderer`, and stable callbacks untouched. Build output confirms identical First Load JS profile (editor 201 kB, dashboard 182 kB).
+
+### Validation Results:
+- `npm run typecheck` — PASS (zero errors)
+- `npm run lint` — PASS ("No ESLint warnings or errors")
+- `npm test` — PASS (7 files, 81/81 tests)
+- `npm run build` — PASS (16 routes generated; only the pre-existing `pdf-parse` CJS-default warning)
+
+### Recovery Commit:
+- UI/UX Polish Commit: see git log (`feat: elevate Envoy UI and UX`)
+

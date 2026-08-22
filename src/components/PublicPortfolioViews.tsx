@@ -10,18 +10,24 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { Logo } from '@/components/Logo'
 import { Mail, Phone, MapPin, Linkedin, Github, ExternalLink } from 'lucide-react'
 import type { PublicPortfolioProfile, PublicPortfolioSite } from '@/lib/portfolio/public-projection'
 
 export function PublicPortfolioNotFound() {
   return (
-    <div className="min-h-screen bg-[#050507] text-[#f2f2f7] flex flex-col items-center justify-center p-6 text-center">
-      <h1 className="text-3xl font-extrabold tracking-tight mb-2">404 - Portfolio Not Found</h1>
-      <p className="text-sm text-[#9898b3] max-w-md">
+    <div className="min-h-screen bg-[#050507] text-[#f2f2f7] flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+      {/* Restrained ambient glow */}
+      <div className="absolute top-[-25%] left-1/2 -translate-x-1/2 w-[60%] h-[50%] rounded-full bg-gradient-radial from-[rgba(99,102,241,0.08)] to-transparent blur-3xl pointer-events-none" />
+      <Logo iconSize={44} showText={false} className="mb-6 opacity-70" />
+      <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2 [text-wrap:balance]">
+        Portfolio Not Found
+      </h1>
+      <p className="text-sm text-[#9898b3] max-w-md leading-relaxed">
         This portfolio site does not exist or has been set to private by the owner.
       </p>
-      <Link href="/" className="mt-6 text-xs text-[#00d4ff] hover:underline font-bold">
-        Go Back Home →
+      <Link href="/" className="btn btn-secondary btn-sm mt-7">
+        Go Back Home
       </Link>
     </div>
   )
@@ -29,12 +35,12 @@ export function PublicPortfolioNotFound() {
 
 export function PublicPortfolioLoader() {
   return (
-    <div className="min-h-screen bg-[#050507] text-[#f2f2f7] flex items-center justify-center">
+    <div className="min-h-screen bg-[#050507] text-[#f2f2f7] flex flex-col items-center justify-center gap-4" role="status" aria-label="Loading portfolio">
       <div
-        className="animate-spin rounded-full h-8 w-8 border-t-2 border-[#00d4ff]"
-        role="status"
-        aria-label="Loading portfolio"
+        className="animate-spin rounded-full h-8 w-8 border-2 border-[#1e1e2e] border-t-[#00d4ff]"
+        aria-hidden="true"
       />
+      <p className="text-xs text-[#5c5c7a] font-semibold uppercase tracking-widest">Loading portfolio</p>
     </div>
   )
 }

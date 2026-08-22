@@ -81,6 +81,17 @@ function EditorWorkspace() {
   // Sync ref for debouncing
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Close the export dropdown when clicking outside of it
+  useEffect(() => {
+    if (!showExportMenu) return
+    const onPointerDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target.closest('[data-export-menu]')) setShowExportMenu(false)
+    }
+    window.document.addEventListener('mousedown', onPointerDown)
+    return () => window.document.removeEventListener('mousedown', onPointerDown)
+  }, [showExportMenu])
+
   // Close overlays with the Escape key (keyboard accessibility)
   useEffect(() => {
     if (!showVersionsModal && !editingSection) return
@@ -541,21 +552,40 @@ function EditorWorkspace() {
           
           <Logo iconSize={32} showText={false} />
           
-          <div className="flex flex-col">
+          <div className="flex flex-col min-w-0">
             <input
               type="text"
               value={document.title}
               onChange={(e) => updateDocument({ title: e.target.value })}
-              className="bg-transparent border-b border-transparent hover:border-[#252535] focus:border-[#6366f1] focus:outline-none text-sm font-bold text-[#f2f2f7] py-0.5 px-1 w-48 transition-colors"
+              aria-label="Document title"
+              className="bg-transparent border-b border-transparent hover:border-[#252535] focus:border-[#6366f1] focus:outline-none text-sm font-bold text-[#f2f2f7] py-0.5 px-1 w-40 sm:w-56 md:w-64 transition-colors truncate"
             />
             {/* Save Status Indicators */}
-            <div className="text-[10px] text-[#5c5c7a] px-1 font-semibold">
+            <div className="text-[10px] px-1 font-semibold flex items-center gap-1.5 mt-0.5">
               {saveStatus === 'saved' && (
-                <span className="text-emerald-400">Saved {checkDemoMode() ? '(Local)' : '(Cloud)'}</span>
+                <span className="inline-flex items-center gap-1 text-emerald-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
+                  Saved {checkDemoMode() ? '(Local)' : '(Cloud)'}
+                </span>
               )}
-              {saveStatus === 'saving' && <span className="text-[#00d4ff]">Saving draft...</span>}
-              {saveStatus === 'unsaved' && <span className="text-amber-400">Unsaved changes</span>}
-              {saveStatus === 'error' && <span className="text-red-400">Autosave failed</span>}
+              {saveStatus === 'saving' && (
+                <span className="inline-flex items-center gap-1 text-[#00d4ff]">
+                  <Loader size={9} className="animate-spin" aria-hidden="true" />
+                  Saving draft...
+                </span>
+              )}
+              {saveStatus === 'unsaved' && (
+                <span className="inline-flex items-center gap-1 text-amber-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" aria-hidden="true" />
+                  Unsaved changes
+                </span>
+              )}
+              {saveStatus === 'error' && (
+                <span className="inline-flex items-center gap-1 text-red-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400" aria-hidden="true" />
+                  Autosave failed
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -586,30 +616,33 @@ function EditorWorkspace() {
               }
               setShowVersionsModal(true)
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#16161f] border border-[#252535] text-xs text-[#9898b3] hover:text-[#00d4ff] hover:border-[#00d4ff]/30 transition-all font-semibold"
+            className="btn btn-secondary btn-sm hidden sm:inline-flex"
             title="Version Checkpoints"
           >
-            <History size={13} />
+            <History size={12} aria-hidden="true" />
             <span>History ({versions.length})</span>
           </button>
 
-          <div className="relative">
+          <div className="relative" data-export-menu>
             <button
               onClick={() => setShowExportMenu(!showExportMenu)}
-              className="flex items-center gap-2 bg-[#6366f1] text-[#050507] hover:opacity-90 transition-opacity px-4 py-1.5 rounded-md font-bold text-xs shadow-md"
+              aria-expanded={showExportMenu}
+              aria-haspopup="menu"
+              className="btn btn-primary btn-sm"
             >
-              <Download size={13} />
+              <Download size={12} aria-hidden="true" />
               <span>Export</span>
             </button>
 
             {showExportMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-[#0c0c10] border border-[#252535] rounded-md shadow-lg z-50 py-1 text-xs">
+              <div role="menu" aria-label="Export options" className="absolute right-0 mt-2 w-52 surface-card !bg-[#0c0c10] rounded-lg shadow-elevation-3 z-50 py-1.5 text-xs animate-scale-in origin-top-right">
                 <button
+                  role="menuitem"
                   onClick={() => {
                     setShowExportMenu(false)
                     window.print()
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-[#16161f] text-[#f2f2f7] hover:text-[#00d4ff] transition-all font-semibold"
+                  className="w-full text-left px-4 py-2 hover:bg-[#16161f] text-[#f2f2f7] hover:text-[#00d4ff] transition-colors font-semibold"
                 >
                   Download PDF (Printable)
                 </button>
@@ -633,7 +666,7 @@ function EditorWorkspace() {
                       alert('Word document generation failed. Please check logs.')
                     }
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-[#16161f] text-[#f2f2f7] hover:text-[#00d4ff] transition-all font-semibold"
+                  className="w-full text-left px-4 py-2 hover:bg-[#16161f] text-[#f2f2f7] hover:text-[#00d4ff] transition-colors font-semibold"
                 >
                   Download Word (.docx)
                 </button>
@@ -657,7 +690,7 @@ function EditorWorkspace() {
                       alert('Plain text generation failed.')
                     }
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-[#16161f] text-[#f2f2f7] hover:text-[#00d4ff] transition-all font-semibold"
+                  className="w-full text-left px-4 py-2 hover:bg-[#16161f] text-[#f2f2f7] hover:text-[#00d4ff] transition-colors font-semibold"
                 >
                   Download Plain Text (.txt)
                 </button>
@@ -766,7 +799,7 @@ function EditorWorkspace() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="version-history-title"
-            className="w-[720px] max-h-[80vh] bg-[#0c0c10] border border-[#1e1e2e] rounded-xl flex flex-col overflow-hidden shadow-2xl"
+            className="surface-card accent-hairline w-full max-w-3xl max-h-[80vh] flex flex-col overflow-hidden shadow-elevation-3 animate-scale-in"
           >
             <div className="p-4 border-b border-[#1e1e2e] flex items-center justify-between">
               <div>
@@ -846,7 +879,7 @@ function EditorWorkspace() {
 
                     <button
                       onClick={() => handleRollbackVersion(selectedVersion)}
-                      className="w-full bg-[#ef4444] text-[#050507] hover:opacity-90 transition-opacity py-2 rounded-lg font-bold text-xs shadow-md mt-auto"
+                      className="btn btn-danger w-full mt-auto"
                     >
                       Revert Workspace to this Snapshot
                     </button>

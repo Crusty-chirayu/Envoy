@@ -491,11 +491,7 @@ export default function DashboardPage() {
         
         <div className="flex items-center gap-6">
           {/* Cloud vs Demo Mode Indicator */}
-          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
-            isDemo 
-              ? 'text-orange-400 bg-orange-500/10 border-orange-500/20' 
-              : 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20'
-          }`}>
+          <div className={`chip !px-3 text-[11px] ${isDemo ? 'chip-warning' : 'chip-indigo'}`}>
             {isDemo ? (
               <>
                 <CloudOff size={13} />
@@ -516,7 +512,7 @@ export default function DashboardPage() {
             </div>
             <button 
               onClick={handleSignOut}
-              className="p-2 rounded-md hover:bg-[#16161f] text-[#9898b3] hover:text-[#f2f2f7] transition-colors"
+              className="btn btn-ghost"
               title="Sign Out"
               aria-label="Sign Out"
             >
@@ -526,14 +522,35 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      {/* Mobile section switcher — the sidebar is hidden below md,
+          so tabs must remain reachable on small screens */}
+      <div className="md:hidden sticky top-[64px] z-30 border-b border-[#1e1e2e] bg-[#050507]/92 backdrop-blur-md px-4 py-2.5">
+        <div className="segmented w-full justify-between" role="tablist" aria-label="Dashboard sections">
+          <button role="tab" aria-selected={activeTab === 'docs'} onClick={() => setActiveTab('docs')} className={`segmented-item flex-1 justify-center ${activeTab === 'docs' ? 'segmented-item-active' : ''}`}>
+            <FileText size={14} aria-hidden="true" />
+            <span>Documents</span>
+          </button>
+          <button role="tab" aria-selected={activeTab === 'profile'} onClick={() => setActiveTab('profile')} className={`segmented-item flex-1 justify-center ${activeTab === 'profile' ? 'segmented-item-active' : ''}`}>
+            <User size={14} aria-hidden="true" />
+            <span>Profile</span>
+          </button>
+          <button role="tab" aria-selected={activeTab === 'portfolio'} onClick={() => setActiveTab('portfolio')} className={`segmented-item flex-1 justify-center ${activeTab === 'portfolio' ? 'segmented-item-active' : ''}`}>
+            <Layout size={14} aria-hidden="true" />
+            <span>Portfolio</span>
+          </button>
+        </div>
+      </div>
+
       {/* Toast Notification */}
       {notification && (
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-6 right-6 z-50 p-4 rounded-md shadow-lg border bg-[#0c0c10] flex items-center gap-3 text-sm animate-fade-in border-[#252535]"
+          className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-lg shadow-elevation-3 border bg-[#0c0c10] flex items-center gap-3 text-sm animate-fade-in border-[#252535]"
         >
-          <CheckCircle size={16} className="text-green-400" />
+          {notification.type === 'success' && <CheckCircle size={16} className="text-emerald-400 shrink-0" aria-hidden="true" />}
+          {notification.type === 'error' && <AlertCircle size={16} className="text-[#ef4444] shrink-0" aria-hidden="true" />}
+          {notification.type === 'info' && <Cloud size={16} className="text-[#00d4ff] shrink-0" aria-hidden="true" />}
           <span>{notification.message}</span>
         </div>
       )}
@@ -543,14 +560,14 @@ export default function DashboardPage() {
         
         {/* Left Nav Menu */}
         <aside className="w-64 shrink-0 flex flex-col gap-2 hidden md:flex">
-          <div className="p-4 rounded-lg bg-[#0c0c10]/40 border border-[#1e1e2e] mb-4">
-            <div className="flex justify-between items-center text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">
+          <div className="surface-inset p-4 mb-4">
+            <div className="flex justify-between items-center text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2.5">
               <span>Profile Progress</span>
-              <span>{calculateProfileCompleteness()}%</span>
+              <span className="font-mono text-[#00d4ff]">{calculateProfileCompleteness()}%</span>
             </div>
-            <div className="w-full bg-[#16161f] rounded-full h-1.5 overflow-hidden">
+            <div className="w-full bg-[#050507] rounded-full h-1.5 overflow-hidden ring-1 ring-inset ring-[#252535]" role="progressbar" aria-valuenow={calculateProfileCompleteness()} aria-valuemin={0} aria-valuemax={100} aria-label="Profile completeness">
               <div 
-                className="bg-gradient-to-r from-[#6366f1] to-[#00d4ff] h-1.5 rounded-full transition-all duration-500" 
+                className="bg-gradient-to-r from-[#6366f1] to-[#00d4ff] h-1.5 rounded-full transition-all duration-700 ease-out" 
                 style={{ width: `${calculateProfileCompleteness()}%` }}
               />
             </div>
@@ -558,37 +575,28 @@ export default function DashboardPage() {
 
           <button
             onClick={() => setActiveTab('docs')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-md text-sm font-semibold transition-all ${
-              activeTab === 'docs' 
-                ? 'bg-[#16161f] text-[#00d4ff] border-l-2 border-[#00d4ff]' 
-                : 'text-[#9898b3] hover:text-[#f2f2f7] hover:bg-[#0c0c10]/40'
-            }`}
+            aria-current={activeTab === 'docs'}
+            className={`nav-item ${activeTab === 'docs' ? 'nav-item-active' : ''}`}
           >
-            <FileText size={18} />
+            <FileText size={17} aria-hidden="true" />
             <span>Documents Grid</span>
           </button>
 
           <button
             onClick={() => setActiveTab('profile')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-md text-sm font-semibold transition-all ${
-              activeTab === 'profile' 
-                ? 'bg-[#16161f] text-[#00d4ff] border-l-2 border-[#00d4ff]' 
-                : 'text-[#9898b3] hover:text-[#f2f2f7] hover:bg-[#0c0c10]/40'
-            }`}
+            aria-current={activeTab === 'profile'}
+            className={`nav-item ${activeTab === 'profile' ? 'nav-item-active' : ''}`}
           >
-            <User size={18} />
+            <User size={17} aria-hidden="true" />
             <span>Master Profile</span>
           </button>
 
           <button
             onClick={() => setActiveTab('portfolio')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-md text-sm font-semibold transition-all ${
-              activeTab === 'portfolio' 
-                ? 'bg-[#16161f] text-[#00d4ff] border-l-2 border-[#00d4ff]' 
-                : 'text-[#9898b3] hover:text-[#f2f2f7] hover:bg-[#0c0c10]/40'
-            }`}
+            aria-current={activeTab === 'portfolio'}
+            className={`nav-item ${activeTab === 'portfolio' ? 'nav-item-active' : ''}`}
           >
-            <Layout size={18} />
+            <Layout size={17} aria-hidden="true" />
             <span>Portfolio Setup</span>
           </button>
         </aside>
@@ -606,22 +614,24 @@ export default function DashboardPage() {
                 </div>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="flex items-center gap-2 bg-[#6366f1] text-[#050507] hover:opacity-90 transition-opacity px-4 py-2 rounded-md font-bold text-sm shadow-[0_0_20px_rgba(99,102,241,0.2)]"
+                  className="btn btn-primary btn-sm"
                 >
-                  <Plus size={16} />
+                  <Plus size={15} aria-hidden="true" />
                   <span>Create New</span>
                 </button>
               </div>
 
               {/* Documents Grid */}
               {documents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center p-12 bg-[#0c0c10]/40 border border-dashed border-[#252535] rounded-xl text-center">
-                  <FileText size={48} className="text-[#5c5c7a] mb-4" />
+                <div className="flex flex-col items-center justify-center p-12 surface-card border-dashed !border-[#252535] text-center">
+                  <div className="w-14 h-14 rounded-xl bg-[#111118] border border-[#252535] flex items-center justify-center text-[#5c5c7a] mb-4">
+                    <FileText size={26} aria-hidden="true" />
+                  </div>
                   <h3 className="text-lg font-semibold mb-2">No documents found</h3>
                   <p className="text-sm text-[#9898b3] max-w-sm mb-6">Create a resume or curriculum vitae to get started. All outputs automatically fetch data from your Canonical Profile.</p>
                   <button
                     onClick={() => setShowCreateModal(true)}
-                    className="flex items-center gap-2 bg-[#16161f] border border-[#252535] text-[#f2f2f7] px-4 py-2 rounded-md font-semibold text-sm hover:bg-[#1c1c28] transition-all"
+                    className="btn btn-secondary btn-sm"
                   >
                     Create a Document
                   </button>
@@ -629,19 +639,15 @@ export default function DashboardPage() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {documents.map(doc => (
-                    <div key={doc.id} className="bg-[#0c0c10]/60 border border-[#1e1e2e] rounded-xl p-5 hover:border-[#252535] transition-all group flex flex-col h-48 justify-between">
+                    <div key={doc.id} className="surface-card surface-card-hover accent-hairline p-5 group flex flex-col h-48 justify-between">
                       <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className={`text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded ${
-                            doc.type === 'resume' 
-                              ? 'bg-blue-500/10 text-blue-400' 
-                              : doc.type === 'cv' 
-                              ? 'bg-purple-500/10 text-purple-400'
-                              : 'bg-emerald-500/10 text-emerald-400'
+                        <div className="flex items-center justify-between mb-2.5">
+                          <span className={`chip !rounded-md !px-2 !py-0.5 text-[10px] font-extrabold uppercase tracking-widest ${
+                            doc.type === 'resume' ? 'chip-indigo' : doc.type === 'cv' ? 'chip-cyan' : 'chip-success'
                           }`}>
                             {doc.type}
                           </span>
-                          <span className="text-xs text-[#5c5c7a]">
+                          <span className="text-xs text-[#5c5c7a] font-mono">
                             {new Date(doc.updatedAt).toLocaleDateString()}
                           </span>
                         </div>
@@ -649,22 +655,22 @@ export default function DashboardPage() {
                         <p className="text-xs text-[#9898b3] mt-1 capitalize">Template: {doc.settings.template}</p>
                       </div>
 
-                      <div className="flex items-center justify-between border-t border-[#1e1e2e]/50 pt-4">
+                      <div className="flex items-center justify-between border-t border-[#1e1e2e]/60 pt-3.5">
                         <button
                           onClick={() => router.push(`/editor?id=${doc.id}`)}
-                          className="flex items-center gap-1.5 text-xs font-bold text-[#6366f1] hover:underline"
+                          className="flex items-center gap-1.5 text-xs font-bold text-[#6366f1] hover:text-[#00d4ff] transition-colors"
                         >
-                          <Edit size={14} />
+                          <Edit size={13} aria-hidden="true" />
                           <span>Open Editor</span>
                         </button>
 
                         <button
                           onClick={() => handleDeleteDocument(doc.id)}
-                          className="text-[#5c5c7a] hover:text-[#ef4444] transition-colors"
+                          className="p-1.5 rounded-md text-[#5c5c7a] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors"
                           title="Delete Document"
                           aria-label={`Delete document ${doc.title}`}
                         >
-                          <Trash2 size={15} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </div>
@@ -722,61 +728,51 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Sub-tabs horizontal bar */}
-              <div className="flex items-center gap-2 border-b border-[#1e1e2e] pb-px overflow-x-auto">
+              {/* Sub-tabs — segmented control */}
+              <div className="segmented w-full overflow-x-auto" role="tablist" aria-label="Profile sections">
                 <button
+                  role="tab"
+                  aria-selected={profileTab === 'identity'}
                   onClick={() => setProfileTab('identity')}
-                  className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
-                    profileTab === 'identity' 
-                      ? 'border-[#00d4ff] text-[#00d4ff]' 
-                      : 'border-transparent text-[#9898b3] hover:text-[#f2f2f7]'
-                  }`}
+                  className={`segmented-item ${profileTab === 'identity' ? 'segmented-item-active' : ''}`}
                 >
-                  <User size={14} />
+                  <User size={13} aria-hidden="true" />
                   <span>Identity</span>
                 </button>
                 <button
+                  role="tab"
+                  aria-selected={profileTab === 'experience'}
                   onClick={() => setProfileTab('experience')}
-                  className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
-                    profileTab === 'experience' 
-                      ? 'border-[#00d4ff] text-[#00d4ff]' 
-                      : 'border-transparent text-[#9898b3] hover:text-[#f2f2f7]'
-                  }`}
+                  className={`segmented-item ${profileTab === 'experience' ? 'segmented-item-active' : ''}`}
                 >
-                  <Briefcase size={14} />
+                  <Briefcase size={13} aria-hidden="true" />
                   <span>Experience ({profile.experience.length})</span>
                 </button>
                 <button
+                  role="tab"
+                  aria-selected={profileTab === 'education'}
                   onClick={() => setProfileTab('education')}
-                  className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
-                    profileTab === 'education' 
-                      ? 'border-[#00d4ff] text-[#00d4ff]' 
-                      : 'border-transparent text-[#9898b3] hover:text-[#f2f2f7]'
-                  }`}
+                  className={`segmented-item ${profileTab === 'education' ? 'segmented-item-active' : ''}`}
                 >
-                  <GraduationCap size={14} />
+                  <GraduationCap size={13} aria-hidden="true" />
                   <span>Education ({profile.education.length})</span>
                 </button>
                 <button
+                  role="tab"
+                  aria-selected={profileTab === 'skills'}
                   onClick={() => setProfileTab('skills')}
-                  className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
-                    profileTab === 'skills' 
-                      ? 'border-[#00d4ff] text-[#00d4ff]' 
-                      : 'border-transparent text-[#9898b3] hover:text-[#f2f2f7]'
-                  }`}
+                  className={`segmented-item ${profileTab === 'skills' ? 'segmented-item-active' : ''}`}
                 >
-                  <Code size={14} />
+                  <Code size={13} aria-hidden="true" />
                   <span>Skills ({profile.skills.length})</span>
                 </button>
                 <button
+                  role="tab"
+                  aria-selected={profileTab === 'projects'}
                   onClick={() => setProfileTab('projects')}
-                  className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
-                    profileTab === 'projects' 
-                      ? 'border-[#00d4ff] text-[#00d4ff]' 
-                      : 'border-transparent text-[#9898b3] hover:text-[#f2f2f7]'
-                  }`}
+                  className={`segmented-item ${profileTab === 'projects' ? 'segmented-item-active' : ''}`}
                 >
-                  <FolderGit size={14} />
+                  <FolderGit size={13} aria-hidden="true" />
                   <span>Projects ({profile.projects.length})</span>
                 </button>
               </div>
@@ -896,9 +892,9 @@ export default function DashboardPage() {
                       <span className="text-xs text-[#9898b3]">Document entries are ordered in reverse chronological sorting automatically.</span>
                       <button
                         onClick={addExperience}
-                        className="flex items-center gap-1 text-xs bg-[#16161f] border border-[#252535] text-[#f2f2f7] px-3 py-1.5 rounded-md hover:bg-[#1c1c28]"
+                        className="btn btn-secondary btn-sm"
                       >
-                        <Plus size={14} />
+                        <Plus size={13} aria-hidden="true" />
                         <span>Add Position</span>
                       </button>
                     </div>
@@ -994,9 +990,9 @@ export default function DashboardPage() {
                       <span className="text-xs text-[#9898b3]">Add university degree or credential entries.</span>
                       <button
                         onClick={addEducation}
-                        className="flex items-center gap-1 text-xs bg-[#16161f] border border-[#252535] text-[#f2f2f7] px-3 py-1.5 rounded-md hover:bg-[#1c1c28]"
+                        className="btn btn-secondary btn-sm"
                       >
-                        <Plus size={14} />
+                        <Plus size={13} aria-hidden="true" />
                         <span>Add Education</span>
                       </button>
                     </div>
@@ -1082,9 +1078,9 @@ export default function DashboardPage() {
                       <span className="text-xs text-[#9898b3]">Define structured groups of technical competencies.</span>
                       <button
                         onClick={addSkillGroup}
-                        className="flex items-center gap-1 text-xs bg-[#16161f] border border-[#252535] text-[#f2f2f7] px-3 py-1.5 rounded-md hover:bg-[#1c1c28]"
+                        className="btn btn-secondary btn-sm"
                       >
-                        <Plus size={14} />
+                        <Plus size={13} aria-hidden="true" />
                         <span>Add Category</span>
                       </button>
                     </div>
@@ -1138,9 +1134,9 @@ export default function DashboardPage() {
                       <span className="text-xs text-[#9898b3]">Detail projects you have built and showcase them.</span>
                       <button
                         onClick={addProject}
-                        className="flex items-center gap-1 text-xs bg-[#16161f] border border-[#252535] text-[#f2f2f7] px-3 py-1.5 rounded-md hover:bg-[#1c1c28]"
+                        className="btn btn-secondary btn-sm"
                       >
-                        <Plus size={14} />
+                        <Plus size={13} aria-hidden="true" />
                         <span>Add Project</span>
                       </button>
                     </div>
@@ -1219,19 +1215,31 @@ export default function DashboardPage() {
 
               <div className="bg-[#0c0c10]/40 border border-[#1e1e2e] rounded-xl p-6 space-y-6">
                 
-                {/* Live Link Block */}
-                <div className="p-4 rounded-md bg-[#111118]/60 border border-[#252535] flex items-center justify-between gap-3">
+                {/* Visibility status banner */}
+                <div className={`p-4 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                  portfolio.visibility === 'private'
+                    ? 'bg-[#111118]/60 border-[#252535]'
+                    : 'bg-emerald-500/[0.06] border-emerald-500/20'
+                }`}>
                   <div className="flex items-start gap-3">
-                    <AlertCircle size={18} className="text-[#00d4ff] shrink-0 mt-0.5" />
-                    <div className="text-xs text-[#9898b3]">
+                    {portfolio.visibility === 'private' ? (
+                      <AlertCircle size={17} className="text-[#9898b3] shrink-0 mt-0.5" aria-hidden="true" />
+                    ) : (
+                      <CheckCircle size={17} className="text-emerald-400 shrink-0 mt-0.5" aria-hidden="true" />
+                    )}
+                    <div className="text-xs text-[#9898b3] leading-relaxed">
                       {portfolio.visibility === 'private' ? (
                         <>
-                          <span className="font-bold text-[#f2f2f7]">Your portfolio is PRIVATE.</span>{' '}
-                          Only you can see it. Switch visibility to Public or Unlisted and save to publish.
+                          <span className={`chip chip-neutral !py-0.5 mr-2 align-middle`}>Private</span>
+                          <span className="font-semibold text-[#f2f2f7]">Only you can see this site.</span>{' '}
+                          Switch visibility to Public or Unlisted and save to publish.
                         </>
                       ) : (
                         <>
-                          <span className="font-bold text-[#f2f2f7]">Your portfolio is LIVE!</span> Any
+                          <span className={`chip chip-success !py-0.5 mr-2 align-middle`}>
+                            {portfolio.visibility === 'public' ? 'Public' : 'Unlisted'}
+                          </span>
+                          <span className="font-semibold text-[#f2f2f7]">Your portfolio is live.</span> Any
                           changes saved below are instantly published.
                         </>
                       )}
@@ -1241,7 +1249,7 @@ export default function DashboardPage() {
                     href={`/p/${portfolio.slug}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-xs text-[#00d4ff] hover:underline font-bold"
+                    className="text-xs text-[#00d4ff] hover:underline font-bold whitespace-nowrap"
                   >
                     View Published Site →
                   </a>
@@ -1355,7 +1363,7 @@ export default function DashboardPage() {
                       showNotification('Save failed', 'error')
                     }
                   }}
-                  className="bg-[#6366f1] text-[#050507] font-extrabold text-xs px-5 py-2.5 rounded-md hover:opacity-90 transition-opacity shadow-md shadow-[#6366f1]/20"
+                  className="btn btn-primary btn-sm"
                 >
                   {portfolio.visibility === 'private' ? 'Save Portfolio Settings' : 'Save & Publish Portfolio'}
                 </button>
@@ -1378,7 +1386,7 @@ export default function DashboardPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="create-doc-title"
-            className="bg-[#0c0c10]/95 border border-[#252535] w-full max-w-md rounded-xl p-6 shadow-2xl space-y-6"
+            className="surface-card accent-hairline w-full max-w-md p-6 space-y-6 animate-scale-in"
           >
             <div>
               <h3 id="create-doc-title" className="text-lg font-bold text-[#f2f2f7]">Create New Career Document</h3>
@@ -1433,13 +1441,13 @@ export default function DashboardPage() {
             <div className="flex items-center justify-end gap-3">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 border border-[#252535] rounded-md text-sm text-[#9898b3] hover:bg-[#16161f] transition-all font-semibold"
+                className="btn btn-secondary btn-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateDocument}
-                className="bg-[#6366f1] text-[#050507] hover:opacity-90 transition-opacity px-4 py-2 rounded-md font-bold text-sm"
+                className="btn btn-primary btn-sm"
               >
                 Create Document
               </button>

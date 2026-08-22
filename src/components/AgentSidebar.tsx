@@ -62,43 +62,33 @@ export function AgentSidebar({
     <aside className="w-[420px] bg-[#0c0c10] border-r border-[#1e1e2e] flex flex-col h-full shrink-0 relative z-20">
       
       {/* Pane Switcher Bar */}
-      <div className="flex items-center border-b border-[#1e1e2e] px-4 py-2 bg-[#050507]/40">
-        <button
-          onClick={() => setActivePane('chat')}
-          aria-pressed={activePane === 'chat'}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
-            activePane === 'chat' 
-              ? 'bg-[#16161f] text-[#00d4ff]' 
-              : 'text-[#9898b3] hover:text-[#f2f2f7]'
-          }`}
-        >
-          <BrainCircuit size={13} />
-          <span>AI Agent</span>
-        </button>
-        <button
-          onClick={() => setActivePane('job')}
-          aria-pressed={activePane === 'job'}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
-            activePane === 'job' 
-              ? 'bg-[#16161f] text-[#00d4ff]' 
-              : 'text-[#9898b3] hover:text-[#f2f2f7]'
-          }`}
-        >
-          <Target size={13} />
-          <span>Job Target</span>
-        </button>
-        <button
-          onClick={() => setActivePane('ats')}
-          aria-pressed={activePane === 'ats'}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
-            activePane === 'ats' 
-              ? 'bg-[#16161f] text-[#00d4ff]' 
-              : 'text-[#9898b3] hover:text-[#f2f2f7]'
-          }`}
-        >
-          <Award size={13} />
-          <span>ATS Check</span>
-        </button>
+      <div className="border-b border-[#1e1e2e] px-3 py-2 bg-[#050507]/40">
+        <div className="segmented w-full" role="group" aria-label="Agent panes">
+          <button
+            onClick={() => setActivePane('chat')}
+            aria-pressed={activePane === 'chat'}
+            className={`segmented-item flex-1 justify-center ${activePane === 'chat' ? 'segmented-item-active' : ''}`}
+          >
+            <BrainCircuit size={13} aria-hidden="true" />
+            <span>AI Agent</span>
+          </button>
+          <button
+            onClick={() => setActivePane('job')}
+            aria-pressed={activePane === 'job'}
+            className={`segmented-item flex-1 justify-center ${activePane === 'job' ? 'segmented-item-active' : ''}`}
+          >
+            <Target size={13} aria-hidden="true" />
+            <span>Job Target</span>
+          </button>
+          <button
+            onClick={() => setActivePane('ats')}
+            aria-pressed={activePane === 'ats'}
+            className={`segmented-item flex-1 justify-center ${activePane === 'ats' ? 'segmented-item-active' : ''}`}
+          >
+            <Award size={13} aria-hidden="true" />
+            <span>ATS Check</span>
+          </button>
+        </div>
       </div>
 
       {/* 1. CHAT CONSOLE PANE */}
@@ -108,8 +98,8 @@ export function AgentSidebar({
           <div className="flex-1 overflow-y-auto p-4 space-y-4" aria-live="polite" aria-label="AI conversation">
             {(!conversation || conversation.messages.length === 0) && (
               <div className="flex flex-col items-center justify-center text-center p-6 h-full space-y-4">
-                <div className="w-12 h-12 rounded-full bg-[#111118] border border-[#252535] flex items-center justify-center text-[#00d4ff]">
-                  <Sparkles size={20} className="animate-pulse" />
+                <div className="w-12 h-12 rounded-xl bg-[#111118] border border-[#252535] flex items-center justify-center text-[#00d4ff] shadow-[0_0_28px_-10px_rgba(0,212,255,0.45)]">
+                  <Sparkles size={20} aria-hidden="true" />
                 </div>
                 <h4 className="text-sm font-bold text-[#f2f2f7]">Envoy Career Agent</h4>
                 <p className="text-xs text-[#9898b3] max-w-[280px]">Ask the agent to rewrite sections, align bullets to outcomes, or analyze keyword signals.</p>
@@ -119,7 +109,7 @@ export function AgentSidebar({
                     <button
                       key={idx}
                       onClick={() => setInputText(p.text)}
-                      className="text-xs p-2.5 rounded-md bg-[#111118]/80 border border-[#252535] hover:border-[#6366f1]/40 text-[#9898b3] hover:text-[#f2f2f7] transition-all text-left"
+                      className="text-xs p-2.5 rounded-lg surface-inset hover:border-[#6366f1]/50 text-left text-[#9898b3] hover:text-[#f2f2f7] transition-colors"
                     >
                       {p.label}
                     </button>
@@ -151,9 +141,9 @@ export function AgentSidebar({
                       {isUser ? <User size={12} /> : <Cpu size={12} />}
                     </div>
 
-                    <div className={`p-3 rounded-lg leading-relaxed whitespace-pre-line text-justify ${
+                    <div className={`p-3 rounded-lg leading-relaxed whitespace-pre-line ${
                       isUser
-                        ? 'bg-gradient-to-r from-[#6366f1] to-[#6366f1]/90 text-[#050507] font-semibold'
+                        ? 'bg-indigo-500/[0.14] border border-indigo-500/30 text-[#dcdcf5]'
                         : 'bg-[#111118]/80 border border-[#1e1e2e] text-[#f2f2f7]'
                     }`}>
                       {proposalMatch ? proposalMatch.preText : msg.content}
@@ -162,11 +152,11 @@ export function AgentSidebar({
 
                   {/* Render Diff Review card if proposal matches */}
                   {proposalMatch && (
-                    <div className="ml-9 mr-auto max-w-[85%] bg-[#111118]/90 border border-[#252535] rounded-lg p-4 space-y-4 relative z-10 shadow-lg">
-                      <div className="flex items-center justify-between border-b border-[#1e1e2e] pb-2">
-                         <span className="font-extrabold uppercase text-[10px] text-[#00d4ff] tracking-widest flex items-center gap-1.5">
-                           <Sparkles size={11} />
-                           <span>Direct Proposal: {proposalMatch.proposal.sectionType} · {proposalMatch.proposal.field}</span>
+                    <div className="ml-9 mr-auto max-w-[85%] surface-card !bg-[#111118]/90 rounded-lg p-4 space-y-4 relative z-10 shadow-elevation-2 animate-fade-in">
+                      <div className="flex items-center justify-between border-b border-[#1e1e2e] pb-2.5">
+                         <span className="chip chip-cyan !py-0.5 !px-2 !text-[9px] uppercase tracking-widest">
+                           <Sparkles size={10} aria-hidden="true" />
+                           <span>{proposalMatch.proposal.sectionType} · {proposalMatch.proposal.field}</span>
                          </span>
                       </div>
                       
@@ -211,9 +201,9 @@ export function AgentSidebar({
                           <>
                             <button
                               onClick={() => setEditingProposalId(null)}
-                              className="flex items-center gap-1.5 text-[9px] font-bold border border-[#252535] px-2.5 py-1.5 rounded hover:bg-[#16161f] text-[#9898b3] hover:text-[#f2f2f7]"
+                              className="btn btn-secondary btn-sm !px-2.5 !py-1 !text-[10px]"
                             >
-                              <X size={11} />
+                              <X size={11} aria-hidden="true" />
                               <span>Cancel</span>
                             </button>
                             <button
@@ -227,9 +217,9 @@ export function AgentSidebar({
                                 })
                                 setEditingProposalId(null)
                               }}
-                              className="flex items-center gap-1.5 text-[9px] font-bold bg-[#6366f1] text-[#050507] px-2.5 py-1.5 rounded hover:opacity-95"
+                              className="btn btn-success btn-sm !px-2.5 !py-1 !text-[10px]"
                             >
-                              <Check size={11} />
+                              <Check size={11} aria-hidden="true" />
                               <span>Apply Edit</span>
                             </button>
                           </>
@@ -244,16 +234,16 @@ export function AgentSidebar({
                                     : proposalMatch.proposal.newValue
                                 )
                               }}
-                              className="flex items-center gap-1 text-[9px] font-bold border border-[#252535] text-[#9898b3] hover:text-[#f2f2f7] px-2.5 py-1.5 rounded hover:bg-[#16161f]"
+                              className="btn btn-secondary btn-sm !px-2.5 !py-1 !text-[10px]"
                             >
-                              <Edit3 size={11} />
+                              <Edit3 size={11} aria-hidden="true" />
                               <span>Edit suggestion</span>
                             </button>
                             <button
                               onClick={() => onAcceptProposal(proposalMatch.proposal)}
-                              className="flex items-center gap-1 text-[9px] font-bold bg-emerald-500 text-[#050507] px-2.5 py-1.5 rounded hover:opacity-95 shadow-md"
+                              className="btn btn-success btn-sm !px-2.5 !py-1 !text-[10px]"
                             >
-                              <Check size={11} />
+                              <Check size={11} aria-hidden="true" />
                               <span>Accept suggestion</span>
                             </button>
                           </>
@@ -274,9 +264,9 @@ export function AgentSidebar({
                 <div className="p-3 rounded-lg leading-relaxed bg-[#111118]/80 border border-[#1e1e2e] text-[#f2f2f7]">
                   {isThinking && !streamText ? (
                     <div className="flex gap-1 items-center">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#00d4ff] animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#00d4ff] animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#00d4ff] animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#00d4ff] animate-thinking-dots" style={{ animationDelay: '0ms' }} aria-hidden="true" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#00d4ff] animate-thinking-dots" style={{ animationDelay: '200ms' }} aria-hidden="true" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#00d4ff] animate-thinking-dots" style={{ animationDelay: '400ms' }} aria-hidden="true" />
                       <span className="text-[10px] text-[#5c5c7a] ml-1.5 uppercase font-bold tracking-wider">Analyzing Context...</span>
                     </div>
                   ) : (
@@ -329,8 +319,10 @@ export function AgentSidebar({
             onClick={() => {
               onUpdateJobTarget(jobInput)
             }}
-            className="w-full flex items-center justify-center gap-2 bg-[#6366f1] text-[#050507] font-bold text-xs py-2 rounded-md hover:opacity-95"
+            disabled={!jobInput.trim()}
+            className="btn btn-primary w-full !py-2 !text-xs"
           >
+            <Target size={13} aria-hidden="true" />
             <span>Update Target Job</span>
           </button>
         </div>
@@ -356,30 +348,54 @@ export function AgentSidebar({
 
           {atsReport ? (
             <div className="space-y-5">
-              {/* Overall Score */}
-              <div className="p-4 bg-[#111118]/80 border border-[#252535] rounded-lg text-center flex flex-col items-center">
-                <span className="text-3xl font-black text-[#00d4ff]">{atsReport.overallScore}/100</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#9898b3] mt-1.5">ATS Match Index</span>
+              {/* Overall Score — ring gauge presenting the deterministic score */}
+              <div className="surface-inset p-5 flex flex-col items-center">
+                <div className="relative w-28 h-28" role="img" aria-label={`Overall ATS match index ${atsReport.overallScore} out of 100`}>
+                  <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="envoy-ats-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#6366f1" />
+                        <stop offset="100%" stopColor="#00d4ff" />
+                      </linearGradient>
+                    </defs>
+                    <circle cx="40" cy="40" r="34" fill="none" stroke="#1e1e2e" strokeWidth="7" />
+                    <circle
+                      cx="40" cy="40" r="34" fill="none"
+                      stroke="url(#envoy-ats-ring)" strokeWidth="7" strokeLinecap="round"
+                      strokeDasharray={2 * Math.PI * 34}
+                      strokeDashoffset={2 * Math.PI * 34 * (1 - Math.min(100, Math.max(0, atsReport.overallScore)) / 100)}
+                      className="transition-all duration-700 ease-out"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-2xl font-black text-[#f2f2f7] font-mono tabular-nums">{atsReport.overallScore}</span>
+                    <span className="text-[9px] text-[#5c5c7a] font-bold uppercase tracking-widest">/ 100</span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#9898b3] mt-3">ATS Match Index</span>
               </div>
 
               {/* Subscores Grid */}
               <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="bg-[#111118]/40 border border-[#1e1e2e] p-2.5 rounded text-center">
-                  <div className="text-sm font-bold text-gray-200">{atsReport.structureScore}%</div>
-                  <div className="text-[9px] text-[#5c5c7a] uppercase tracking-wider">Structure</div>
-                </div>
-                <div className="bg-[#111118]/40 border border-[#1e1e2e] p-2.5 rounded text-center">
-                  <div className="text-sm font-bold text-gray-200">{atsReport.keywordScore}%</div>
-                  <div className="text-[9px] text-[#5c5c7a] uppercase tracking-wider">Keywords</div>
-                </div>
-                <div className="bg-[#111118]/40 border border-[#1e1e2e] p-2.5 rounded text-center">
-                  <div className="text-sm font-bold text-gray-200">{atsReport.contentScore}%</div>
-                  <div className="text-[9px] text-[#5c5c7a] uppercase tracking-wider">Content</div>
-                </div>
-                <div className="bg-[#111118]/40 border border-[#1e1e2e] p-2.5 rounded text-center">
-                  <div className="text-sm font-bold text-gray-200">{atsReport.readabilityScore}%</div>
-                  <div className="text-[9px] text-[#5c5c7a] uppercase tracking-wider">Readability</div>
-                </div>
+                {([
+                  ['Structure', atsReport.structureScore],
+                  ['Keywords', atsReport.keywordScore],
+                  ['Content', atsReport.contentScore],
+                  ['Readability', atsReport.readabilityScore],
+                ] as const).map(([label, value]) => (
+                  <div key={label} className="surface-inset p-3">
+                    <div className="flex items-baseline justify-between mb-1.5">
+                      <span className="text-sm font-bold text-[#f2f2f7] font-mono tabular-nums">{value}%</span>
+                      <span className="text-[9px] text-[#5c5c7a] uppercase tracking-wider">{label}</span>
+                    </div>
+                    <div className="h-1 rounded-full bg-[#050507] overflow-hidden ring-1 ring-inset ring-[#1e1e2e]" role="progressbar" aria-valuenow={value} aria-valuemin={0} aria-valuemax={100} aria-label={`${label} score`}>
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-[#6366f1] to-[#00d4ff] transition-all duration-700 ease-out"
+                        style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
 
               {/* Issues List */}
@@ -393,10 +409,10 @@ export function AgentSidebar({
                       <div key={iss.id} className="p-2.5 rounded bg-[#111118]/80 border border-[#1e1e2e] text-xs">
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-bold text-gray-300">{iss.title}</span>
-                          <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
+                          <span className={`chip !rounded-md !px-1.5 !py-0.5 !text-[8px] font-extrabold uppercase tracking-wider shrink-0 ${
                             iss.severity === 'critical' || iss.severity === 'high'
-                              ? 'bg-[#ef4444]/10 text-[#ef4444]'
-                              : 'bg-amber-500/10 text-amber-500'
+                              ? 'chip-danger'
+                              : 'chip-warning'
                           }`}>{iss.severity}</span>
                         </div>
                         <p className="text-[11px] text-[#9898b3]">{iss.description}</p>
@@ -407,12 +423,14 @@ export function AgentSidebar({
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-8 bg-[#111118]/40 border border-dashed border-[#252535] rounded-xl text-center">
-              <Sparkles size={28} className="text-[#5c5c7a] mb-2 animate-pulse" />
-              <p className="text-xs text-[#9898b3] mb-4">Provide a target job post and run the scan to get automated ATS scoring feedback.</p>
+            <div className="flex flex-col items-center justify-center p-8 surface-card border-dashed !border-[#252535] text-center">
+              <div className="w-12 h-12 rounded-xl bg-[#111118] border border-[#252535] flex items-center justify-center text-[#5c5c7a] mb-3">
+                <Award size={22} aria-hidden="true" />
+              </div>
+              <p className="text-xs text-[#9898b3] mb-4 max-w-[240px]">Provide a target job post and run the scan to get automated ATS scoring feedback.</p>
               <button
                 onClick={onRunATSAnalysis}
-                className="bg-[#16161f] border border-[#252535] text-[#f2f2f7] font-semibold text-xs px-3.5 py-1.5 rounded hover:bg-[#1c1c28]"
+                className="btn btn-secondary btn-sm"
               >
                 Scan Resume
               </button>

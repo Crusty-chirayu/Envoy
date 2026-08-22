@@ -3,9 +3,9 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Logo } from '@/components/Logo'
+import { AuthShell } from '@/components/AuthShell'
 import { authService } from '@/lib/auth'
-import { Mail, Lock, User, ArrowRight, ShieldAlert, CheckCircle } from 'lucide-react'
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Loader } from 'lucide-react'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -15,6 +15,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -47,104 +48,102 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050507] text-[#f2f2f7] flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Background Glows */}
-      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-gradient-radial from-[rgba(99,102,241,0.08)] to-transparent blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-gradient-radial from-[rgba(0,212,255,0.08)] to-transparent blur-3xl pointer-events-none" />
-
-      <div className="w-full max-w-md bg-[#0c0c10]/60 backdrop-blur-md border border-[#1e1e2e] rounded-xl p-8 shadow-2xl relative z-10 hover:border-[#252535] transition-all duration-300">
-        <div className="flex flex-col items-center mb-8">
-          <Logo iconSize={42} showText={true} textSize="lg" className="mb-2" />
-        </div>
-
-        <h2 className="text-xl font-bold text-center mb-6">Create Your Account</h2>
-
-        {error && (
-          <div role="alert" className="mb-6 p-4 rounded-md bg-[#ef4444]/10 border border-[#ef4444]/20 text-sm text-[#ef4444] flex items-start gap-3">
-            <ShieldAlert size={18} className="shrink-0 mt-0.5" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {success && (
-          <div role="status" className="mb-6 p-4 rounded-md bg-[#10b981]/10 border border-[#10b981]/20 text-sm text-[#10b981] flex items-start gap-3">
-            <CheckCircle size={18} className="shrink-0 mt-0.5" />
-            <span>{success}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label htmlFor="signup-name" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">
-              Full Name
-            </label>
-            <div className="relative">
-              <User className="absolute left-3 top-3 h-5 w-5 text-[#5c5c7a]" />
-              <input
-                id="signup-name"
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="John Doe"
-                className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2.5 pl-10 pr-4 text-sm text-[#f2f2f7] placeholder-[#5c5c7a] focus:outline-none focus:border-[#6366f1] transition-colors"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="signup-email" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">
-              Email Address
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-5 w-5 text-[#5c5c7a]" />
-              <input
-                id="signup-email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2.5 pl-10 pr-4 text-sm text-[#f2f2f7] placeholder-[#5c5c7a] focus:outline-none focus:border-[#6366f1] transition-colors"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="signup-password" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">
-              Password (min 8 chars)
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 h-5 w-5 text-[#5c5c7a]" />
-              <input
-                id="signup-password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2.5 pl-10 pr-4 text-sm text-[#f2f2f7] placeholder-[#5c5c7a] focus:outline-none focus:border-[#6366f1] transition-colors"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#6366f1] to-[#00d4ff] text-[#050507] py-2.5 rounded-md font-bold text-sm hover:opacity-95 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mt-2"
-          >
-            {loading ? 'Creating Account...' : 'Get Started'}
-            {!loading && <ArrowRight size={16} />}
-          </button>
-        </form>
-
-        <div className="mt-8 text-center text-sm text-[#9898b3]">
+    <AuthShell
+      title="Create Your Account"
+      subtitle="One canonical profile. Every document and portfolio derives from it."
+      error={error}
+      success={success}
+      footer={
+        <>
           Already have an account?{' '}
-          <Link href="/login" className="text-[#6366f1] hover:underline font-semibold">
+          <Link href="/login" className="text-[#6366f1] hover:text-[#00d4ff] hover:underline font-semibold transition-colors">
             Sign In
           </Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div>
+          <label htmlFor="signup-name" className="field-label">
+            Full Name
+          </label>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#5c5c7a] pointer-events-none" aria-hidden="true" />
+            <input
+              id="signup-name"
+              type="text"
+              required
+              autoComplete="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="John Doe"
+              className="w-full py-2.5 pl-10 pr-4 text-sm"
+            />
+          </div>
         </div>
-      </div>
-    </div>
+
+        <div>
+          <label htmlFor="signup-email" className="field-label">
+            Email Address
+          </label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#5c5c7a] pointer-events-none" aria-hidden="true" />
+            <input
+              id="signup-email"
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="w-full py-2.5 pl-10 pr-4 text-sm"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="signup-password" className="field-label">
+            Password (min 8 chars)
+          </label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#5c5c7a] pointer-events-none" aria-hidden="true" />
+            <input
+              id="signup-password"
+              type={showPassword ? 'text' : 'password'}
+              required
+              minLength={8}
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full py-2.5 pl-10 pr-11 text-sm"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(v => !v)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded text-[#5c5c7a] hover:text-[#f2f2f7] transition-colors"
+            >
+              {showPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" disabled={loading} className="btn btn-primary w-full mt-1">
+          {loading ? (
+            <>
+              <Loader size={15} className="animate-spin" aria-hidden="true" />
+              <span>Creating Account...</span>
+            </>
+          ) : (
+            <>
+              <span>Get Started</span>
+              <ArrowRight size={16} className="arrow-shift" aria-hidden="true" />
+            </>
+          )}
+        </button>
+      </form>
+    </AuthShell>
   )
 }

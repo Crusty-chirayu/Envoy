@@ -62,40 +62,42 @@ export function A4Canvas({
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleZoomOut}
-            className="p-1.5 rounded bg-[#16161f] border border-[#252535] hover:bg-[#1c1c28] text-[#9898b3] hover:text-[#f2f2f7]"
-            title="Zoom Out"
-            aria-label="Zoom Out"
-          >
-            <ZoomOut size={14} />
-          </button>
-          <span className="text-xs text-[#9898b3] font-mono select-none w-10 text-center">
-            {Math.round(zoom * 100)}%
-          </span>
-          <button
-            onClick={handleZoomIn}
-            className="p-1.5 rounded bg-[#16161f] border border-[#252535] hover:bg-[#1c1c28] text-[#9898b3] hover:text-[#f2f2f7]"
-            title="Zoom In"
-            aria-label="Zoom In"
-          >
-            <ZoomIn size={14} />
-          </button>
+          <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-[#050507]/60 border border-[#1e1e2e]" role="group" aria-label="Zoom controls">
+            <button
+              onClick={handleZoomOut}
+              className="p-1.5 rounded-md text-[#9898b3] hover:text-[#f2f2f7] hover:bg-[#16161f] transition-colors"
+              title="Zoom Out"
+              aria-label="Zoom Out"
+            >
+              <ZoomOut size={13} aria-hidden="true" />
+            </button>
+            <span className="text-xs text-[#9898b3] font-mono tabular-nums select-none w-11 text-center" aria-live="polite">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              onClick={handleZoomIn}
+              className="p-1.5 rounded-md text-[#9898b3] hover:text-[#f2f2f7] hover:bg-[#16161f] transition-colors"
+              title="Zoom In"
+              aria-label="Zoom In"
+            >
+              <ZoomIn size={13} aria-hidden="true" />
+            </button>
+          </div>
 
-          <div className="h-4 w-px bg-[#252535]" />
-
-          <button
-            onClick={handleFitPage}
-            className="px-2 py-1 rounded bg-[#16161f] border border-[#252535] hover:bg-[#1c1c28] text-xs text-[#9898b3] hover:text-[#f2f2f7]"
-          >
-            Fit Page
-          </button>
-          <button
-            onClick={handleFitWidth}
-            className="px-2 py-1 rounded bg-[#16161f] border border-[#252535] hover:bg-[#1c1c28] text-xs text-[#9898b3] hover:text-[#f2f2f7]"
-          >
-            Fit Width
-          </button>
+          <div className="hidden sm:flex items-center gap-2">
+            <button
+              onClick={handleFitPage}
+              className="btn btn-secondary !px-2.5 !py-1 !text-[11px]"
+            >
+              Fit Page
+            </button>
+            <button
+              onClick={handleFitWidth}
+              className="btn btn-secondary !px-2.5 !py-1 !text-[11px]"
+            >
+              Fit Width
+            </button>
+          </div>
         </div>
       </div>
 
