@@ -420,3 +420,19 @@ This changelog tracks the implementation status of major milestones in the produ
 - `npm run lint` — PASS
 - `npm run build` — PASS
 
+### S1 + S9 + PF4 — Public portfolio data boundary, server rendering, metadata (CRITICAL/MEDIUM/LOW) — FIXED
+- **S1 (CRITICAL, cloud-mode)** — The public page read `portfolio_sites` with the anon client then tried to read the owner profile with the same client; under RLS (profiles owner-only) the profile was always null, so every public portfolio 404'd. Fixed with a true data boundary:
+  - `src/lib/portfolio/public-projection.ts` — pure builders producing the ONLY shape that crosses the public boundary: the fields the themes render (identity name/headline/email/phone/location/linkedin/github/website + summary/experience/education/skills/projects). Certifications, awards, publications, volunteering, languages, interests, custom sections, internal ids, userId, and timestamps never cross. Site projection strips owner ids and `customDomain`.
+  - `src/lib/supabase/server-public.ts` + `src/lib/portfolio/public-data.ts` — server-side assembly using a service-role client that never reaches the browser. Enforces the visibility gate in code (service role bypasses RLS) and returns only the projection. Missing `SUPABASE_SERVICE_ROLE_KEY` fails CLOSED (404 + log), never weaker RLS.
+  - `/p/[slug]` is now a Server Component (was `'use client'`): cloud mode renders server-assembled projections via `PublicPortfolioViews`; demo mode renders client-side from localStorage through `PublicPortfolioClient`, applying the same visibility gate + projection. RLS is NOT weakened; profiles remain owner-only and the canonical profile row never leaves the server.
+- **S9 (MEDIUM)** — `generateMetadata` added: real title/description from `seoTitle`/`seoDescription`/headline, OpenGraph tags, and `robots` directives (public indexable, unlisted `noindex`/`noarchive`). Previously `seo_title`/`seo_description`/`social_image_url` were dead schema with no rendered metadata.
+- **PF4 (LOW)** — converting to a server component eliminates the client-side blank-spinner fetch on every visit in cloud mode and enables CDN/ISR caching; demo mode retains the client loader.
+- Added `src/lib/portfolio/public-projection.test.ts` — 8 tests pinning the boundary: only renderable identity fields, no internal ids/userId/timestamps, no private sections, renderable sections retained, coercion of missing contact fields, array tolerance, site projection strips owner ids/customDomain, seo fields preserved.
+
+### Validation (S1 + S9 + PF4):
+- `npx vitest run` — PASS (81/81)
+- `npm run typecheck` — PASS
+- `npm run lint` — PASS
+- `npm run build` — PASS (13 pages; `/p/[slug]` now dynamic server-rendered)
+- External verification deferred: cloud-mode public rendering requires a real Supabase project with `SUPABASE_SERVICE_ROLE_KEY` (credential gate).
+
