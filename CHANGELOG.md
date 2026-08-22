@@ -399,3 +399,24 @@ This changelog tracks the implementation status of major milestones in the produ
 - `npm run lint` — PASS
 - `npm run build` — PASS
 
+### S4 — SSE chunk-boundary parsing (HIGH) — FIXED
+- OpenAI, Anthropic, and OpenRouter decoded each network chunk independently and `split('\n')` per chunk, silently dropping any SSE event split across a TCP packet boundary (intermittent garbled/truncated AI responses under real latency). Only Gemini buffered lines.
+- Created `src/lib/ai/sse.ts` with `createSSEParser`: a byte-safe incremental parser (TextDecoder stream mode) that reassembles lines across chunk boundaries, handles multi-byte UTF-8 characters split mid-sequence, normalizes CRLF, and flushes a trailing line without a final newline.
+- Added `consumeSSEStream`: the single SSE body consumer now used by ALL FOUR providers. It delivers complete `data:` payloads, treats the OpenAI-family `[DONE]` sentinel as a control frame (terminates consumption, cancels the upstream connection, never delivered as content), ignores `event:`/`id:`/comment/blank lines, and flushes a final unterminated event. Provider stream handlers now only parse complete JSON payloads.
+- Gemini's ad-hoc buffer was replaced with the same shared parser for consistency.
+
+### S5 — No timeout, abort, or retry on AI provider calls (HIGH) — FIXED
+- Every provider `fetch` (8 call sites across OpenAI, Anthropic, Gemini, OpenRouter — both `complete` and `stream`) is now wrapped in `fetchWithResilience`:
+  - Connection-phase timeout (default 60s, configurable via `AI_TIMEOUT_MS` env) that aborts hung connections; the timer covers only until response HEADERS arrive, so long-lived streaming bodies are never cut off mid-flight.
+  - One bounded retry with jittered linear backoff for transient failures ONLY (network errors, 429, 5xx). Non-retryable client errors (401/400/etc.) fail fast. Retry happens strictly BEFORE any response body is consumed, so streams can never be rewound or duplicated; failed attempt bodies are drained before backoff.
+- Provider errors surface as typed Error instances with useful messages; stream errors propagate through `controller.error` instead of hanging.
+
+### Tests (S4/S5):
+- `src/lib/ai/sse.test.ts` — 18 tests: chunk-boundary reassembly (split events, byte-by-byte fragments, multi-byte UTF-8 splits, CRLF, streaming emission, trailing flush), `consumeSSEStream` behavior (multiple events per chunk, split reassembly, `[DONE]` stop + no post-DONE delivery, non-data line filtering, payload space stripping, unterminated final event), and `fetchWithResilience` (500→retry→success, 429→network-error→last error thrown, no retry on 401, clear timeout error).
+
+### Validation (S4 + S5):
+- `npx vitest run` — PASS (73/73)
+- `npm run typecheck` — PASS
+- `npm run lint` — PASS
+- `npm run build` — PASS
+

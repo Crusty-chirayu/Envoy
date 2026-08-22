@@ -9,6 +9,7 @@
  */
 
 import type { AIProviderName } from '@/types'
+import { consumeSSEStream, fetchWithResilience } from './sse'
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant'
@@ -78,7 +79,8 @@ class OpenAIProvider implements AIProvider {
   }
 
   async complete(messages: ChatMessage[], options: AIRequestOptions = {}): Promise<string> {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // S5 (audit): connection-phase timeout + bounded retry on transient failures.
+    const response = await fetchWithResilience('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify({
@@ -101,7 +103,9 @@ class OpenAIProvider implements AIProvider {
   }
 
   async stream(messages: ChatMessage[], options: AIRequestOptions = {}): Promise<ReadableStream<string>> {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // S5 (audit): timeout + retry; retry only happens before the body is
+    // consumed, so a stream can never be rewound or duplicated.
+    const response = await fetchWithResilience('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify({
@@ -122,30 +126,16 @@ class OpenAIProvider implements AIProvider {
       throw new Error('OpenAI response has no body')
     }
 
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-
+    // S4 (audit): byte-safe SSE parsing — events split across network chunk
+    // boundaries are reassembled instead of being silently dropped.
+    const body = response.body
     return new ReadableStream<string>({
-      async pull(controller) {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) {
-            controller.close()
-            return
-          }
-
-          const chunk = decoder.decode(value, { stream: true })
-          const lines = chunk.split('\n').filter(line => line.trim() !== '')
-
-          for (const line of lines) {
-            if (line === 'data: [DONE]') {
-              controller.close()
-              return
-            }
-            if (!line.startsWith('data: ')) continue
-
+      async start(controller) {
+        try {
+          // [DONE] is handled centrally by consumeSSEStream.
+          await consumeSSEStream(body, payload => {
             try {
-              const json = JSON.parse(line.slice(6)) as {
+              const json = JSON.parse(payload) as {
                 choices: Array<{ delta: { content?: string } }>
               }
               const content = json.choices[0]?.delta?.content
@@ -155,7 +145,10 @@ class OpenAIProvider implements AIProvider {
             } catch {
               // Skip malformed chunks
             }
-          }
+          })
+          controller.close()
+        } catch (err) {
+          controller.error(err)
         }
       },
     })
@@ -212,7 +205,8 @@ class AnthropicProvider implements AIProvider {
     const systemMessages = messages.filter(m => m.role === 'system')
     const chatMessages = messages.filter(m => m.role !== 'system')
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // S5 (audit): connection-phase timeout + bounded retry on transient failures.
+    const response = await fetchWithResilience('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify({
@@ -239,7 +233,8 @@ class AnthropicProvider implements AIProvider {
     const systemMessages = messages.filter(m => m.role === 'system')
     const chatMessages = messages.filter(m => m.role !== 'system')
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // S5 (audit): timeout + retry before any body consumption.
+    const response = await fetchWithResilience('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify({
@@ -258,22 +253,14 @@ class AnthropicProvider implements AIProvider {
 
     if (!response.body) throw new Error('Anthropic response has no body')
 
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-
+    // S4 (audit): byte-safe SSE parsing shared across all providers.
+    const body = response.body
     return new ReadableStream<string>({
-      async pull(controller) {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) { controller.close(); return }
-
-          const chunk = decoder.decode(value, { stream: true })
-          const lines = chunk.split('\n')
-
-          for (const line of lines) {
-            if (!line.startsWith('data: ')) continue
+      async start(controller) {
+        try {
+          await consumeSSEStream(body, payload => {
             try {
-              const json = JSON.parse(line.slice(6)) as {
+              const json = JSON.parse(payload) as {
                 type: string
                 delta?: { type: string; text: string }
               }
@@ -281,9 +268,12 @@ class AnthropicProvider implements AIProvider {
                 controller.enqueue(json.delta.text)
               }
             } catch {
-              // Skip
+              // Skip malformed events
             }
-          }
+          })
+          controller.close()
+        } catch (err) {
+          controller.error(err)
         }
       },
     })
@@ -332,7 +322,8 @@ class OpenRouterProvider implements AIProvider {
   }
 
   async complete(messages: ChatMessage[], options: AIRequestOptions = {}): Promise<string> {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    // S5 (audit): connection-phase timeout + bounded retry on transient failures.
+    const response = await fetchWithResilience('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify({
@@ -355,7 +346,8 @@ class OpenRouterProvider implements AIProvider {
   }
 
   async stream(messages: ChatMessage[], options: AIRequestOptions = {}): Promise<ReadableStream<string>> {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    // S5 (audit): timeout + retry before any body consumption.
+    const response = await fetchWithResilience('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify({
@@ -374,28 +366,25 @@ class OpenRouterProvider implements AIProvider {
 
     if (!response.body) throw new Error('OpenRouter response has no body')
 
-    // OpenRouter uses the same SSE format as OpenAI
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-
+    // OpenRouter uses the same SSE format as OpenAI; S4 (audit): byte-safe
+    // chunk-boundary reassembly shared across all providers.
+    const body = response.body
     return new ReadableStream<string>({
-      async pull(controller) {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) { controller.close(); return }
-
-          const chunk = decoder.decode(value, { stream: true })
-          for (const line of chunk.split('\n')) {
-            if (line === 'data: [DONE]') { controller.close(); return }
-            if (!line.startsWith('data: ')) continue
+      async start(controller) {
+        try {
+          // [DONE] is handled centrally by consumeSSEStream.
+          await consumeSSEStream(body, payload => {
             try {
-              const json = JSON.parse(line.slice(6)) as {
+              const json = JSON.parse(payload) as {
                 choices: Array<{ delta: { content?: string } }>
               }
               const content = json.choices[0]?.delta?.content
               if (content) controller.enqueue(content)
             } catch { /* skip */ }
-          }
+          })
+          controller.close()
+        } catch (err) {
+          controller.error(err)
         }
       },
     })
@@ -460,7 +449,8 @@ class GeminiProvider implements AIProvider {
     const apiKey = this.getApiKey()
     const { contents, systemInstruction } = this.mapMessages(messages)
 
-    const response = await fetch(
+    // S5 (audit): connection-phase timeout + bounded retry on transient failures.
+    const response = await fetchWithResilience(
       `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
@@ -498,7 +488,8 @@ class GeminiProvider implements AIProvider {
     const apiKey = this.getApiKey()
     const { contents, systemInstruction } = this.mapMessages(messages)
 
-    const response = await fetch(
+    // S5 (audit): timeout + retry before any body consumption.
+    const response = await fetchWithResilience(
       `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:streamGenerateContent?alt=sse&key=${apiKey}`,
       {
         method: 'POST',
@@ -525,29 +516,15 @@ class GeminiProvider implements AIProvider {
       throw new Error('Gemini response has no body')
     }
 
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-
+    // S4 (audit): replaced the ad-hoc buffer with the shared byte-safe SSE
+    // parser used by every provider (also handles CRLF and multi-byte splits).
+    const body = response.body
     return new ReadableStream<string>({
-      async pull(controller) {
-        let buffer = ''
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) {
-            controller.close()
-            return
-          }
-
-          buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split('\n')
-          buffer = lines.pop() || ''
-
-          for (const line of lines) {
-            const trimmed = line.trim()
-            if (!trimmed || !trimmed.startsWith('data: ')) continue
-
+      async start(controller) {
+        try {
+          await consumeSSEStream(body, payload => {
             try {
-              const json = JSON.parse(trimmed.slice(6)) as {
+              const json = JSON.parse(payload) as {
                 candidates?: Array<{
                   content?: {
                     parts?: Array<{ text?: string }>
@@ -559,9 +536,12 @@ class GeminiProvider implements AIProvider {
                 controller.enqueue(chunkText)
               }
             } catch {
-              // Ignore partial chunk parse error
+              // Ignore malformed events
             }
-          }
+          })
+          controller.close()
+        } catch (err) {
+          controller.error(err)
         }
       },
     })
