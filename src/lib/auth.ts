@@ -93,6 +93,43 @@ export const authService = {
   },
 
   /**
+   * Request a password reset email (audit finding U2).
+   * In demo mode this simulates success; in cloud mode it calls Supabase.
+   */
+  async resetPassword(email: string): Promise<{ error: string | null }> {
+    if (checkDemoMode()) {
+      // Demo mode has no real password; report success so the flow works.
+      return { error: null }
+    }
+
+    const supabase = createBrowserClient()
+    const redirectTo = process.env.NEXT_PUBLIC_APP_URL
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/reset?code=`
+      : undefined
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo,
+    })
+
+    if (error) return { error: error.message }
+    return { error: null }
+  },
+
+  /**
+   * Update the current user's password (recovery-link flow, audit U2).
+   * In demo mode this simulates success; in cloud mode it calls Supabase.
+   */
+  async updatePassword(newPassword: string): Promise<{ error: string | null }> {
+    if (checkDemoMode()) {
+      return { error: null }
+    }
+
+    const supabase = createBrowserClient()
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) return { error: error.message }
+    return { error: null }
+  },
+
+  /**
    * Sign out the current user
    */
   async signOut(): Promise<void> {

@@ -436,3 +436,10 @@ This changelog tracks the implementation status of major milestones in the produ
 - `npm run build` — PASS (13 pages; `/p/[slug]` now dynamic server-rendered)
 - External verification deferred: cloud-mode public rendering requires a real Supabase project with `SUPABASE_SERVICE_ROLE_KEY` (credential gate).
 
+### U2 — Dead links: /reset, /privacy, /terms (HIGH, UX trust) — FIXED
+- The login page's "Forgot?" link and the landing footer linked to `/reset`, `/privacy`, and `/terms` — all 404 routes. A password-reset link that 404s is a trust-breaking defect.
+- Implemented `/reset` (client component matching the login/signup aesthetic): requests a reset email via `authService.resetPassword` (demo: simulated success; cloud: Supabase `resetPasswordForEmail` with redirect back to `/reset?code=`), and supports the recovery-link flow (`?code=`) to set a new password via `authService.updatePassword` with client-side validation (min 8 chars, matching confirmation). Success state then redirects to `/login`.
+- Added `resetPassword` and `updatePassword` to `src/lib/auth.ts` with dual-mode dispatch.
+- Implemented real `/privacy` and `/terms` pages (server components, `noindex` metadata) describing: data storage (demo vs cloud), private-by-default portfolios, AI processing when provider keys are configured, deletion, and acceptable use.
+- Middleware already listed `/reset` as an auth path, so authenticated users visiting `/reset` are routed to the dashboard as intended.
+
