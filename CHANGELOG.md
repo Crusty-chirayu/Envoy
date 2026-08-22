@@ -336,3 +336,23 @@ This changelog tracks the implementation status of major milestones in the produ
 ### Recovery Commit:
 - Phase 15 Commit: `cb6c29b`
 
+---
+
+## [Remediation Wave 1 — Group 1] Audit Findings S3 / S14 / S7 / S4-S5
+**Status**: In Progress  
+**Date**: August 22, 2026
+
+### S3 — AI proposal validation gate (CRITICAL) — FIXED
+- Created `src/lib/validation/proposal.ts`: strict Zod allowlist gate for AI-proposed edits. Every (sectionType, field) pair must be explicitly allowlisted (summary: `summary`; experience: `bullets|role|company|location|technologies`; skills: `category|skills`; projects: `name|description|bullets|technologies`); value shapes and length caps are enforced per field; `itemId` is mandatory for all non-summary sections; unsupported sections (e.g. education) are rejected outright.
+- The model can no longer select arbitrary object keys — computed-key spreads (`{ ...exp, [field]: value }`) have been eliminated from the mutation path entirely; application now uses explicit per-field branches in `editor/page.tsx`.
+- Mutation boundary hardened (`handleAcceptProposal`): re-validates at the boundary (defense in depth), verifies the referenced item exists in the live profile, resolves the complete mutation plan BEFORE any side effect, and only then creates the version checkpoint + commits. Rejected proposals produce zero canonical side effects (no store update, no persistence, no checkpoint).
+- `AgentSidebar` now uses the shared `extractProposal` extractor/validator: invalid or malformed proposal blocks render as plain text and never surface an actionable Accept/Edit card. Proposal cards display the actual target field (`sectionType · field`).
+- Test infrastructure stood up: added `vitest.config.ts` (node environment, `@` alias). Added `src/lib/validation/proposal.test.ts` — 21 tests pinning the security contract (allowlist enforcement, key-injection rejection, item-reference requirements, value-shape enforcement, extraction/injection invisibility, fence tolerance).
+- Note: editor First Load JS increased 186 kB → 201 kB because zod is now bundled into the editor page for client-side validation. Accepted tradeoff for the security guarantee.
+
+### Validation (S3):
+- `npx vitest run` — PASS (21/21)
+- `npm run typecheck` — PASS
+- `npm run lint` — PASS
+- `npm run build` — PASS
+

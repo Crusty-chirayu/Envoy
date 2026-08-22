@@ -1,15 +1,7 @@
 import React, { useState } from 'react'
 import type { ProfessionalProfile, EnvoyDocument, AIConversation, JobTarget, ATSReport } from '@/types'
 import { Send, Sparkles, Cpu, Award, Target, User, BrainCircuit, RefreshCw, Check, X, Edit3 } from 'lucide-react'
-
-export interface ProposeEditData {
-  sectionType: 'summary' | 'experience' | 'skills' | 'projects' | 'education'
-  itemId?: string
-  field: string
-  originalValue: string | string[]
-  newValue: string | string[]
-  explanation: string
-}
+import { extractProposal, type ValidatedProposal } from '@/lib/validation/proposal'
 
 interface AgentSidebarProps {
   profile: ProfessionalProfile
@@ -19,11 +11,11 @@ interface AgentSidebarProps {
   streamText: string
   jobTarget: JobTarget | null
   atsReport: ATSReport | null
-  onSendMessage: (text: string) => void
-  onUpdateJobTarget: (desc: string) => void
-  onRunATSAnalysis: () => void
-  onAcceptProposal: (proposal: ProposeEditData) => void
-}
+   onSendMessage: (text: string) => void
+   onUpdateJobTarget: (desc: string) => void
+   onRunATSAnalysis: () => void
+   onAcceptProposal: (proposal: ValidatedProposal) => void
+ }
 
 export function AgentSidebar({
   profile: _profile,
@@ -136,28 +128,13 @@ export function AgentSidebar({
               </div>
             )}
 
-            {conversation && conversation.messages.map(msg => {
-              const isUser = msg.role === 'user'
-              
-              // Match JSON edit proposal block
-              const matchJsonCodeBlock = (content: string) => {
-                const regex = /```json\n([\s\S]*?)\n```/
-                const match = content.match(regex)
-                if (match && match[1]) {
-                  try {
-                    const parsed = JSON.parse(match[1])
-                    if (parsed.action === 'propose_edit' && parsed.data) {
-                      const preText = content.replace(regex, '').trim()
-                      return { preText, proposal: parsed.data as ProposeEditData }
-                    }
-                  } catch {
-                    // Ignore invalid JSON parsing
-                  }
-                }
-                return null
-              }
+             {conversation && conversation.messages.map(msg => {
+               const isUser = msg.role === 'user'
 
-              const proposalMatch = msg.role === 'assistant' ? matchJsonCodeBlock(msg.content) : null
+               // Extract + VALIDATE any embedded proposal block. Invalid or
+               // malformed proposals return null and are rendered as plain
+               // text — they can never reach the mutation boundary.
+               const proposalMatch = msg.role === 'assistant' ? extractProposal(msg.content) : null
 
               return (
                 <div key={msg.id} className="flex flex-col gap-3">
@@ -187,10 +164,10 @@ export function AgentSidebar({
                   {proposalMatch && (
                     <div className="ml-9 mr-auto max-w-[85%] bg-[#111118]/90 border border-[#252535] rounded-lg p-4 space-y-4 relative z-10 shadow-lg">
                       <div className="flex items-center justify-between border-b border-[#1e1e2e] pb-2">
-                        <span className="font-extrabold uppercase text-[10px] text-[#00d4ff] tracking-widest flex items-center gap-1.5">
-                          <Sparkles size={11} />
-                          <span>Direct Proposal: {proposalMatch.proposal.sectionType}</span>
-                        </span>
+                         <span className="font-extrabold uppercase text-[10px] text-[#00d4ff] tracking-widest flex items-center gap-1.5">
+                           <Sparkles size={11} />
+                           <span>Direct Proposal: {proposalMatch.proposal.sectionType} · {proposalMatch.proposal.field}</span>
+                         </span>
                       </div>
                       
                       <div className="text-[11px] text-[#9898b3] leading-relaxed text-justify">

@@ -7,7 +7,7 @@ import { dbDocuments, dbProfile, checkDemoMode, dbATSReports, dbJobTargets, dbVe
 import { useDocumentStore } from '@/stores/document'
 import { A4Canvas } from '@/components/A4Canvas'
 import { AgentSidebar } from '@/components/AgentSidebar'
-import type { DocumentSectionConfig, AIConversation, AIMessage, JobTarget, ATSReport, TemplateId, DocumentVersion } from '@/types'
+import type { DocumentSectionConfig, AIConversation, AIMessage, JobTarget, ATSReport, TemplateId, DocumentVersion, ExperienceEntry, SkillGroup, ProjectEntry } from '@/types'
 import { 
   ArrowLeft, Download, Loader, Eye, History
 } from 'lucide-react'
@@ -15,6 +15,7 @@ import { v4 as uuid } from 'uuid'
 // NOTE: The docx generator is dynamically imported inside its export handler
 // so the large `docx` dependency stays out of the initial editor bundle.
 import { generatePlainText } from '@/lib/export/txt'
+import { validateProposalBlock, type ValidatedProposal } from '@/lib/validation/proposal'
 
 function EditorWorkspace() {
   const router = useRouter()
@@ -367,49 +368,144 @@ function EditorWorkspace() {
     }
   }
 
-  // Apply AI proposal modifications directly to Canonical Profile state
-  const handleAcceptProposal = (proposal: {
-    sectionType: string
-    itemId?: string
-    field: string
-    newValue: string | string[]
-    explanation?: string
-  }) => {
+  // Apply AI proposal modifications to the Canonical Profile state.
+  //
+  // SECURITY GATE (audit finding S3): this is the ONLY path from an AI
+  // suggestion to canonical state. Every proposal is re-validated here
+  // against the strict allowlist in lib/validation/proposal.ts, and the
+  // referenced item must exist in the live profile. The full mutation plan
+  // is resolved BEFORE any side effect: invalid proposals, unknown items,
+  // or unexpected value shapes are rejected with ZERO canonical side
+  // effects — no store update, no persistence, no version checkpoint.
+  // Field application uses explicit branches; the model can never select
+  // an arbitrary object key.
+  const handleAcceptProposal = (rawProposal: ValidatedProposal) => {
     if (!profile || !document) return
 
-    // 1. Create a version checkpoint before applying the AI change
+    // 1. Re-validate at the mutation boundary (defense in depth).
+    const validation = validateProposalBlock({ action: 'propose_edit', data: rawProposal })
+    if (!validation.ok) {
+      alert(
+        'This AI suggestion was blocked by the safety validator and was NOT applied.\n\n' +
+        `Reason: ${validation.error}`
+      )
+      return
+    }
+    const proposal = validation.proposal
+
+    // 2. Resolve the complete mutation plan before touching anything.
+    const updatedProfile = { ...profile }
+    let rejectionReason: string | null = null
+
+    if (proposal.sectionType === 'summary') {
+      if (typeof proposal.newValue === 'string') {
+        updatedProfile.summary = proposal.newValue
+      } else {
+        rejectionReason = 'Summary proposal must be plain text.'
+      }
+    } else if (proposal.sectionType === 'experience') {
+      const itemId = proposal.itemId ?? ''
+      const index = updatedProfile.experience.findIndex(exp => exp.id === itemId)
+      if (index === -1) {
+        rejectionReason = 'The referenced work-experience entry no longer exists.'
+      } else {
+        const current = updatedProfile.experience[index]
+        let next: ExperienceEntry | null = null
+        switch (proposal.field) {
+          case 'bullets':
+            if (Array.isArray(proposal.newValue)) next = { ...current, bullets: proposal.newValue }
+            break
+          case 'technologies':
+            if (Array.isArray(proposal.newValue)) next = { ...current, technologies: proposal.newValue }
+            break
+          case 'role':
+            if (typeof proposal.newValue === 'string') next = { ...current, role: proposal.newValue }
+            break
+          case 'company':
+            if (typeof proposal.newValue === 'string') next = { ...current, company: proposal.newValue }
+            break
+          case 'location':
+            if (typeof proposal.newValue === 'string') next = { ...current, location: proposal.newValue }
+            break
+        }
+        if (!next) {
+          rejectionReason = `Unexpected value shape for experience.${proposal.field}.`
+        } else {
+          const nextList = [...updatedProfile.experience]
+          nextList[index] = next
+          updatedProfile.experience = nextList
+        }
+      }
+    } else if (proposal.sectionType === 'skills') {
+      const itemId = proposal.itemId ?? ''
+      const index = updatedProfile.skills.findIndex(group => group.id === itemId)
+      if (index === -1) {
+        rejectionReason = 'The referenced skills group no longer exists.'
+      } else {
+        const current = updatedProfile.skills[index]
+        let next: SkillGroup | null = null
+        switch (proposal.field) {
+          case 'skills':
+            if (Array.isArray(proposal.newValue)) next = { ...current, skills: proposal.newValue }
+            break
+          case 'category':
+            if (typeof proposal.newValue === 'string') next = { ...current, category: proposal.newValue }
+            break
+        }
+        if (!next) {
+          rejectionReason = `Unexpected value shape for skills.${proposal.field}.`
+        } else {
+          const nextList = [...updatedProfile.skills]
+          nextList[index] = next
+          updatedProfile.skills = nextList
+        }
+      }
+    } else if (proposal.sectionType === 'projects') {
+      const itemId = proposal.itemId ?? ''
+      const index = updatedProfile.projects.findIndex(proj => proj.id === itemId)
+      if (index === -1) {
+        rejectionReason = 'The referenced project no longer exists.'
+      } else {
+        const current = updatedProfile.projects[index]
+        let next: ProjectEntry | null = null
+        switch (proposal.field) {
+          case 'bullets':
+            if (Array.isArray(proposal.newValue)) next = { ...current, bullets: proposal.newValue }
+            break
+          case 'technologies':
+            if (Array.isArray(proposal.newValue)) next = { ...current, technologies: proposal.newValue }
+            break
+          case 'name':
+            if (typeof proposal.newValue === 'string') next = { ...current, name: proposal.newValue }
+            break
+          case 'description':
+            if (typeof proposal.newValue === 'string') next = { ...current, description: proposal.newValue }
+            break
+        }
+        if (!next) {
+          rejectionReason = `Unexpected value shape for projects.${proposal.field}.`
+        } else {
+          const nextList = [...updatedProfile.projects]
+          nextList[index] = next
+          updatedProfile.projects = nextList
+        }
+      }
+    }
+
+    if (rejectionReason) {
+      alert(
+        'This AI suggestion was blocked by the safety validator and was NOT applied.\n\n' +
+        `Reason: ${rejectionReason}`
+      )
+      return
+    }
+
+    // 3. Plan fully resolved — now capture the rollback checkpoint and commit.
     const versionLabel = `AI Auto-Save: ${proposal.sectionType} rewrite`
     const description = `Pre-modification snapshot captured automatically before applying AI suggestion: "${proposal.explanation || ''}"`
     const newVer = createVersion(versionLabel, 'ai_accept', description)
     if (newVer) {
       dbVersions.save(newVer, document.userId)
-    }
-
-    const updatedProfile = { ...profile }
-
-    if (proposal.sectionType === 'summary') {
-      updatedProfile.summary = proposal.newValue as string
-    } else if (proposal.sectionType === 'experience' && proposal.itemId) {
-      updatedProfile.experience = profile.experience.map(exp => {
-        if (exp.id === proposal.itemId) {
-          return { ...exp, [proposal.field]: proposal.newValue }
-        }
-        return exp
-      })
-    } else if (proposal.sectionType === 'skills' && proposal.itemId) {
-      updatedProfile.skills = profile.skills.map(skill => {
-        if (skill.id === proposal.itemId) {
-          return { ...skill, [proposal.field]: proposal.newValue }
-        }
-        return skill
-      })
-    } else if (proposal.sectionType === 'projects' && proposal.itemId) {
-      updatedProfile.projects = profile.projects.map(proj => {
-        if (proj.id === proposal.itemId) {
-          return { ...proj, [proposal.field]: proposal.newValue }
-        }
-        return proj
-      })
     }
 
     // Update store state which sets saveStatus to unsaved and triggers autosave
