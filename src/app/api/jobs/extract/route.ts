@@ -86,20 +86,24 @@ function extractLocalJobTarget(description: string) {
 }
 
 export async function POST(request: Request) {
+  // 0. Authentication — AI extraction is never served anonymously.
+  const auth = await getAuthContext()
+  if (!auth) return unauthorizedResponse()
+
+  // 1. Rate limiting — protect provider budgets.
+  const rateKey = getClientRateLimitKey(auth.userId, request, 'jobs-extract')
+  const rate = checkRateLimit(rateKey)
+  if (!rate.allowed) {
+    return jsonError(429, 'Too many extraction requests. Please wait before trying again.')
+  }
+
+  // 2. Read the request body EXACTLY ONCE (audit finding S14). A Request
+  // body is single-consumption; both the structured AI path below AND the
+  // heuristic fallback in the error handler operate on this same in-memory
+  // value, so a provider failure can still serve the deterministic result.
+  const body = await parseJsonBody<{ description?: unknown }>(request)
+
   try {
-    // 0. Authentication — AI extraction is never served anonymously.
-    const auth = await getAuthContext()
-    if (!auth) return unauthorizedResponse()
-
-    // 1. Rate limiting — protect provider budgets.
-    const rateKey = getClientRateLimitKey(auth.userId, request, 'jobs-extract')
-    const rate = checkRateLimit(rateKey)
-    if (!rate.allowed) {
-      return jsonError(429, 'Too many extraction requests. Please wait before trying again.')
-    }
-
-    // 2. Size-capped, structural validation of the request body.
-    const body = await parseJsonBody<{ description?: unknown }>(request)
     if (!body) {
       return jsonError(400, 'Invalid or oversized request body.')
     }
@@ -162,17 +166,14 @@ ${description}`
     })
 
   } catch (err: unknown) {
-    console.warn('[Job Extraction] AI extraction failed or bypassed, falling back to heuristic:', err)
-    try {
-      const body = await parseJsonBody<{ description?: unknown }>(request)
-      const description = validateJobDescription(body?.description)
-      if (!description) {
-        return jsonError(400, 'A job description between 10 and 50,000 characters is required.')
-      }
-      const fallback = extractLocalJobTarget(description)
-      return Response.json(fallback)
-    } catch {
-      return jsonError(500, 'Failed to process job extraction. Please try again later.')
+    console.warn('[Job Extraction] AI extraction failed, falling back to heuristic:', err)
+
+    // Fallback reuses the already-parsed body — no second consumption.
+    const description = validateJobDescription(body?.description)
+    if (!description) {
+      return jsonError(400, 'A job description between 10 and 50,000 characters is required.')
     }
+    const fallback = extractLocalJobTarget(description)
+    return Response.json(fallback)
   }
 }

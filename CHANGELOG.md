@@ -356,3 +356,14 @@ This changelog tracks the implementation status of major milestones in the produ
 - `npm run lint` — PASS
 - `npm run build` — PASS
 
+### S14 — jobs/extract heuristic fallback restored (HIGH, Phase 15 regression) — FIXED
+- Root cause: the Phase 15 rewrite consumed the request body via `parseJsonBody(request)` in the primary path AND again inside the error handler's fallback. A `Request` body is single-consumption, so the second read always threw and every AI-provider failure returned 500 instead of the documented deterministic heuristic result.
+- Fix: the body is now read EXACTLY ONCE before the try block; both the structured AI path and the heuristic fallback operate on the same in-memory value. Auth + rate limiting still run before body consumption so rejected callers never cause a read.
+- Added `src/app/api/jobs/extract/route.test.ts` (5 tests) with hermetic mocks for auth and the AI provider: heuristic path without keys, provider-failure → fallback regression test (the exact S14 scenario), provider-success passthrough, minimum-length rejection, malformed-body rejection.
+
+### Validation (S14):
+- `npx vitest run` — PASS (26/26 across both suites)
+- `npm run typecheck` — PASS
+- `npm run lint` — PASS
+- `npm run build` — PASS
+
