@@ -443,3 +443,16 @@ This changelog tracks the implementation status of major milestones in the produ
 - Implemented real `/privacy` and `/terms` pages (server components, `noindex` metadata) describing: data storage (demo vs cloud), private-by-default portfolios, AI processing when provider keys are configured, deletion, and acceptable use.
 - Middleware already listed `/reset` as an auth path, so authenticated users visiting `/reset` are routed to the dashboard as intended.
 
+## [Cloud Validation — Credential Gate Report]
+**Status**: Completed (code-level) + Manual action required for live cloud end-to-end
+**Date**: August 22, 2026
+
+- Local `.env.local` contains all three required Supabase variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+- `.env.local` is gitignored (`.gitignore` lines 18-23). `git ls-files` tracks only `.env.example` (placeholders); no `.env.local` / real secrets committed. No credentials hard-coded in `src/`.
+- `SUPABASE_SERVICE_ROLE_KEY` read ONLY in `src/lib/supabase/server-public.ts`, imported ONLY by `src/lib/portfolio/public-data.ts` (server), imported ONLY by the Server Component `src/app/p/[slug]/page.tsx` -> cannot reach a client bundle. The browser client (`src/lib/supabase/client.ts`) uses only the anon key.
+- `public-data.ts` fails CLOSED when `SUPABASE_SERVICE_ROLE_KEY` is absent (returns null -> 404 + log); it never weakens RLS or exposes profiles anonymously.
+- `profiles` RLS is owner-only (`auth.uid() = user_id`); NO public-read policy on profiles. Public portfolios are assembled server-side via the service role and reduced to the whitelisted `public-projection.ts` (identity + career history only); internal ids/`user_id`/timestamps/private sections never cross the boundary.
+- `portfolio_sites` DB column defaults to `visibility = 'private'` and the app default is `'private'`; publishing stamps `published_at`; the `/p/[slug]` gate (`isPortfolioPubliclyViewable`) rejects private/unpublished sites.
+- Build-time + test validation executed with `.env.local` loaded: `npm run typecheck` PASS, `npm run lint` PASS ("No ESLint warnings or errors"), `npm test` PASS (7 files, 81/81 tests), `npm run build` PASS (16 pages; `/p/[slug]` dynamic; log reports `Environments: .env.local`; only the pre-existing `pdf-parse` CJS-default warning).
+- Live cloud end-to-end requires manual action: apply `supabase/schema.sql` to the project (Supabase SQL editor or `supabase db push`); it is idempotent (`CREATE IF NOT EXISTS`, no `DROP`) and non-destructive. Then sign up, create + publish a portfolio, and open `/p/[slug]` logged-out (public projection) and an unpublished/private slug (expect 404). These interactive/browser steps cannot be safely automated from the terminal; no live-data claims are made beyond the verification above.
+
