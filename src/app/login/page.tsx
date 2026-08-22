@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Logo } from '@/components/Logo'
 import { authService } from '@/lib/auth'
+import { sanitizeRedirectPath } from '@/lib/security/redirect'
 import { Mail, Lock, ArrowRight, ShieldAlert, CheckCircle } from 'lucide-react'
 
 function LoginForm() {
@@ -37,7 +38,9 @@ function LoginForm() {
         setSuccess('Successfully signed in!')
         // Small delay for success animation
         setTimeout(() => {
-          const redirectTo = searchParams.get('redirectTo') || '/dashboard'
+          // S6 (audit): sanitize the client-side redirect target with the same
+          // rule as /api/auth/callback to prevent open-redirect abuse.
+          const redirectTo = sanitizeRedirectPath(searchParams.get('redirectTo'))
           router.push(redirectTo)
           router.refresh()
         }, 800)

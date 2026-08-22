@@ -384,3 +384,18 @@ This changelog tracks the implementation status of major milestones in the produ
 - `npm run lint` — PASS
 - `npm run build` — PASS
 
+### D2 — "in undefined" education bug in exporters (MEDIUM) — FIXED
+- Both `src/lib/export/docx.ts` and `src/lib/export/txt.ts` rendered a literal "B.S. in undefined" when an education entry had no `field`. Exported files now omit the "in <field>" clause entirely (matching TemplateRenderer's conditional behavior).
+- Added `src/lib/export/txt.test.ts` (3 tests): field present renders "degree in field", missing field renders "degree | institution" with zero occurrences of "undefined", and general document structure sanity.
+
+### S6 — Client-side open redirect on login (MEDIUM) — FIXED
+- `/login?redirectTo=//evil.com` (and absolute URLs, backslash tricks, control-character paths) could navigate a victim off-site after sign-in; only the server OAuth callback was sanitized in Phase 15.
+- Extracted the sanitation rule into `src/lib/security/redirect.ts` (`sanitizeRedirectPath`) as the single source of truth and wired BOTH call sites: `/api/auth/callback` (`next` param) and the login page client-side `router.push(redirectTo)`. The shared rule additionally rejects control characters.
+- Added `src/lib/security/redirect.test.ts` (10 tests): relative paths accepted; null/empty/absolute/protocol-relative/backslash/whitespace-padded/control-character targets rejected to the safe default; custom fallback supported; deep internal paths preserved intact.
+
+### Validation (D2 + S6):
+- `npx vitest run` — PASS (55/55)
+- `npm run typecheck` — PASS
+- `npm run lint` — PASS
+- `npm run build` — PASS
+
