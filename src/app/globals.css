@@ -42,6 +42,35 @@
   }
 }
 
+/* ─────────────────────────────────────────
+   Accessibility: Keyboard Focus Visibility
+   Ensures every interactive element shows a
+   clear, high-contrast ring when focused via
+   keyboard navigation (Tab / Shift+Tab).
+   ───────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #00d4ff;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ─────────────────────────────────────────
+   Accessibility: Reduced Motion
+   Honors the OS-level "reduce motion" setting
+   by disabling non-essential animations and
+   transitions across the entire application.
+   ───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Custom Scrollbar for Workspace layout */
 ::-webkit-scrollbar {
   width: 6px;
@@ -56,6 +85,25 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: theme('colors.envoy.text.tertiary');
+}
+
+/* Accessibility: Skip link — visible only when keyboard-focused */
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+}
+.skip-to-content:focus {
+  left: 8px;
+  top: 8px;
+  padding: 8px 16px;
+  background: #0c0c10;
+  color: #00d4ff;
+  border: 1px solid #00d4ff;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 /* Print Media Styles for High-Fidelity PDF Export */

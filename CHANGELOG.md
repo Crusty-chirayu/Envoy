@@ -276,3 +276,63 @@ This changelog tracks the implementation status of major milestones in the produ
 ### Recovery Commit:
 - Phase 14 Commit: `daaeca9`
 
+---
+
+## [Phase 15] Security / Accessibility / Performance
+**Status**: Completed  
+**Date**: August 22, 2026
+
+### Completed Implementation:
+
+**Security**
+- Created `src/lib/security/auth.ts`: server-side API auth guard. Cloud mode (Supabase configured) requires a valid Supabase session on every API route; fully offline demo mode (no Supabase AND no AI keys) remains open so the demo keeps working; misconfiguration (AI keys present but no Supabase) is refused with 401 so paid AI endpoints can never be reached anonymously.
+- Created `src/lib/security/rate-limit.ts`: in-memory sliding-window rate limiter keyed by authenticated user id (fallback: client IP). Honors the previously-declared-but-unimplemented `AI_REQUESTS_PER_MINUTE` env var (default 20/min). Applied to `/api/chat`, `/api/jobs/extract`, `/api/ingest`, `/api/ats`.
+- Created `src/lib/security/request.ts`: size-capped JSON body parsing (512 KB default), structural validators, trust-boundary narrowing helpers (`narrowProfile`, `narrowDocument`, `narrowJobTarget`, `narrowATSReport`) that verify every field server-side consumers dereference before typing untrusted JSON, and sanitized 500 responses (internal error details logged, never returned).
+- Hardened all four API routes (`chat`, `ats`, `jobs/extract`, `ingest`) with auth guard → rate limit → validation pipeline. Previously every route was fully anonymous, exposing server-side AI provider keys to anyone.
+- Fixed open-redirect vulnerability in `/api/auth/callback`: the `next` query param is now restricted to same-origin relative paths (rejects absolute URLs, protocol-relative `//host`, backslash-prefixed paths).
+- Added upload constraints to `/api/ingest`: 10 MB size ceiling (header pre-check + file check), extension allowlist (.pdf/.docx/.txt), correct 413/415 status codes.
+- Added security headers via `next.config.mjs headers()`: Content-Security-Policy, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin, Permissions-Policy.
+- ATS reports are now stamped with the server-verified user id instead of trusting client-supplied `document.userId`.
+
+**Accessibility**
+- Global `:focus-visible` outline styles and full `prefers-reduced-motion: reduce` support in `globals.css`.
+- Skip-to-content link in root layout targeting `#main-content`.
+- Dialog semantics (`role="dialog"`, `aria-modal`, labelled titles), Escape-key closing, backdrop-click closing, and autofocus on: dashboard create-document modal, editor version-history modal, editor section-edit panel.
+- Accessible names on all icon-only buttons: sign out, back-to-dashboard, send message, zoom controls, section HUD edit/hide/reorder, delete buttons for documents/experience/education/skills/projects, portfolio project GitHub/live links.
+- Label-input associations (`htmlFor`/`id`) across dashboard identity form, create-document modal, login, and signup forms.
+- Live regions: dashboard toast (`role="status"` + `aria-live`), AI chat message stream (`aria-live="polite"`), loading states; login/signup errors use `role="alert"`.
+- Pane switcher buttons in AgentSidebar expose state via `aria-pressed`.
+
+**Performance**
+- Editor initial bundle reduced from 117 kB to 16.6 kB (First Load JS 287 kB → 186 kB) by dynamically importing the `docx` generator inside its export handler instead of statically.
+- `TemplateRenderer` wrapped in `React.memo` with a stable `useCallback` selection handler in `A4Canvas`, preventing full resume re-renders caused by unrelated editor state changes (zoom, export menu, overlay panels).
+
+**Pipeline Fix**
+- Repaired broken `npm run lint`: Next.js 15.0.3 enables ESLint flat-config mode when `eslint.config.mjs` exists but only strips legacy constructor options for ESLint ≥ 9, crashing against the installed ESLint 8.57.1 ("Invalid Options: useEslintrc, extensions..."). Replaced flat config with an equivalent legacy `.eslintrc.json` (identical rule set), restoring both standalone lint and the lint step inside `next build`.
+
+### Architecture Decisions:
+- **Auth policy split**: anonymous access is only permitted when the deployment has zero secrets at risk (no Supabase AND no AI keys). This preserves the offline/demo contract while making it impossible to burn AI budget anonymously in any partially-configured environment.
+- **Shallow trust-boundary validation over strict schemas**: request payloads originate from the user's own Zustand store and may contain non-UUID demo identifiers, so strict Zod enforcement would break legitimate flows. Validators verify structure and cap sizes instead; deep schema validation remains available via existing Zod schemas where strictness is later required.
+- **In-memory rate limiting**: chosen as dependency-free protection appropriate to single-instance deployments; documented as a known limitation with a Redis/Upstash upgrade path.
+- **CSP pragmatism**: `'unsafe-inline'/'unsafe-eval'` retained for scripts/styles because Next.js hydration requires them without nonce-based middleware; frame-ancestors 'none' plus X-Frame-Options DENY still block clickjacking.
+- **Legacy ESLint config**: `.eslintrc.json` is the format both `next lint` and direct ESLint runs support reliably on the pinned Next 15.0.3 + ESLint 8.57.1 combination. No dependency changes were made.
+
+### Validation Results:
+- `npm run typecheck` — PASS (zero errors)
+- `npm run lint` — PASS ("No ESLint warnings or errors"; pipeline restored)
+- `npm run build` — PASS (13 static pages generated; editor First Load JS reduced 287 kB → 186 kB)
+- Build-time ESLint step now completes cleanly (previously emitted "Invalid Options" failure).
+
+### Known Limitations:
+- Rate limiting is per-instance memory; multi-instance deployments should move counters to Redis/Upstash.
+- CSP retains `'unsafe-inline'/'unsafe-eval'` for scripts/styles; tightening requires nonce-based CSP middleware.
+- `pdf-parse` emits a webpack "does not contain a default export" warning during builds; runtime parsing works via CJS interop (pre-existing since Phase 11).
+- Supabase RLS policies remain intentionally unconfigured until production credentials/schema finalization; cloud-mode data isolation currently relies on client-side user_id filtering and must be backed by RLS before public launch.
+- Portfolio pages fetch full profiles through the browser Supabase client; when RLS is finalized, public portfolio reads must expose only published fields.
+
+### Next Milestone:
+- None — all planned phases (0–15) complete. Recommended follow-ups before production launch: deploy `supabase/schema.sql` with RLS policies once credentials are finalized, swap rate limiting to Redis for multi-instance hosting, add nonce-based CSP, and introduce unit/E2E test coverage (vitest + playwright tooling already installed).
+
+### Recovery Commit:
+- Phase 15 Commit: (this commit)
+

@@ -73,6 +73,7 @@ export function AgentSidebar({
       <div className="flex items-center border-b border-[#1e1e2e] px-4 py-2 bg-[#050507]/40">
         <button
           onClick={() => setActivePane('chat')}
+          aria-pressed={activePane === 'chat'}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
             activePane === 'chat' 
               ? 'bg-[#16161f] text-[#00d4ff]' 
@@ -84,6 +85,7 @@ export function AgentSidebar({
         </button>
         <button
           onClick={() => setActivePane('job')}
+          aria-pressed={activePane === 'job'}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
             activePane === 'job' 
               ? 'bg-[#16161f] text-[#00d4ff]' 
@@ -95,6 +97,7 @@ export function AgentSidebar({
         </button>
         <button
           onClick={() => setActivePane('ats')}
+          aria-pressed={activePane === 'ats'}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
             activePane === 'ats' 
               ? 'bg-[#16161f] text-[#00d4ff]' 
@@ -110,7 +113,7 @@ export function AgentSidebar({
       {activePane === 'chat' && (
         <div className="flex-1 flex flex-col min-h-0 bg-[#0c0c10]">
           {/* Messages list */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4" aria-live="polite" aria-label="AI conversation">
             {(!conversation || conversation.messages.length === 0) && (
               <div className="flex flex-col items-center justify-center text-center p-6 h-full space-y-4">
                 <div className="w-12 h-12 rounded-full bg-[#111118] border border-[#252535] flex items-center justify-center text-[#00d4ff]">
@@ -320,6 +323,8 @@ export function AgentSidebar({
             <button
               onClick={handleSend}
               className="w-10 h-10 rounded-md bg-[#6366f1] hover:opacity-90 transition-opacity text-[#050507] flex items-center justify-center shrink-0 self-end shadow-md"
+              aria-label="Send message"
+              title="Send message"
             >
               <Send size={15} />
             </button>

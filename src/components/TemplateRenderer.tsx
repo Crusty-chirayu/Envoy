@@ -8,7 +8,12 @@ interface TemplateRendererProps {
   onSelectSection?: (sectionId: string) => void
 }
 
-export function TemplateRenderer({ profile, document, onSelectSection }: TemplateRendererProps) {
+/**
+ * Memoized: the resume sheet only re-renders when its actual inputs change.
+ * Prevents full-document re-renders triggered by unrelated editor state
+ * (zoom changes, toolbar toggles, overlay panels).
+ */
+function TemplateRendererImpl({ profile, document, onSelectSection }: TemplateRendererProps) {
   const { settings, sections } = document
   const { identity } = profile
 
@@ -382,3 +387,5 @@ export function TemplateRenderer({ profile, document, onSelectSection }: Templat
     </div>
   )
 }
+
+export const TemplateRenderer = React.memo(TemplateRendererImpl)

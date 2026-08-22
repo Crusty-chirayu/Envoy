@@ -1,4 +1,10 @@
-import { NextResponse } from 'next/server'
+import { getAuthContext, unauthorizedResponse } from '@/lib/security/auth'
+import { checkRateLimit, getClientRateLimitKey } from '@/lib/security/rate-limit'
+import {
+  jsonError,
+  parseJsonBody,
+  validateJobDescription,
+} from '@/lib/security/request'
 import { getAIProvider } from '@/lib/ai/provider'
 import type { JobExtraction } from '@/types'
 
@@ -17,7 +23,7 @@ const jobExtractionSchema = {
     softSkills: { type: 'array', items: { type: 'string' } }
   },
   required: [
-    'company', 'role', 'seniority', 'requiredSkills', 'preferredSkills', 
+    'company', 'role', 'seniority', 'requiredSkills', 'preferredSkills',
     'keywords', 'responsibilities', 'qualifications', 'technologies', 'softSkills'
   ]
 }
@@ -26,12 +32,12 @@ function extractLocalJobTarget(description: string) {
   const text = description.toLowerCase()
 
   const techs = [
-    'react', 'next.js', 'typescript', 'javascript', 'node.js', 'python', 'java', 'c++', 
-    'go', 'rust', 'docker', 'kubernetes', 'aws', 'gcp', 'azure', 'sql', 'postgresql', 
+    'react', 'next.js', 'typescript', 'javascript', 'node.js', 'python', 'java', 'c++',
+    'go', 'rust', 'docker', 'kubernetes', 'aws', 'gcp', 'azure', 'sql', 'postgresql',
     'mongodb', 'redis', 'graphql', 'rest', 'git', 'ci/cd', 'html', 'css', 'tailwind'
   ]
   const skills = [
-    'agile', 'scrum', 'leadership', 'collaboration', 'communication', 'problem solving', 
+    'agile', 'scrum', 'leadership', 'collaboration', 'communication', 'problem solving',
     'project management', 'product management', 'system design', 'microservices'
   ]
   const keywords = [
@@ -81,10 +87,26 @@ function extractLocalJobTarget(description: string) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.clone().json()
-    const { description } = body
+    // 0. Authentication — AI extraction is never served anonymously.
+    const auth = await getAuthContext()
+    if (!auth) return unauthorizedResponse()
+
+    // 1. Rate limiting — protect provider budgets.
+    const rateKey = getClientRateLimitKey(auth.userId, request, 'jobs-extract')
+    const rate = checkRateLimit(rateKey)
+    if (!rate.allowed) {
+      return jsonError(429, 'Too many extraction requests. Please wait before trying again.')
+    }
+
+    // 2. Size-capped, structural validation of the request body.
+    const body = await parseJsonBody<{ description?: unknown }>(request)
+    if (!body) {
+      return jsonError(400, 'Invalid or oversized request body.')
+    }
+
+    const description = validateJobDescription(body.description)
     if (!description) {
-      return NextResponse.json({ error: 'Missing job description' }, { status: 400 })
+      return jsonError(400, 'A job description between 10 and 50,000 characters is required.')
     }
 
     const hasOpenAI = !!process.env.OPENAI_API_KEY
@@ -94,14 +116,17 @@ export async function POST(request: Request) {
 
     if (isMock) {
       const mockResult = extractLocalJobTarget(description)
-      return NextResponse.json(mockResult)
+      return Response.json(mockResult)
     }
 
     const provider = getAIProvider()
     const messages = [
       {
         role: 'user' as const,
-        content: `Extract the company name, role name, seniority, required skills, preferred skills, keywords, responsibilities, qualifications, technologies, and soft skills from the job description below.\n\nJob Description:\n${description}`
+        content: `Extract the company name, role name, seniority, required skills, preferred skills, keywords, responsibilities, qualifications, technologies, and soft skills from the job description below.
+
+Job Description:
+${description}`
       }
     ]
 
@@ -130,7 +155,7 @@ export async function POST(request: Request) {
       softSkills: result.softSkills || []
     }
 
-    return NextResponse.json({
+    return Response.json({
       company: result.company || 'Target Company',
       role: result.role || 'Target Role',
       extracted: extraction
@@ -139,11 +164,15 @@ export async function POST(request: Request) {
   } catch (err: unknown) {
     console.warn('[Job Extraction] AI extraction failed or bypassed, falling back to heuristic:', err)
     try {
-      const { description } = await request.json()
+      const body = await parseJsonBody<{ description?: unknown }>(request)
+      const description = validateJobDescription(body?.description)
+      if (!description) {
+        return jsonError(400, 'A job description between 10 and 50,000 characters is required.')
+      }
       const fallback = extractLocalJobTarget(description)
-      return NextResponse.json(fallback)
+      return Response.json(fallback)
     } catch {
-      return NextResponse.json({ error: 'Failed to process extraction fallback' }, { status: 500 })
+      return jsonError(500, 'Failed to process job extraction. Please try again later.')
     }
   }
 }

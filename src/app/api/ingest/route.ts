@@ -5,6 +5,14 @@ import pdf from 'pdf-parse'
 import mammoth from 'mammoth'
 import { v4 as uuid } from 'uuid'
 import type { ProfessionalProfile } from '@/types'
+import { getAuthContext, unauthorizedResponse } from '@/lib/security/auth'
+import { checkRateLimit, getClientRateLimitKey } from '@/lib/security/rate-limit'
+import {
+  jsonError,
+  serverErrorResponse,
+  MAX_UPLOAD_BYTES,
+  ALLOWED_UPLOAD_EXTENSIONS,
+} from '@/lib/security/request'
 
 const profileExtractionSchema = {
   type: 'object',
@@ -193,24 +201,50 @@ function parseLocalProfileHeuristically(text: string) {
 
 export async function POST(request: Request) {
   try {
-    const formData = await request.formData()
-    const file = formData.get('file') as File | null
+    // 0. Authentication — ingestion spends AI budget and CPU on parsing.
+    const auth = await getAuthContext()
+    if (!auth) return unauthorizedResponse()
 
-    if (!file) {
-      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
+    // 1. Rate limiting — bound per-user/IP ingestion frequency.
+    const rateKey = getClientRateLimitKey(auth.userId, request, 'ingest')
+    const rate = checkRateLimit(rateKey)
+    if (!rate.allowed) {
+      return jsonError(429, 'Too many upload requests. Please wait before trying again.')
+    }
+
+    // 2. Enforce upload constraints before touching the bytes.
+    const contentLength = Number.parseInt(request.headers.get('content-length') ?? '', 10)
+    if (Number.isFinite(contentLength) && contentLength > MAX_UPLOAD_BYTES + 1024) {
+      return jsonError(413, 'File exceeds the 10 MB upload limit.')
+    }
+
+    const formData = await request.formData()
+    const file = formData.get('file')
+
+    if (!(file instanceof File)) {
+      return jsonError(400, 'No file uploaded.')
+    }
+
+    const lowerName = file.name.toLowerCase()
+    const hasAllowedExtension = ALLOWED_UPLOAD_EXTENSIONS.some(ext => lowerName.endsWith(ext))
+    if (!hasAllowedExtension) {
+      return jsonError(415, 'Unsupported file type. Upload a PDF, DOCX, or TXT document.')
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return jsonError(413, 'File exceeds the 10 MB upload limit.')
     }
 
     const buffer = Buffer.from(await file.arrayBuffer())
     let extractedText = ''
 
-    if (file.name.endsWith('.pdf')) {
+    if (lowerName.endsWith('.pdf')) {
       const parsed = await pdf(buffer)
       extractedText = parsed.text
-    } else if (file.name.endsWith('.docx')) {
+    } else if (lowerName.endsWith('.docx')) {
       const parsed = await mammoth.extractRawText({ buffer })
       extractedText = parsed.value
     } else {
-      // Fallback: parse as plain text
+      // Fallback: parse as plain text (.txt)
       extractedText = buffer.toString('utf-8')
     }
 
@@ -325,10 +359,6 @@ export async function POST(request: Request) {
     return NextResponse.json(profile)
 
   } catch (err: unknown) {
-    console.error('[Document Ingestion] Failed:', err)
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'An unexpected error occurred during ingestion parsing' },
-      { status: 500 }
-    )
+    return serverErrorResponse('Document Ingestion', err)
   }
 }

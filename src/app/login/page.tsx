@@ -63,14 +63,14 @@ function LoginForm() {
         <h2 className="text-xl font-bold text-center mb-6">Welcome Back</h2>
 
         {error && (
-          <div className="mb-6 p-4 rounded-md bg-[#ef4444]/10 border border-[#ef4444]/20 text-sm text-[#ef4444] flex items-start gap-3">
+          <div role="alert" className="mb-6 p-4 rounded-md bg-[#ef4444]/10 border border-[#ef4444]/20 text-sm text-[#ef4444] flex items-start gap-3">
             <ShieldAlert size={18} className="shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
         )}
 
         {success && (
-          <div className="mb-6 p-4 rounded-md bg-[#10b981]/10 border border-[#10b981]/20 text-sm text-[#10b981] flex items-start gap-3">
+          <div role="status" className="mb-6 p-4 rounded-md bg-[#10b981]/10 border border-[#10b981]/20 text-sm text-[#10b981] flex items-start gap-3">
             <CheckCircle size={18} className="shrink-0 mt-0.5" />
             <span>{success}</span>
           </div>
@@ -78,12 +78,13 @@ function LoginForm() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">
+            <label htmlFor="login-email" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">
               Email Address
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-5 w-5 text-[#5c5c7a]" />
               <input
+                id="login-email"
                 type="email"
                 required
                 value={email}
@@ -96,7 +97,7 @@ function LoginForm() {
 
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider">
+              <label htmlFor="login-password" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider">
                 Password
               </label>
               <Link href="/reset" className="text-xs text-[#6366f1] hover:underline">
@@ -106,6 +107,7 @@ function LoginForm() {
             <div className="relative">
               <Lock className="absolute left-3 top-3 h-5 w-5 text-[#5c5c7a]" />
               <input
+                id="login-password"
                 type="password"
                 required
                 value={password}

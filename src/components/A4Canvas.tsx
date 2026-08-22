@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import type { ProfessionalProfile, EnvoyDocument, DocumentSectionConfig } from '@/types'
 import { TemplateRenderer } from './TemplateRenderer'
 import { ArrowUp, ArrowDown, EyeOff, Eye, Edit2, ZoomIn, ZoomOut } from 'lucide-react'
@@ -39,6 +39,16 @@ export function A4Canvas({
     }
   }
 
+  // Stable reference so the memoized TemplateRenderer skips re-renders
+  // caused by unrelated editor state changes.
+  const handleSelectSection = useCallback(
+    (sectionId: string) => {
+      const section = document.sections.find(s => s.id === sectionId)
+      if (section) onEditSection(section)
+    },
+    [document.sections, onEditSection]
+  )
+
   return (
     <div className="flex flex-col items-center h-full bg-[#111118]/40 border-l border-[#1e1e2e] flex-1">
       {/* Canvas Toolbars */}
@@ -56,6 +66,7 @@ export function A4Canvas({
             onClick={handleZoomOut}
             className="p-1.5 rounded bg-[#16161f] border border-[#252535] hover:bg-[#1c1c28] text-[#9898b3] hover:text-[#f2f2f7]"
             title="Zoom Out"
+            aria-label="Zoom Out"
           >
             <ZoomOut size={14} />
           </button>
@@ -66,6 +77,7 @@ export function A4Canvas({
             onClick={handleZoomIn}
             className="p-1.5 rounded bg-[#16161f] border border-[#252535] hover:bg-[#1c1c28] text-[#9898b3] hover:text-[#f2f2f7]"
             title="Zoom In"
+            aria-label="Zoom In"
           >
             <ZoomIn size={14} />
           </button>
@@ -100,10 +112,7 @@ export function A4Canvas({
             <TemplateRenderer 
               profile={profile} 
               document={document} 
-              onSelectSection={(sectionId) => {
-                const section = document.sections.find(s => s.id === sectionId)
-                if (section) onEditSection(section)
-              }}
+              onSelectSection={handleSelectSection}
             />
 
             {/* Visual Section Hovers (Only visible on screen in editor) */}
@@ -142,6 +151,7 @@ export function A4Canvas({
                   onClick={() => onEditSection(sec)}
                   className="hover:text-[#00d4ff] text-[#9898b3]"
                   title="Edit Settings"
+                  aria-label={`Edit settings for section ${sec.title}`}
                 >
                   <Edit2 size={10} />
                 </button>
@@ -149,6 +159,7 @@ export function A4Canvas({
                   onClick={() => onToggleVisibility(sec.id)}
                   className="hover:text-[#6366f1]"
                   title={sec.visible ? 'Hide Section' : 'Show Section'}
+                  aria-label={sec.visible ? `Hide section ${sec.title}` : `Show section ${sec.title}`}
                 >
                   {sec.visible ? <Eye size={10} /> : <EyeOff size={10} />}
                 </button>
@@ -156,6 +167,7 @@ export function A4Canvas({
                   onClick={() => moveSection(idx, 'up')}
                   disabled={idx === 0}
                   className="hover:text-[#00d4ff] disabled:opacity-40"
+                  aria-label={`Move section ${sec.title} up`}
                 >
                   <ArrowUp size={10} />
                 </button>
@@ -163,6 +175,7 @@ export function A4Canvas({
                   onClick={() => moveSection(idx, 'down')}
                   disabled={idx === sortedSections.length - 1}
                   className="hover:text-[#00d4ff] disabled:opacity-40"
+                  aria-label={`Move section ${sec.title} down`}
                 >
                   <ArrowDown size={10} />
                 </button>

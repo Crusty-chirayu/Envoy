@@ -60,14 +60,14 @@ export default function SignupPage() {
         <h2 className="text-xl font-bold text-center mb-6">Create Your Account</h2>
 
         {error && (
-          <div className="mb-6 p-4 rounded-md bg-[#ef4444]/10 border border-[#ef4444]/20 text-sm text-[#ef4444] flex items-start gap-3">
+          <div role="alert" className="mb-6 p-4 rounded-md bg-[#ef4444]/10 border border-[#ef4444]/20 text-sm text-[#ef4444] flex items-start gap-3">
             <ShieldAlert size={18} className="shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
         )}
 
         {success && (
-          <div className="mb-6 p-4 rounded-md bg-[#10b981]/10 border border-[#10b981]/20 text-sm text-[#10b981] flex items-start gap-3">
+          <div role="status" className="mb-6 p-4 rounded-md bg-[#10b981]/10 border border-[#10b981]/20 text-sm text-[#10b981] flex items-start gap-3">
             <CheckCircle size={18} className="shrink-0 mt-0.5" />
             <span>{success}</span>
           </div>
@@ -75,12 +75,13 @@ export default function SignupPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">
+            <label htmlFor="signup-name" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">
               Full Name
             </label>
             <div className="relative">
               <User className="absolute left-3 top-3 h-5 w-5 text-[#5c5c7a]" />
               <input
+                id="signup-name"
                 type="text"
                 required
                 value={name}
@@ -92,12 +93,13 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">
+            <label htmlFor="signup-email" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">
               Email Address
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-5 w-5 text-[#5c5c7a]" />
               <input
+                id="signup-email"
                 type="email"
                 required
                 value={email}
@@ -109,12 +111,13 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">
+            <label htmlFor="signup-password" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">
               Password (min 8 chars)
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 h-5 w-5 text-[#5c5c7a]" />
               <input
+                id="signup-password"
                 type="password"
                 required
                 value={password}

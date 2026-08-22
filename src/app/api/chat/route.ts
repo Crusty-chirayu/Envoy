@@ -1,51 +1,95 @@
 import { NextResponse } from 'next/server'
 import { getAIProvider } from '@/lib/ai/provider'
 import { buildContext } from '@/lib/ai/context'
+import { getAuthContext, unauthorizedResponse } from '@/lib/security/auth'
+import { checkRateLimit, getClientRateLimitKey } from '@/lib/security/rate-limit'
+import {
+  jsonError,
+  parseJsonBody,
+  serverErrorResponse,
+  validateChatMessages,
+  narrowProfile,
+  narrowDocument,
+  narrowJobTarget,
+  narrowATSReport,
+} from '@/lib/security/request'
 import type { ChatMessage } from '@/lib/ai/provider'
+
+interface ChatRequestBody {
+  messages?: unknown
+  profile?: unknown
+  document?: unknown
+  jobTarget?: unknown
+  atsReport?: unknown
+  selectedSectionId?: unknown
+  selectedText?: unknown
+}
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { 
-      messages, 
-      profile, 
-      document, 
-      jobTarget, 
-      atsReport,
-      selectedSectionId,
-      selectedText 
-    } = body
+    // 0. Authentication — AI completions are never served anonymously.
+    const auth = await getAuthContext()
+    if (!auth) return unauthorizedResponse()
 
-    if (!messages || !profile || !document) {
-      return NextResponse.json({ error: 'Missing required parameters (messages, profile, document)' }, { status: 400 })
+    // 1. Rate limiting — protect provider budgets from runaway clients.
+    const rateKey = getClientRateLimitKey(auth.userId, request, 'chat')
+    const rate = checkRateLimit(rateKey)
+    if (!rate.allowed) {
+      return NextResponse.json(
+        { error: 'Too many AI requests. Please wait before trying again.' },
+        { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } }
+      )
     }
 
-    // 1. Build the system context messages
+    // 2. Size-capped, structural validation of the request body.
+    const body = await parseJsonBody<ChatRequestBody>(request)
+    if (!body) {
+      return jsonError(400, 'Invalid or oversized request body.')
+    }
+
+    const messages = validateChatMessages(body.messages)
+    if (!messages) {
+      return jsonError(400, 'Invalid conversation history.')
+    }
+
+    const profile = narrowProfile(body.profile)
+    const document = narrowDocument(body.document)
+    if (!profile || !document) {
+      return jsonError(400, 'Missing or malformed required parameters (profile, document).')
+    }
+
+    const jobTarget = narrowJobTarget(body.jobTarget) ?? undefined
+    const atsReport = narrowATSReport(body.atsReport) ?? undefined
+    const selectedSectionId =
+      typeof body.selectedSectionId === 'string' ? body.selectedSectionId : undefined
+    const selectedText =
+      typeof body.selectedText === 'string' ? body.selectedText.slice(0, 5000) : undefined
+
+    // 3. Build the system context messages
     const contextMessages = buildContext({
       profile,
       document,
       jobTarget,
       atsReport,
       selectedSectionId,
-      selectedText
+      selectedText,
     })
 
-    // Combine system context messages with the conversation history
-    const history = messages.map((m: ChatMessage) => ({
+    const history: ChatMessage[] = messages.map(m => ({
       role: m.role,
-      content: m.content
+      content: m.content,
     }))
 
     const fullMessages: ChatMessage[] = [...contextMessages, ...history]
 
-    // 2. Check if we should run in mock/simulation mode
+    // 4. Check if we should run in mock/simulation mode
     const providerName = process.env.ENVOY_AI_PROVIDER ?? 'openai'
     const hasOpenAI = !!process.env.OPENAI_API_KEY
     const hasAnthropic = !!process.env.ANTHROPIC_API_KEY
     const hasGemini = !!(process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY)
     const hasOpenRouter = !!process.env.OPENROUTER_API_KEY
 
-    const isMissingKey = 
+    const isMissingKey =
       (providerName === 'openai' && !hasOpenAI) ||
       (providerName === 'anthropic' && !hasAnthropic) ||
       (providerName === 'gemini' && !hasGemini) ||
@@ -73,7 +117,7 @@ To optimize your visibility to hiring systems and highlight architectural execut
 
       const encoder = new TextEncoder()
       const words = mockResponseText.split(/(\s+)/)
-      
+
       const customStream = new ReadableStream({
         async start(controller) {
           let index = 0
@@ -98,7 +142,7 @@ To optimize your visibility to hiring systems and highlight architectural execut
       })
     }
 
-    // 3. Run real streaming completion
+    // 5. Run real streaming completion
     const provider = getAIProvider()
     const rawStream = await provider.stream(fullMessages)
 
@@ -120,7 +164,6 @@ To optimize your visibility to hiring systems and highlight architectural execut
     })
 
   } catch (err: unknown) {
-    console.error('Chat API Error:', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'An unexpected error occurred inside the AI Agent endpoint' }, { status: 500 })
+    return serverErrorResponse('Chat API', err)
   }
 }

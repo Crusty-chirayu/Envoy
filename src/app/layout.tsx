@@ -27,7 +27,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${mono.variable} dark`}>
       <body className="antialiased min-h-screen bg-[#050507] text-[#f2f2f7]">
-        {children}
+        <a href="#main-content" className="skip-to-content">
+          Skip to main content
+        </a>
+        <div id="main-content">{children}</div>
       </body>
     </html>
   )

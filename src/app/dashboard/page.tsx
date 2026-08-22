@@ -81,6 +81,16 @@ export default function DashboardPage() {
     }
   }
 
+  // Close the create-document modal with the Escape key (keyboard accessibility)
+  useEffect(() => {
+    if (!showCreateModal) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowCreateModal(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [showCreateModal])
+
   // Load initial data
   useEffect(() => {
     setIsDemo(checkDemoMode())
@@ -458,7 +468,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#050507] text-[#f2f2f7] flex items-center justify-center">
+      <div className="min-h-screen bg-[#050507] text-[#f2f2f7] flex items-center justify-center" role="status" aria-live="polite">
         <div className="flex flex-col items-center gap-4">
           <Logo iconSize={48} showText={false} className="animate-spin-slow" />
           <p className="text-sm text-[#9898b3]">Restoring workspace session...</p>
@@ -505,6 +515,7 @@ export default function DashboardPage() {
               onClick={handleSignOut}
               className="p-2 rounded-md hover:bg-[#16161f] text-[#9898b3] hover:text-[#f2f2f7] transition-colors"
               title="Sign Out"
+              aria-label="Sign Out"
             >
               <LogOut size={18} />
             </button>
@@ -514,7 +525,11 @@ export default function DashboardPage() {
 
       {/* Toast Notification */}
       {notification && (
-        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-md shadow-lg border bg-[#0c0c10] flex items-center gap-3 text-sm animate-fade-in border-[#252535]">
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 right-6 z-50 p-4 rounded-md shadow-lg border bg-[#0c0c10] flex items-center gap-3 text-sm animate-fade-in border-[#252535]"
+        >
           <CheckCircle size={16} className="text-green-400" />
           <span>{notification.message}</span>
         </div>
@@ -644,6 +659,7 @@ export default function DashboardPage() {
                           onClick={() => handleDeleteDocument(doc.id)}
                           className="text-[#5c5c7a] hover:text-[#ef4444] transition-colors"
                           title="Delete Document"
+                          aria-label={`Delete document ${doc.title}`}
                         >
                           <Trash2 size={15} />
                         </button>
@@ -769,8 +785,9 @@ export default function DashboardPage() {
                 {profileTab === 'identity' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                      <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Full Name</label>
+                      <label htmlFor="identity-name" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Full Name</label>
                       <input 
+                        id="identity-name"
                         type="text"
                         value={profile.identity.name}
                         onChange={(e) => handleIdentityChange('name', e.target.value)}
@@ -778,8 +795,9 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Headline / Job Title</label>
+                      <label htmlFor="identity-headline" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Headline / Job Title</label>
                       <input 
+                        id="identity-headline"
                         type="text"
                         value={profile.identity.headline}
                         onChange={(e) => handleIdentityChange('headline', e.target.value)}
@@ -787,8 +805,9 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Email Address</label>
+                      <label htmlFor="identity-email" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Email Address</label>
                       <input 
+                        id="identity-email"
                         type="email"
                         value={profile.identity.email}
                         onChange={(e) => handleIdentityChange('email', e.target.value)}
@@ -796,8 +815,9 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Phone Number</label>
+                      <label htmlFor="identity-phone" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Phone Number</label>
                       <input 
+                        id="identity-phone"
                         type="text"
                         value={profile.identity.phone || ''}
                         onChange={(e) => handleIdentityChange('phone', e.target.value)}
@@ -806,8 +826,9 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Location</label>
+                      <label htmlFor="identity-location" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Location</label>
                       <input 
+                        id="identity-location"
                         type="text"
                         value={profile.identity.location || ''}
                         onChange={(e) => handleIdentityChange('location', e.target.value)}
@@ -816,8 +837,9 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">LinkedIn URL</label>
+                      <label htmlFor="identity-linkedin" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">LinkedIn URL</label>
                       <input 
+                        id="identity-linkedin"
                         type="text"
                         value={profile.identity.linkedin || ''}
                         onChange={(e) => handleIdentityChange('linkedin', e.target.value)}
@@ -826,8 +848,9 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">GitHub URL</label>
+                      <label htmlFor="identity-github" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">GitHub URL</label>
                       <input 
+                        id="identity-github"
                         type="text"
                         value={profile.identity.github || ''}
                         onChange={(e) => handleIdentityChange('github', e.target.value)}
@@ -836,8 +859,9 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Website URL</label>
+                      <label htmlFor="identity-website" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Website URL</label>
                       <input 
+                        id="identity-website"
                         type="text"
                         value={profile.identity.website || ''}
                         onChange={(e) => handleIdentityChange('website', e.target.value)}
@@ -846,8 +870,9 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Professional Summary</label>
+                      <label htmlFor="identity-summary" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Professional Summary</label>
                       <textarea 
+                        id="identity-summary"
                         value={profile.summary || ''}
                         onChange={(e) => {
                           const updated = { ...profile, summary: e.target.value, updatedAt: new Date().toISOString() }
@@ -937,6 +962,7 @@ export default function DashboardPage() {
                               <button
                                 onClick={() => deleteExperience(exp.id)}
                                 className="p-1.5 rounded hover:bg-[#ef4444]/10 text-[#5c5c7a] hover:text-[#ef4444] transition-colors shrink-0 mt-5"
+                                aria-label={`Delete experience at ${exp.company}`}
                               >
                                 <Trash2 size={14} />
                               </button>
@@ -1034,6 +1060,7 @@ export default function DashboardPage() {
                               <button
                                 onClick={() => deleteEducation(edu.id)}
                                 className="p-1.5 rounded hover:bg-[#ef4444]/10 text-[#5c5c7a] hover:text-[#ef4444] transition-colors shrink-0 mt-5"
+                                aria-label={`Delete education at ${edu.institution}`}
                               >
                                 <Trash2 size={14} />
                               </button>
@@ -1089,6 +1116,7 @@ export default function DashboardPage() {
                               <button
                                 onClick={() => deleteSkillGroup(group.id)}
                                 className="p-1.5 rounded hover:bg-[#ef4444]/10 text-[#5c5c7a] hover:text-[#ef4444] transition-colors shrink-0 mt-5"
+                                aria-label={`Delete skill group ${group.category}`}
                               >
                                 <Trash2 size={14} />
                               </button>
@@ -1153,6 +1181,7 @@ export default function DashboardPage() {
                               <button
                                 onClick={() => deleteProject(proj.id)}
                                 className="p-1.5 rounded hover:bg-[#ef4444]/10 text-[#5c5c7a] hover:text-[#ef4444] transition-colors shrink-0 mt-5"
+                                aria-label={`Delete project ${proj.name}`}
                               >
                                 <Trash2 size={14} />
                               </button>
@@ -1304,29 +1333,42 @@ export default function DashboardPage() {
 
       {/* CREATE DOCUMENT MODAL */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-[#000000]/70 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-          <div className="bg-[#0c0c10]/95 border border-[#252535] w-full max-w-md rounded-xl p-6 shadow-2xl space-y-6">
+        <div
+          className="fixed inset-0 bg-[#000000]/70 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowCreateModal(false)
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-doc-title"
+            className="bg-[#0c0c10]/95 border border-[#252535] w-full max-w-md rounded-xl p-6 shadow-2xl space-y-6"
+          >
             <div>
-              <h3 className="text-lg font-bold text-[#f2f2f7]">Create New Career Document</h3>
+              <h3 id="create-doc-title" className="text-lg font-bold text-[#f2f2f7]">Create New Career Document</h3>
               <p className="text-xs text-[#9898b3] mt-1">This document will draw elements from your Canonical Profile.</p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Document Title</label>
+                <label htmlFor="create-doc-name" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Document Title</label>
                 <input 
+                  id="create-doc-name"
                   type="text"
                   value={newDocTitle}
                   onChange={(e) => setNewDocTitle(e.target.value)}
                   placeholder="e.g. Senior Backend Resume"
+                  autoFocus
                   className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Output Type</label>
+                  <label htmlFor="create-doc-type" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Output Type</label>
                   <select 
+                    id="create-doc-type"
                     value={newDocType}
                     onChange={(e) => setNewDocType(e.target.value as DocumentType)}
                     className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] focus:outline-none"
@@ -1337,8 +1379,9 @@ export default function DashboardPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Base Layout</label>
+                  <label htmlFor="create-doc-template" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Base Layout</label>
                   <select 
+                    id="create-doc-template"
                     value={newDocTemplate}
                     onChange={(e) => setNewDocTemplate(e.target.value as TemplateId)}
                     className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] focus:outline-none"

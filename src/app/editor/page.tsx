@@ -12,7 +12,8 @@ import {
   ArrowLeft, Download, Loader, Eye, History
 } from 'lucide-react'
 import { v4 as uuid } from 'uuid'
-import { generateDocxBlob } from '@/lib/export/docx'
+// NOTE: The docx generator is dynamically imported inside its export handler
+// so the large `docx` dependency stays out of the initial editor bundle.
 import { generatePlainText } from '@/lib/export/txt'
 
 function EditorWorkspace() {
@@ -78,6 +79,22 @@ function EditorWorkspace() {
 
   // Sync ref for debouncing
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Close overlays with the Escape key (keyboard accessibility)
+  useEffect(() => {
+    if (!showVersionsModal && !editingSection) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      if (showVersionsModal) {
+        setShowVersionsModal(false)
+        setSelectedVersion(null)
+      } else if (editingSection) {
+        setEditingSection(null)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [showVersionsModal, editingSection])
 
   // Load document and profile from DB
   useEffect(() => {
@@ -420,6 +437,8 @@ function EditorWorkspace() {
           <button
             onClick={() => router.push('/dashboard')}
             className="p-2 rounded-md hover:bg-[#16161f] text-[#9898b3] hover:text-[#f2f2f7] transition-colors"
+            aria-label="Back to Dashboard"
+            title="Back to Dashboard"
           >
             <ArrowLeft size={16} />
           </button>
@@ -503,6 +522,7 @@ function EditorWorkspace() {
                     setShowExportMenu(false)
                     if (!profile || !document) return
                     try {
+                      const { generateDocxBlob } = await import('@/lib/export/docx')
                       const blob = await generateDocxBlob(profile, document)
                       const url = URL.createObjectURL(blob)
                       const a = window.document.createElement('a')
@@ -584,7 +604,12 @@ function EditorWorkspace() {
 
       {/* SECTION CONFIG EDIT OVERLAY SIDEBAR */}
       {editingSection && (
-        <div className="fixed inset-y-0 right-0 w-80 bg-[#0c0c10] border-l border-[#1e1e2e] shadow-2xl z-50 p-6 space-y-6 animate-slide-in-right">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Edit section ${editingSection.title}`}
+          className="fixed inset-y-0 right-0 w-80 bg-[#0c0c10] border-l border-[#1e1e2e] shadow-2xl z-50 p-6 space-y-6 animate-slide-in-right"
+        >
           <div className="flex items-center justify-between border-b border-[#1e1e2e] pb-3">
             <h3 className="text-sm font-bold text-[#f2f2f7]">Edit Section: {editingSection.title}</h3>
             <button
@@ -632,11 +657,24 @@ function EditorWorkspace() {
 
       {/* VERSION HISTORY MODAL OVERLAY */}
       {showVersionsModal && (
-        <div className="fixed inset-0 bg-[#050507]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="w-[720px] max-h-[80vh] bg-[#0c0c10] border border-[#1e1e2e] rounded-xl flex flex-col overflow-hidden shadow-2xl">
+        <div
+          className="fixed inset-0 bg-[#050507]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowVersionsModal(false)
+              setSelectedVersion(null)
+            }
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="version-history-title"
+            className="w-[720px] max-h-[80vh] bg-[#0c0c10] border border-[#1e1e2e] rounded-xl flex flex-col overflow-hidden shadow-2xl"
+          >
             <div className="p-4 border-b border-[#1e1e2e] flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-sm text-[#f2f2f7]">Document Version History</h3>
+                <h3 id="version-history-title" className="font-bold text-sm text-[#f2f2f7]">Document Version History</h3>
                 <p className="text-[10px] text-[#9898b3] mt-0.5">View and restore past snapshots of this document and profile.</p>
               </div>
               <button

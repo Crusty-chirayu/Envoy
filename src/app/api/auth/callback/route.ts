@@ -1,10 +1,25 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+/**
+ * Validates a post-auth redirect target.
+ * Only same-origin relative paths are accepted; anything else (absolute URLs,
+ * protocol-relative "//host", backslash tricks) falls back to /dashboard to
+ * prevent open-redirect abuse of the OAuth flow.
+ */
+function sanitizeRedirectPath(next: string | null): string {
+  if (!next) return '/dashboard'
+  if (!next.startsWith('/')) return '/dashboard'
+  // Reject protocol-relative ("//host") and backslash-prefixed ("\host") tricks.
+  if (next.startsWith('//')) return '/dashboard'
+  if (next.charCodeAt(1) === 92) return '/dashboard' // 92 === backslash
+  return next
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard'
+  const next = sanitizeRedirectPath(searchParams.get('next'))
 
   if (code) {
     const supabase = await createClient()

@@ -144,12 +144,12 @@ function MinimalThemeView({ profile, site }: { profile: ProfessionalProfile; sit
                   <h3 className="font-bold text-sm text-white">{proj.name}</h3>
                   <div className="flex gap-2">
                     {proj.github && (
-                      <a href={`https://github.com/${proj.github}`} target="_blank" rel="noopener noreferrer" className="text-[#5c5c7a] hover:text-[#00d4ff]">
+                      <a href={`https://github.com/${proj.github}`} target="_blank" rel="noopener noreferrer" className="text-[#5c5c7a] hover:text-[#00d4ff]" aria-label={`View ${proj.name} on GitHub`}>
                         <Github size={13} />
                       </a>
                     )}
                     {proj.url && (
-                      <a href={proj.url} target="_blank" rel="noopener noreferrer" className="text-[#5c5c7a] hover:text-[#00d4ff]">
+                      <a href={proj.url} target="_blank" rel="noopener noreferrer" className="text-[#5c5c7a] hover:text-[#00d4ff]" aria-label={`Open ${proj.name} live site`}>
                         <ExternalLink size={13} />
                       </a>
                     )}
@@ -282,8 +282,8 @@ function DeveloperThemeView({ profile, site }: { profile: ProfessionalProfile; s
                     <div className="flex justify-between items-center text-emerald-400 font-bold">
                       <span>{proj.name}</span>
                       <div className="flex gap-2">
-                        {proj.github && <a href={`https://github.com/${proj.github}`} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-200"><Github size={12} /></a>}
-                        {proj.url && <a href={proj.url} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-200"><ExternalLink size={12} /></a>}
+                        {proj.github && <a href={`https://github.com/${proj.github}`} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-200" aria-label={`View ${proj.name} on GitHub`}><Github size={12} /></a>}
+                        {proj.url && <a href={proj.url} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-200" aria-label={`Open ${proj.name} live site`}><ExternalLink size={12} /></a>}
                       </div>
                     </div>
                     <p className="text-[11px] text-emerald-600/90 leading-normal">{proj.description}</p>
@@ -413,8 +413,8 @@ function BoldThemeView({ profile, site }: { profile: ProfessionalProfile; site: 
                       <div className="flex justify-between items-start">
                         <h4 className="font-bold text-xs text-white truncate max-w-[80%]">{proj.name}</h4>
                         <div className="flex gap-2">
-                          {proj.github && <a href={`https://github.com/${proj.github}`} target="_blank" rel="noopener noreferrer" className="text-[#5c5c7a] hover:text-[#00d4ff]"><Github size={12} /></a>}
-                          {proj.url && <a href={proj.url} target="_blank" rel="noopener noreferrer" className="text-[#5c5c7a] hover:text-[#00d4ff]"><ExternalLink size={12} /></a>}
+                          {proj.github && <a href={`https://github.com/${proj.github}`} target="_blank" rel="noopener noreferrer" className="text-[#5c5c7a] hover:text-[#00d4ff]" aria-label={`View ${proj.name} on GitHub`}><Github size={12} /></a>}
+                          {proj.url && <a href={proj.url} target="_blank" rel="noopener noreferrer" className="text-[#5c5c7a] hover:text-[#00d4ff]" aria-label={`Open ${proj.name} live site`}><ExternalLink size={12} /></a>}
                         </div>
                       </div>
                       <p className="text-[11px] text-[#9898b3] mt-2 line-clamp-3 leading-relaxed">{proj.description}</p>
