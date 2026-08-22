@@ -334,5 +334,5 @@ This changelog tracks the implementation status of major milestones in the produ
 - None — all planned phases (0–15) complete. Recommended follow-ups before production launch: deploy `supabase/schema.sql` with RLS policies once credentials are finalized, swap rate limiting to Redis for multi-instance hosting, add nonce-based CSP, and introduce unit/E2E test coverage (vitest + playwright tooling already installed).
 
 ### Recovery Commit:
-- Phase 15 Commit: (this commit)
+- Phase 15 Commit: `cb6c29b`
 
