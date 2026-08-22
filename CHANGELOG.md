@@ -456,3 +456,56 @@ This changelog tracks the implementation status of major milestones in the produ
 - Build-time + test validation executed with `.env.local` loaded: `npm run typecheck` PASS, `npm run lint` PASS ("No ESLint warnings or errors"), `npm test` PASS (7 files, 81/81 tests), `npm run build` PASS (16 pages; `/p/[slug]` dynamic; log reports `Environments: .env.local`; only the pre-existing `pdf-parse` CJS-default warning).
 - Live cloud end-to-end requires manual action: apply `supabase/schema.sql` to the project (Supabase SQL editor or `supabase db push`); it is idempotent (`CREATE IF NOT EXISTS`, no `DROP`) and non-destructive. Then sign up, create + publish a portfolio, and open `/p/[slug]` logged-out (public projection) and an unpublished/private slug (expect 404). These interactive/browser steps cannot be safely automated from the terminal; no live-data claims are made beyond the verification above.
 
+---
+
+## [Hotfix] Supabase Signup Trigger search_path — Production Signup Failure
+**Status**: Completed  
+**Date**: August 23, 2026
+
+### Symptom
+- Real cloud signups failed with Supabase Auth's generic `Database error saving new user` (HTTP 500 from `/auth/v1/signup`). The landing page's "Create Free Account" CTA was reported broken; investigation proved the link itself was correct and the failure occurred **after** navigation, on form submission.
+
+### Proven Root Cause (read-only catalog diagnostics against the live project)
+1. `supabase_auth_admin` role config: `search_path = auth`, `rolsuper = false`, `rolbypassrls = false`.
+2. `postgres` role: `rolbypassrls = true`, `search_path = "$user", public, extensions`.
+3. `handle_new_user()`: owner `postgres`, `SECURITY DEFINER`, **no** function-level `SET search_path`.
+4. Trigger `on_auth_user_created` present and correctly bound to `handle_new_user()`.
+5. `uuid-ossp` extension installed in the `extensions` schema only.
+6. Deployed function body references unqualified `profiles`, `user_preferences`, `uuid_generate_v4()` (byte-consistent with repo `schema.sql`).
+
+**Failure chain**: GoTrue connects as `supabase_auth_admin` (session `search_path = auth`) → signup INSERT into `auth.users` fires the AFTER INSERT trigger → SECURITY DEFINER switches effective role to postgres for privileges/RLS only (BYPASSRLS=true ⇒ **RLS was NOT the root cause**) → role-level settings apply only at session start and the function declared no `SET search_path`, so the body executed under the caller's `search_path = auth` → `pg_catalog` names (`jsonb_build_object`, `NOW`, `COALESCE`) resolved fine, but unqualified `profiles` / `user_preferences` / `uuid_generate_v4()` (in `public` / `extensions`) did not → first statement failed (`relation "profiles" does not exist`) → transaction aborted → GoTrue surfaced `Database error saving new user`.
+
+### Fix (narrowly scoped, architecture-preserving)
+- Applied in the real Supabase SQL Editor: `CREATE OR REPLACE FUNCTION public.handle_new_user() RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions AS $$ <identical body> $$;`
+- Zero changes to tables, RLS policies, roles, or triggers. `OR REPLACE` with an unchanged signature preserved the function OID, keeping the existing trigger bound. This also implements PostgreSQL's documented hardening requirement for SECURITY DEFINER functions (pinning `search_path`), i.e. a security *strengthening*.
+- `supabase/schema.sql` synchronized so future deployments reproduce the fix.
+
+### Real Cloud Verification
+- Live signup probe against the configured project (fresh account; credentials and password never logged): **HTTP 200 `SIGNUP_OK`; auth user created; NO database error.** GoTrue executes the INSERT + trigger in one transaction, so the 200 response transactionally guarantees the trigger completed and committed both `profiles` and `user_preferences` rows.
+- Direct row-count confirmation query (read-only, run in SQL Editor against the probe account):
+  ```sql
+  SELECT u.email,
+         (SELECT count(*) FROM public.profiles p WHERE p.user_id = u.id)          AS profiles_rows,
+         (SELECT count(*) FROM public.user_preferences up WHERE up.user_id = u.id) AS preferences_rows
+  FROM auth.users u
+  WHERE u.email LIKE 'envoy.probe.%';
+  ```
+- Subsequent automated probes were rejected by Supabase Auth rate limiting (HTTP 429); the single successful post-fix signup is the authoritative runtime evidence at the database layer.
+- A later manual signup attempt through the application UI returned **`email rate limit exceeded`** — Supabase's built-in outbound-email quota, exhausted by repeated testing. This is an Auth email-delivery limit, NOT a database/trigger error. The error class changing from `Database error saving new user` → `email rate limit exceeded` independently confirms the trigger-layer fix took effect in production.
+- **End-to-end signup verification status: BLOCKED by Supabase built-in email rate limiting.** The database/trigger layer is verified (post-fix HTTP 200); the complete flow (confirmation-email delivery → confirmed session → dashboard redirect) remains UNVERIFIED until the project-wide email quota resets and a genuinely fresh signup succeeds. The signup flow must NOT be treated as fully verified until then. No bypass of the email rate limit exists or was attempted in application code.
+
+### Landing CTA Verification (runtime)
+- `GET /` → 200; contains two `href="/signup"` links including "Create Free Account"; "Try Demo Mode" present.
+- `GET /signup` anonymous → 200, final URI stays `/signup`, form renders (middleware does not block auth pages for anonymous users).
+- Conclusion: the CTA link was never broken; the reported failure was the downstream signup database error fixed above.
+- Anonymous `GET /dashboard` redirects to `/login?redirectTo=%2Fdashboard` — designed protected-route behavior in cloud mode.
+
+### Validation Results
+- `npm run typecheck` — PASS (zero errors)
+- `npm run lint` — PASS ("No ESLint warnings or errors")
+- `npm test` — PASS (7 files, 81/81 tests)
+- `npm run build` — PASS (16 routes generated; only the pre-existing `pdf-parse` CJS-default warning)
+
+### Recovery Commit:
+- Hotfix Commit: see git log (`fix: repair Supabase signup trigger search path`)
+
