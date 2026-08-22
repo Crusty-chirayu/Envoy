@@ -168,7 +168,9 @@ export async function generateDocxBlob(
           spacing: { before: 120, after: 40 },
           children: [
             new TextRun({
-              text: `${edu.degree} in ${edu.field}  -  `,
+              // D2 (audit): omit "in <field>" when field is missing instead of
+              // rendering a literal "in undefined" in exported files.
+              text: edu.field ? `${edu.degree} in ${edu.field}  -  ` : `${edu.degree}  -  `,
               bold: true,
               size: 20,
               font: 'Arial',

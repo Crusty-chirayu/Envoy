@@ -44,7 +44,9 @@ export function generatePlainText(profile: ProfessionalProfile): string {
     lines.push('EDUCATION')
     lines.push('-'.repeat(9))
     for (const edu of profile.education) {
-      lines.push(`${edu.degree} in ${edu.field} | ${edu.institution}`)
+      // D2 (audit): omit "in <field>" when field is missing instead of
+      // rendering a literal "in undefined" in exported files.
+      lines.push(edu.field ? `${edu.degree} in ${edu.field} | ${edu.institution}` : `${edu.degree} | ${edu.institution}`)
       lines.push(`${edu.startDate} - ${edu.current ? 'Present' : edu.endDate}`)
       lines.push('')
     }
