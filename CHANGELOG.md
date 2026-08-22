@@ -367,3 +367,16 @@ This changelog tracks the implementation status of major milestones in the produ
 - `npm run lint` — PASS
 - `npm run build` — PASS
 
+### S7 — Portfolio privacy default + explicit publishing (HIGH) — FIXED
+- New portfolios are now created with `visibility: 'private'` instead of `'public'`. Previously every new user's portfolio was published to the internet by default without opt-in — a privacy anti-pattern exposing name, contact details, and career history.
+- Publishing is now an explicit user action: saving with a non-private visibility stamps `publishedAt` on first publish; the save button label reflects intent ("Save Portfolio Settings" vs "Save & Publish Portfolio").
+- Added an inline privacy warning when Public/Unlisted is selected, stating exactly what becomes exposed and to whom.
+- The status banner now tells the truth: private sites show "Your portfolio is PRIVATE" with publish instructions instead of the unconditional "LIVE!" message.
+- Existing users' already-public portfolios are intentionally left untouched (no retroactive data changes); new defaults apply going forward.
+
+### Validation (S7):
+- `npx vitest run` — PASS (26/26)
+- `npm run typecheck` — PASS
+- `npm run lint` — PASS
+- `npm run build` — PASS
+

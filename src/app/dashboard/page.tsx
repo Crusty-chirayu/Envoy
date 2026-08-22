@@ -177,7 +177,9 @@ export default function DashboardPage() {
         title: `${userProfile.identity.name}'s Portfolio`,
         theme: 'minimal',
         accentColor: '#6366f1',
-        visibility: 'public',
+        // Privacy default (audit finding S7): portfolios start PRIVATE.
+        // Publishing requires an explicit user action in Portfolio Setup.
+        visibility: 'private',
         sections: [
           { id: uuid(), type: 'hero', visible: true, order: 0, title: 'Introduction' },
           { id: uuid(), type: 'about', visible: true, order: 1, title: 'About' },
@@ -1221,7 +1223,17 @@ export default function DashboardPage() {
                   <div className="flex items-start gap-3">
                     <AlertCircle size={18} className="text-[#00d4ff] shrink-0 mt-0.5" />
                     <div className="text-xs text-[#9898b3]">
-                      <span className="font-bold text-[#f2f2f7]">Your portfolio is LIVE!</span> Any changes saved below are instantly published.
+                      {portfolio.visibility === 'private' ? (
+                        <>
+                          <span className="font-bold text-[#f2f2f7]">Your portfolio is PRIVATE.</span>{' '}
+                          Only you can see it. Switch visibility to Public or Unlisted and save to publish.
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-bold text-[#f2f2f7]">Your portfolio is LIVE!</span> Any
+                          changes saved below are instantly published.
+                        </>
+                      )}
                     </div>
                   </div>
                   <a 
@@ -1267,8 +1279,9 @@ export default function DashboardPage() {
 
                   {/* Visibility Select */}
                   <div>
-                    <label className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Visibility Status</label>
+                    <label htmlFor="portfolio-visibility" className="block text-xs font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Visibility Status</label>
                     <select 
+                      id="portfolio-visibility"
                       value={portfolio.visibility}
                       onChange={(e) => setPortfolioState({ ...portfolio, visibility: e.target.value as PortfolioVisibility })}
                       className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-xs text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
@@ -1277,6 +1290,11 @@ export default function DashboardPage() {
                       <option value="unlisted">Unlisted (Direct Link Only)</option>
                       <option value="private">Private (Owner Only Access)</option>
                     </select>
+                    {portfolio.visibility !== 'private' && (
+                      <p className="text-[10px] text-amber-400 mt-2 leading-relaxed" role="note">
+                        Publishing makes this portfolio viewable by anyone{portfolio.visibility === 'public' ? ', including search engines' : ' with the direct link'}. Your name, contact details, and career history will be exposed.
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -1309,12 +1327,27 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Save action button */}
+                {/* Save action button — publishing is an explicit user action
+                    (audit finding S7): saving with a non-private visibility
+                    stamps publishedAt the first time the site goes live. */}
                 <button
                   onClick={async () => {
                     try {
-                      await dbPortfolios.save(portfolio)
-                      showNotification('Portfolio settings successfully saved and published!', 'success')
+                      const siteToSave = {
+                        ...portfolio,
+                        publishedAt:
+                          portfolio.publishedAt ??
+                          (portfolio.visibility !== 'private' ? new Date().toISOString() : undefined),
+                        updatedAt: new Date().toISOString(),
+                      }
+                      setPortfolioState(siteToSave)
+                      await dbPortfolios.save(siteToSave)
+                      showNotification(
+                        portfolio.visibility === 'private'
+                          ? 'Portfolio settings saved (site is private).'
+                          : 'Portfolio settings saved and published!',
+                        'success'
+                      )
                     } catch (err) {
                       console.error('Save portfolio failed:', err)
                       showNotification('Save failed', 'error')
@@ -1322,7 +1355,7 @@ export default function DashboardPage() {
                   }}
                   className="bg-[#6366f1] text-[#050507] font-extrabold text-xs px-5 py-2.5 rounded-md hover:opacity-90 transition-opacity shadow-md shadow-[#6366f1]/20"
                 >
-                  Save and Publish Portfolio
+                  {portfolio.visibility === 'private' ? 'Save Portfolio Settings' : 'Save & Publish Portfolio'}
                 </button>
               </div>
             </div>
