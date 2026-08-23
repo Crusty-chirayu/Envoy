@@ -157,9 +157,10 @@ Once the stack is finalized, this section gets swapped for exact, tested command
 
 ## 🌿 Branching Strategy
 
-Three builders, one repo, zero stepping on each other's work:
+Contributions in this project: Dominance/Work - wise presentation
 
-<img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/2420d967-d541-4371-af83-ea3ef3fc7a86" />
+<img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/d43e1c77-9314-484a-806c-86d9c1b48bf3" />
+
 
 
 - **`main`** — production-ready, protected, no direct pushes.
@@ -203,11 +204,13 @@ Full guidelines live in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 <div align="center">
 
-| | Name | GitHub | Focus |
-|---|---|---|---|
-| 🧠 | **Chirayu** | [@Crusty-chirayu](https://github.com/Crusty-chirayu) | Core Architecture/Developer/Designer |
-| 🎯 | **Sagar Khanal Sharma** | [@Sagar-Khanal](https://github.com/Sagar-Khanal) | Testing/Structure planner |
-| ⚙️ | **Prakash Bohara** | [@Prakash0788](https://github.com/Prakash0788) | Documentation/Key-generation and Research |
+## 👥 Contributors
+
+| | Name | GitHub | Contribution | Focus |
+|---|---|---|---|---|
+| 🧠 | **Chirayu** | [@Crusty-chirayu](https://github.com/Crusty-chirayu) | **95%** | Core Architecture, Full Development, Design |
+| 🎯 | **Sagar Khanal Sharma** | [@Sagar-Khanal](https://github.com/Sagar-Khanal) | 3% | Testing, Structure Planning |
+| ⚙️ | **Prakash Bohara** | [@Prakash0788](https://github.com/Prakash0788) | 2% | Documentation, Free API Key Research |
 
 </div>
 
