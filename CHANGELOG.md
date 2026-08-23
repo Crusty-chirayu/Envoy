@@ -643,3 +643,36 @@ A full-application visual refinement pass. No backend, auth, security, AI, ATS, 
 ### Real Cloud Verification (honest status)
 - **PENDING** — the interactive browser sequence (improve summary → concise follow-up uses context → "next" advances the editor → section-aware advice → continuation) requires the user's OpenRouter key in `.env.local` plus an authenticated cloud session, and has NOT been executed by this change. Automated coverage proves the deterministic navigation contract, bounded-memory payload shape, and contextual mock behavior; live LLM behavior remains unverified until the key is added and the flow is exercised in the running app.
 
+---
+
+## [AI Fix] OpenRouter 500 → 402 Surfaced + Credit-Compatible Token Budget
+**Status**: Completed (diagnosis + code fix + validation) — live user test pending credits  
+**Date**: August 23, 2026
+
+### Symptom
+- With `ENVOY_AI_PROVIDER=openrouter` configured, the editor chat sent a request to `/api/chat`; the route returned HTTP 500 and the browser showed "AI Agent endpoint responded with status 500". The Supabase/cloud persistence layer was unaffected.
+
+### Proven Root Cause (captured from the real OpenRouter API through the application's own provider code path; no key leaked)
+- A temporary diagnostics probe invoked `getAIProvider()` → `OpenRouterProvider.complete()/stream()` exactly as `/api/chat` does, loading `.env.local` in memory. Results:
+  - `PROVIDER_NAME = openrouter`, `PROVIDER_MODEL = openai/gpt-4o` — env vars load correctly.
+  - **Non-streaming `complete()` with `maxTokens: 10` SUCCEEDED** (2 chars returned) — the key, the endpoint, the Authorization header, and the model are all valid.
+  - **Streaming `stream()` failed with OpenRouter HTTP 402:** `"This request requires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 395"`.
+- **Root cause:** the provider methods sent a hardcoded `max_tokens: 4096` in the streaming body. The account's remaining OpenRouter credit (≈395 tokens at the model's rate) is less than 4096, so OpenRouter rejected the request with 402. Envoy's `/api/chat` catch-all then mapped the provider error to a generic HTTP 500 — the browser could never see the real 402.
+
+### Fix (smallest production-quality change; nothing else touched)
+- `src/lib/ai/provider.ts` — added `export class ProviderError extends Error` carrying the upstream HTTP `status`, and `export function resolveMaxOutputTokens()` (env `AI_MAX_TOKENS`, clamped 64…8192, default **1024** instead of the previous hardcoded 4096). All four providers (OpenAI/Anthropic/OpenRouter/Gemini) now reject with `ProviderError` including the real status instead of a bare `Error`.
+- `/api/chat` now passes `{ maxTokens: resolveMaxOutputTokens() }` into `provider.stream(...)` and maps `ProviderError` with `status === 402` to a clear HTTP 402 JSON body explaining the credits/`AI_MAX_TOKENS` remedy — no longer a generic 500.
+- `/api/jobs/extract` and `/api/ingest` also pass `resolveMaxOutputTokens()` into their `provider.structured(...)` calls so extraction/ingestion honor the same credit-compatible limit.
+- `src/app/editor/page.tsx` — the `!response.ok` branch now parses the JSON `error` field so the browser shows the server's actionable message instead of a bare "status 500".
+- `.env.example` documents the new `AI_MAX_TOKENS` knob.
+- `src/app/api/jobs/extract/route.test.ts` — extended the hermetic provider mock with `resolveMaxOutputTokens` (test-only).
+
+### Validation
+- `npm run typecheck` — PASS
+- `npm run lint` — PASS ("No ESLint warnings or errors")
+- `npm test` — PASS (8 files, 129/129)
+- `npm run build` — PASS (16 routes; only the pre-existing `pdf-parse` CJS warning)
+
+### Real-world behavior note (honest)
+- The 500 is replaced by an HTTP 402 response that (a) tells the user exactly why and (b) offers two remedies: add credits, or set `AI_MAX_TOKENS` to fit the balance. The non-streaming probe proved the full code path works when the budget fits. After the user adds credits (or lowers `AI_MAX_TOKENS`), the streaming chat request will succeed; that live success must be confirmed in the running app before marking fully verified.
+

@@ -5,7 +5,7 @@ import {
   parseJsonBody,
   validateJobDescription,
 } from '@/lib/security/request'
-import { getAIProvider } from '@/lib/ai/provider'
+import { getAIProvider, resolveMaxOutputTokens } from '@/lib/ai/provider'
 import type { JobExtraction } from '@/types'
 
 const jobExtractionSchema = {
@@ -145,7 +145,7 @@ ${description}`
       qualifications: string[]
       technologies: string[]
       softSkills: string[]
-    }>(messages, jobExtractionSchema)
+    }>(messages, jobExtractionSchema, { maxTokens: resolveMaxOutputTokens() })
 
     const extraction: JobExtraction = {
       role: result.role || 'Target Role',

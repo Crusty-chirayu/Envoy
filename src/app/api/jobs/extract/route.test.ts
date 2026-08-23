@@ -27,6 +27,7 @@ vi.mock('@/lib/ai/provider', () => ({
   getAIProvider: () => ({
     structured: structuredMock,
   }),
+  resolveMaxOutputTokens: () => 1024,
 }))
 
 import { POST } from './route'

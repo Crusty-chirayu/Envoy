@@ -309,7 +309,14 @@ function EditorWorkspace() {
       })
 
       if (!response.ok) {
-        throw new Error(`AI Agent endpoint responded with status ${response.status}`)
+        let detail = `AI Agent endpoint responded with status ${response.status}`
+        try {
+          const data = await response.json()
+          if (data && typeof data.error === 'string') detail = data.error
+        } catch {
+          // Non-JSON body — keep the generic status message.
+        }
+        throw new Error(detail)
       }
 
       const reader = response.body?.getReader()

@@ -59,6 +59,37 @@ export interface AIProvider {
 // OpenAI Provider
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+/**
+ * Typed provider failure carrying the upstream HTTP status so route
+ * handlers can map provider-side conditions (e.g. 402 insufficient
+ * credits) to actionable client responses without leaking internals.
+ */
+export class ProviderError extends Error {
+  readonly status?: number
+
+  constructor(message: string, status?: number) {
+    super(message)
+    this.name = 'ProviderError'
+    this.status = status
+  }
+}
+
+/**
+ * Resolves the maximum OUTPUT tokens per AI request.
+ *
+ * Configurable via AI_MAX_TOKENS (clamped 64-8192). Default 1024 instead
+ * of the previous hardcoded 4096: gateway credit systems such as
+ * OpenRouter's free tier reject requests whose max_tokens exceeds the
+ * remaining balance (HTTP 402), so a modest default keeps chat working
+ * out of the box while staying tunable for paid accounts.
+ */
+export function resolveMaxOutputTokens(): number {
+  const parsed = Number.parseInt(process.env.AI_MAX_TOKENS ?? '', 10)
+  if (!Number.isFinite(parsed)) return 1024
+  return Math.min(8192, Math.max(64, parsed))
+}
+
+
 class OpenAIProvider implements AIProvider {
   readonly name: AIProviderName = 'openai'
   readonly model: string
@@ -93,7 +124,7 @@ class OpenAIProvider implements AIProvider {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new Error(`OpenAI API error ${response.status}: ${error}`)
+      throw new ProviderError(`OpenAI API error ${response.status}: ${error}`, response.status)
     }
 
     const data = await response.json() as {
@@ -119,7 +150,7 @@ class OpenAIProvider implements AIProvider {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new Error(`OpenAI API error ${response.status}: ${error}`)
+      throw new ProviderError(`OpenAI API error ${response.status}: ${error}`, response.status)
     }
 
     if (!response.body) {
@@ -220,7 +251,7 @@ class AnthropicProvider implements AIProvider {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new Error(`Anthropic API error ${response.status}: ${error}`)
+      throw new ProviderError(`Anthropic API error ${response.status}: ${error}`, response.status)
     }
 
     const data = await response.json() as {
@@ -248,7 +279,7 @@ class AnthropicProvider implements AIProvider {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new Error(`Anthropic API error ${response.status}: ${error}`)
+      throw new ProviderError(`Anthropic API error ${response.status}: ${error}`, response.status)
     }
 
     if (!response.body) throw new Error('Anthropic response has no body')
@@ -336,7 +367,7 @@ class OpenRouterProvider implements AIProvider {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new Error(`OpenRouter API error ${response.status}: ${error}`)
+      throw new ProviderError(`OpenRouter API error ${response.status}: ${error}`, response.status)
     }
 
     const data = await response.json() as {
@@ -361,7 +392,7 @@ class OpenRouterProvider implements AIProvider {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new Error(`OpenRouter API error ${response.status}: ${error}`)
+      throw new ProviderError(`OpenRouter API error ${response.status}: ${error}`, response.status)
     }
 
     if (!response.body) throw new Error('OpenRouter response has no body')
@@ -470,7 +501,7 @@ class GeminiProvider implements AIProvider {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new Error(`Gemini API error ${response.status}: ${error}`)
+      throw new ProviderError(`Gemini API error ${response.status}: ${error}`, response.status)
     }
 
     const data = await response.json() as {
@@ -509,7 +540,7 @@ class GeminiProvider implements AIProvider {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new Error(`Gemini API error ${response.status}: ${error}`)
+      throw new ProviderError(`Gemini API error ${response.status}: ${error}`, response.status)
     }
 
     if (!response.body) {

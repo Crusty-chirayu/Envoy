@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server'
-import { getAIProvider } from '@/lib/ai/provider'
+import { getAIProvider, resolveMaxOutputTokens } from '@/lib/ai/provider'
 import pdf from 'pdf-parse'
 import mammoth from 'mammoth'
 import { v4 as uuid } from 'uuid'
@@ -270,7 +270,7 @@ export async function POST(request: Request) {
         }
       ]
 
-      parsedResult = await provider.structured<Record<string, unknown>>(messages, profileExtractionSchema)
+      parsedResult = await provider.structured<Record<string, unknown>>(messages, profileExtractionSchema, { maxTokens: resolveMaxOutputTokens() })
     }
 
     // Map extracted data to full ProfessionalProfile (adding UUIDs where needed)

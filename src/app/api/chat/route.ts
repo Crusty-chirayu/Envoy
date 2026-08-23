@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getAIProvider } from '@/lib/ai/provider'
+import { getAIProvider, ProviderError, resolveMaxOutputTokens } from '@/lib/ai/provider'
 import { buildContext } from '@/lib/ai/context'
 import { getAuthContext, unauthorizedResponse } from '@/lib/security/auth'
 import { checkRateLimit, getClientRateLimitKey } from '@/lib/security/rate-limit'
@@ -164,7 +164,7 @@ To optimize your visibility to hiring systems and highlight architectural execut
 
     // 5. Run real streaming completion
     const provider = getAIProvider()
-    const rawStream = await provider.stream(fullMessages)
+    const rawStream = await provider.stream(fullMessages, { maxTokens: resolveMaxOutputTokens() })
 
     const encoder = new TextEncoder()
     const transformStream = new TransformStream({
@@ -184,6 +184,15 @@ To optimize your visibility to hiring systems and highlight architectural execut
     })
 
   } catch (err: unknown) {
+    // Provider-side credit exhaustion (e.g. OpenRouter free tier) is an
+    // actionable user condition, not an internal failure — surface it.
+    if (err instanceof ProviderError && err.status === 402) {
+      return NextResponse.json(
+        { error: 'Your AI provider account is out of credits. Add credits at https://openrouter.ai/settings/credits, or set a lower AI_MAX_TOKENS value in .env.local to fit your remaining balance.' },
+        { status: 402 }
+      )
+    }
+
     return serverErrorResponse('Chat API', err)
   }
 }
