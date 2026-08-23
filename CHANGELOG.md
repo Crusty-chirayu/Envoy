@@ -676,3 +676,32 @@ A full-application visual refinement pass. No backend, auth, security, AI, ATS, 
 ### Real-world behavior note (honest)
 - The 500 is replaced by an HTTP 402 response that (a) tells the user exactly why and (b) offers two remedies: add credits, or set `AI_MAX_TOKENS` to fit the balance. The non-streaming probe proved the full code path works when the budget fits. After the user adds credits (or lowers `AI_MAX_TOKENS`), the streaming chat request will succeed; that live success must be confirmed in the running app before marking fully verified.
 
+---
+
+## [AI Fix] Apply AI Proposals to the Editor (Bare-Fence Extraction)
+**Status**: Completed (diagnosis + code fix + validation) — live browser re-test pending  
+**Date**: August 23, 2026
+
+### Symptom
+- With OpenRouter working, the user asked the AI to rewrite the professional summary. The AI returned a good natural-language response AND a valid `propose_edit` JSON block (`sectionType: "summary"`, `field: "summary"`, a real `newValue`). However, no proposal card appeared and nothing was applied to the resume — the editor still showed the old/empty summary.
+
+### Proven Root Cause (reproduced through the real pipeline; no guessing)
+- A temporary diagnostic test fed the user's EXACT observed payload through the real `extractProposal()` → `validateProposalBlock()` → editor summary-apply branch:
+  - `extractProposal` parsed the ```` ```json ````-fenced block correctly.
+  - `validateProposalBlock` ACCEPTED the summary proposal — `originalValue` is NOT a literal-match requirement; the schema only validates shape/length. So `"old text value"` was never a blocker.
+  - The editor's summary-apply branch correctly assigned `newValue` to the summary.
+- **Root cause:** the extraction regex `PROPOSAL_BLOCK_REGEX = /```json\s*([\s\S]*?)```/i` ONLY matched a ```` ```json ```` fence. Real OpenRouter responses frequently emit a **bare ```` ``` ```` fence** (no `json` tag). When that happened, `extractProposal()` returned `null`, the diff card never rendered, and the user never saw an Accept button — so the proposal was never applied. This is failure class **A (AI response parsing failure)** — specifically the fence-variant mismatch.
+
+### Fix (smallest production-quality change; nothing else touched)
+- `src/lib/validation/proposal.ts` — hardened `PROPOSAL_BLOCK_REGEX` to `/```(?:jsonl?)?\s*([\s\S]*?)```/i`, which tolerates ```` ```json ````, ```` ```JSON ````, ```` ```jsonl ````, and the bare ```` ``` ```` fence that real OpenRouter responses emit. Validation allowlist, value-shape enforcement, itemId requirements, and the zero-side-effect guarantee are all unchanged.
+- Verified the fix against the user's exact payload (both ```` ```json ```` and bare ```` ``` ```` fences) and confirmed all 21 existing proposal tests still pass — the change is strictly additive and backward-compatible.
+
+### Validation
+- `npm run typecheck` — PASS
+- `npm run lint` — PASS ("No ESLint warnings or errors")
+- `npm test` — PASS (8 files, 129/129)
+- `npm run build` — PASS (16 routes; only the pre-existing `pdf-parse` CJS warning)
+
+### Real browser verification (honest status)
+- **PENDING** — the fix is proven at the unit level (the exact observed payload now extracts, validates, and applies through the real code path, including the bare-fence variant). The live browser sequence (send "Rewrite my professional summary…" → proposal card appears → click Accept → summary updates → refresh persists) must be re-run in the running app to confirm end-to-end behavior before marking fully verified.
+

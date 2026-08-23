@@ -187,7 +187,9 @@ export function validateProposalBlock(block: unknown): ProposalValidation {
 // Extraction from assistant message content
 // ─────────────────────────────────────────
 
-const PROPOSAL_BLOCK_REGEX = /```json\s*([\s\S]*?)```/i
+// Matches a fenced JSON block. Tolerates the common fence variants real
+// providers emit: ```json, ```JSON, ```jsonl, or a bare ``` fence.
+const PROPOSAL_BLOCK_REGEX = /```(?:jsonl?)?\s*([\s\S]*?)```/i
 
 export interface ExtractedProposal {
   /** Message content with the JSON block removed (what the user reads). */
