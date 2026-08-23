@@ -159,7 +159,44 @@ Once the stack is finalized, this section gets swapped for exact, tested command
 
 Contributions in this project: Dominance/Work - wise presentation
 
-<img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/d43e1c77-9314-484a-806c-86d9c1b48bf3" />
+gitGraph
+   commit id: "init"
+   branch dev
+   checkout dev
+   commit id: "dev-init"
+   branch feature/chirayu
+   checkout feature/chirayu
+   commit id: "10"
+   commit id: "12"
+   commit id: "3"
+   commit id: "4"
+   commit id: "3"
+   checkout dev
+   merge feature/chirayu id: "C1"
+   checkout feature/chirayu
+   commit id: "4"
+   commit id: "5"
+   commit id: "6"
+   checkout dev
+   merge feature/chirayu id: "C2"
+   branch feature/sagar
+   checkout feature/sagar
+   commit id: "testing"
+   checkout dev
+   merge feature/sagar id: "testing pass"
+   branch feature/prakash
+   checkout feature/prakash
+   commit id: "docs + keys"
+   checkout dev
+   merge feature/prakash id: "docs merge"
+   checkout feature/chirayu
+   commit id: "7"
+   commit id: "8"
+   commit id: "9"
+   checkout dev
+   merge feature/chirayu id: "C3 Integration"
+   checkout main
+   merge dev id: "Release"
 
 
 
