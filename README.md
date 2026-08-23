@@ -82,7 +82,7 @@ Renders the result into an ATS-ready resume, an academic CV, or a live, deployab
 
 Envoy's core is a four-stage agentic loop — not a single prompt-and-pray call, but a pipeline where each stage checks and enriches the one before it.
 
-```
+```text
   STAGE 1              STAGE 2                STAGE 3               STAGE 4
   ────────             ────────                ────────              ────────
   INGEST      ──────▶  UNDERSTAND    ──────▶   STRATEGIZE   ──────▶  COMPOSE
@@ -99,10 +99,56 @@ Each stage hands a structured artifact to the next — never raw text — so not
 
 ## 🏗️ System Architecture
 
+```mermaid
+flowchart TD
+    classDef input fill:#1F2A44,stroke:#4CC9F0,color:#E8F4FF,stroke-width:1px
+    classDef parser fill:#2B1F44,stroke:#7A5CFA,color:#EEE8FF,stroke-width:1px
+    classDef agent fill:#3A1F1F,stroke:#FF6B6B,color:#FFE8E8,stroke-width:1px
+    classDef store fill:#1F3A2E,stroke:#06D6A0,color:#E4FFF4,stroke-width:1px
+    classDef output fill:#3A2E1F,stroke:#FFD60A,color:#FFF6DC,stroke-width:1px
 
-<img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/736fb964-a456-4cc7-836a-fb13e5ae6d4e" />
+    subgraph IN["📥 Input Sources"]
+        A1["Resume PDF / DOCX"]:::input
+        A2["Free-text bio"]:::input
+        A3["Job description + sector"]:::input
+    end
 
+    subgraph PARSE["apps/parser"]
+        B1["OCR / text extraction"]:::parser
+        B2["Structured profile builder"]:::parser
+    end
 
+    subgraph AGENT["apps/agent — the pipeline"]
+        C1["INGEST"]:::agent
+        C2["UNDERSTAND"]:::agent
+        C3["STRATEGIZE\nsector + keyword engine"]:::agent
+        C4["COMPOSE"]:::agent
+    end
+
+    subgraph TPL["packages/templates + ui"]
+        D1["Resume / CV templates"]:::store
+        D2["Portfolio components"]:::store
+    end
+
+    subgraph OUT["apps/web — delivery"]
+        E1["ATS-ready resume"]:::output
+        E2["Academic CV"]:::output
+        E3["Live web portfolio"]:::output
+    end
+
+    A1 --> B1 --> B2
+    A2 --> B2
+    B2 --> C1 --> C2 --> C3
+    A3 --> C3
+    C3 --> C4
+    D1 --> C4
+    D2 --> C4
+    C4 --> E1
+    C4 --> E2
+    C4 --> E3
+```
+
+> Every arrow in this diagram is a structured hand-off, not a prompt string — the parser never talks directly to the renderer, and the agent never sees raw files. That separation is what keeps outputs traceable and testable stage-by-stage.
 
 <br/>
 
@@ -155,10 +201,11 @@ Once the stack is finalized, this section gets swapped for exact, tested command
 
 <br/>
 
-## 🌿 Branching Strategy
+## 🌿 Branching Strategy & Contribution Flow
 
-Contributions in this project: Dominance/Work - wise presentation
+The diagram below reflects actual commit share, not headcount — Chirayu drives continuous development on `feature/chirayu`, while Sagar and Prakash contribute focused, single-pass merges (testing, and docs/API key research respectively).
 
+```mermaid
 gitGraph
    commit id: "init"
    branch dev
@@ -197,8 +244,7 @@ gitGraph
    merge feature/chirayu id: "C3 Integration"
    checkout main
    merge dev id: "Release"
-
-
+```
 
 - **`main`** — production-ready, protected, no direct pushes.
 - **`dev`** — integration branch; every finished feature lands here before release.
@@ -240,8 +286,6 @@ Full guidelines live in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 ## 👥 The Builders
 
 <div align="center">
-
-## 👥 Contributors
 
 | | Name | GitHub | Contribution | Focus |
 |---|---|---|---|---|
