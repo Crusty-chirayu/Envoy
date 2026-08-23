@@ -41,6 +41,27 @@ export function checkDemoMode(): boolean {
   return isDemoEnv || !hasSupabaseKeys
 }
 
+/**
+ * Diagnostic-only serializer for Supabase/PostgREST errors.
+ * Exposes ONLY safe, non-sensitive fields (message, code, details, hint,
+ * status) so browser logs show the real error instead of `{}`.
+ * Never includes tokens, keys, headers, or session data.
+ */
+export function describeDbError(error: unknown): Record<string, unknown> {
+  if (error === null || typeof error !== 'object') {
+    return { kind: typeof error, value: String(error) }
+  }
+  const e = error as Record<string, unknown>
+  return {
+    name: typeof e.name === 'string' ? e.name : undefined,
+    message: typeof e.message === 'string' ? e.message : undefined,
+    code: typeof e.code === 'string' ? e.code : undefined,
+    details: typeof e.details === 'string' ? e.details : undefined,
+    hint: typeof e.hint === 'string' ? e.hint : undefined,
+    status: typeof e.status === 'number' ? e.status : undefined,
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // PROFILES
 // ─────────────────────────────────────────────────────────────────────────────
@@ -51,9 +72,13 @@ export const dbProfile = {
       return localProfile.get()
     }
     const supabase = createBrowserClient()
+    // Select the real primary key alongside the JSONB payload. profiles.id is
+    // authoritative: FK targets such as portfolio_sites.profile_id and
+    // documents.profile_id reference it, so the returned profile must carry
+    // the database id rather than the (possibly stale) JSONB `id`.
     const { data, error } = await supabase
       .from('profiles')
-      .select('data')
+      .select('id, data')
       .eq('user_id', userId)
       .maybeSingle()
 
@@ -61,7 +86,12 @@ export const dbProfile = {
       console.error('[DB Profile] Get failed:', error)
       return null
     }
-    return data ? (data.data as ProfessionalProfile) : null
+    return data
+      ? {
+          ...(data.data as ProfessionalProfile),
+          id: data.id as string,
+        }
+      : null
   },
 
   async save(profile: ProfessionalProfile): Promise<void> {
@@ -677,7 +707,7 @@ export const dbPortfolios = {
       .upsert(mapPortfolioToDb(site))
 
     if (error) {
-      console.error('[DB Portfolios] Save failed:', error)
+      console.error('[DB Portfolios] Save failed:', describeDbError(error))
       throw error
     }
   },

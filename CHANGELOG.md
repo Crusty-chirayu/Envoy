@@ -578,3 +578,39 @@ A full-application visual refinement pass. No backend, auth, security, AI, ATS, 
 ### Recovery Commit:
 - UI/UX Polish Commit: see git log (`feat: elevate Envoy UI and UX`)
 
+---
+
+## [Hotfix] Align Profile IDs for Cloud Persistence (FK 23503)
+**Status**: Code complete — live Supabase trigger SQL successfully executed  
+**Date**: August 23, 2026
+
+### Proven Root Cause (live-captured error)
+- Dashboard load failed in Cloud Mode with PostgREST error **23503**:
+  `insert or update on table "portfolio_sites" violates foreign key constraint "portfolio_sites_profile_id_fkey"`
+  (`details`: Key (profile_id)=(…) is not present in table "profiles"; HTTP 409).
+- Failing query: `dbPortfolios.save()` → `supabase.from('portfolio_sites').upsert(mapPortfolioToDb(site))`, invoked from `loadUserWorkspace()` when no portfolio row exists yet.
+- **Root cause**: `profiles.id` (the table's UUID primary key) never equaled the `id` embedded inside the `profiles.data` JSONB payload.
+  - Signup trigger `handle_new_user()` generated a *second* random UUID inside the JSON (`'id', uuid_generate_v4()::text`) while the row itself received its own DEFAULT-generated PK.
+  - `dbProfile.get()` selected only `.select('data')` and returned the JSONB id to consumers.
+  - Therefore every `portfolio_sites.profile_id` insert referenced a UUID that does not exist in `profiles.id` → guaranteed FK violation on every dashboard load for connected users.
+- **RLS/authentication were NOT the cause**: the insert passed the `WITH CHECK (auth.uid() = user_id)` policy and failed later at the FK constraint (409 integrity error, not 42501). No RLS policy was weakened, disabled, or bypassed.
+
+### Fixes Applied
+- `src/lib/db.ts` — `dbProfile.get()`: now selects `id, data` and hydrates the returned `ProfessionalProfile` with the **real database primary key** (`id: data.id`). `profiles.id` is authoritative; consumers (`portfolio_sites.profile_id`, `documents.profile_id`) now receive a valid FK target. Subsequent `dbProfile.save()` calls persist the corrected id into the JSONB, so existing rows self-heal on the next profile write — **no destructive data migration required or performed**.
+- `supabase/schema.sql` — `handle_new_user()`: generates `new_profile_id := uuid_generate_v4()` up front, inserts it as the actual `profiles.id`, and embeds the SAME value in the JSONB (`'id', new_profile_id::text`). Retains `SECURITY DEFINER` and `SET search_path = public, extensions`. Trigger and RLS untouched.
+  - Implementation note: referencing `new_profile_id` inside the INSERT's VALUES before `RETURNING … INTO` assigns it would store JSON `null` (PL/pgSQL evaluates variables at statement execution), so the PK is pre-generated instead of captured post-insert.
+- Diagnostic logging retained (production-safe): `describeDbError()` in `src/lib/db.ts` serializes ONLY `name/message/code/details/hint/status`; used by `dbPortfolios.save()` and the dashboard workspace-load catch. Never logs tokens, keys, headers, or session secrets.
+
+### Required Live-SQL Step — EXECUTED SUCCESSFULLY
+- Updating `schema.sql` does NOT alter the already-deployed function, so the updated `CREATE OR REPLACE FUNCTION handle_new_user()` was run manually in the Supabase SQL Editor against the live Supabase project. Execution succeeded: the deployed trigger now pre-generates one UUID used both as the `profiles.id` primary key and inside the JSONB payload. No tables, RLS policies, roles, or triggers were changed. The app-side hydration fix remains in place as defense in depth.
+
+### Validation Results
+- `npm run typecheck` — PASS (zero errors)
+- `npm run lint` — PASS ("No ESLint warnings or errors")
+- `npm test` — PASS (7 files, 81/81 tests)
+- `npm run build` — PASS (16 routes generated; only the pre-existing `pdf-parse` CJS-default warning)
+
+### Real Cloud Verification
+- Trigger SQL deployment: **DONE** — the updated `handle_new_user()` was successfully applied to the live Supabase project (see Required Live-SQL Step above).
+- **Dashboard-load test: PENDING** — the authenticated dashboard-load test has not yet been performed (portfolio creation must succeed with `portfolio_sites.profile_id = profiles.id` and zero 23503 errors). Successful SQL execution alone does not constitute runtime verification; this section will be finalized only after that test passes.
+

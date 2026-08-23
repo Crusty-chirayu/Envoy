@@ -431,12 +431,18 @@ AS $$
 DECLARE
   new_profile_id UUID;
 BEGIN
+  -- Generate the primary key up front so the embedded profile JSON 'id'
+  -- equals the actual profiles.id (FK targets portfolio_sites.profile_id
+  -- and documents.profile_id reference profiles.id).
+  new_profile_id := uuid_generate_v4();
+
   -- Create empty profile
-  INSERT INTO profiles (user_id, data)
+  INSERT INTO profiles (id, user_id, data)
   VALUES (
+    new_profile_id,
     NEW.id,
     jsonb_build_object(
-      'id', uuid_generate_v4()::text,
+      'id', new_profile_id::text,
       'userId', NEW.id::text,
       'identity', jsonb_build_object(
         'name', COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
@@ -458,8 +464,7 @@ BEGIN
       'createdAt', NOW()::text,
       'updatedAt', NOW()::text
     )
-  )
-  RETURNING id INTO new_profile_id;
+  );
 
   -- Create default preferences
   INSERT INTO user_preferences (user_id)

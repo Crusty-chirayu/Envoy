@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Logo } from '@/components/Logo'
 import { authService } from '@/lib/auth'
-import { dbProfile, dbDocuments, checkDemoMode, dbPortfolios } from '@/lib/db'
+import { dbProfile, dbDocuments, checkDemoMode, dbPortfolios, describeDbError } from '@/lib/db'
 import { DEFAULT_PORTFOLIO_VISIBILITY, resolvePublishedAt } from '@/lib/portfolio/visibility'
 import type { ProfessionalProfile, EnvoyDocument, ExperienceEntry, EducationEntry, SkillGroup, ProjectEntry, AppUser, DocumentType, TemplateId, PortfolioSite, PortfolioTheme, PortfolioVisibility } from '@/types'
 import { 
@@ -114,7 +114,7 @@ export default function DashboardPage() {
           await loadUserWorkspace(currentUser.id)
         }
       } catch (err) {
-        console.error('Workspace load error:', err)
+        console.error('Workspace load error:', describeDbError(err))
       } finally {
         setLoading(false)
       }
@@ -160,6 +160,11 @@ export default function DashboardPage() {
         customSections: [],
       }
       await dbProfile.save(userProfile)
+      // Re-read so the authoritative database primary key (profiles.id)
+      // replaces the locally generated id before it feeds FK references
+      // such as portfolio_sites.profile_id / documents.profile_id.
+      const savedProfile = await dbProfile.get(userId)
+      if (savedProfile) userProfile = savedProfile
     }
     setProfileState(userProfile)
 
@@ -193,8 +198,18 @@ export default function DashboardPage() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }
-      await dbPortfolios.save(defaultPortfolio)
-      userPortfolio = defaultPortfolio
+      try {
+        await dbPortfolios.save(defaultPortfolio)
+        userPortfolio = defaultPortfolio
+      } catch (err) {
+        // Concurrent-initialization race (React StrictMode double-mount in
+        // dev, rapid double navigation, or a second tab): another instance
+        // may have created the default portfolio between our existence
+        // check and this save. Adopt the winner's row instead of failing
+        // the whole workspace load with a duplicate-slug error.
+        userPortfolio = await dbPortfolios.getByUserId(userId)
+        if (!userPortfolio) throw err
+      }
     }
     
     if (userPortfolio) {
