@@ -96,10 +96,30 @@ export async function POST(request: Request) {
       (providerName === 'openrouter' && !hasOpenRouter)
 
     if (isMissingKey || process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+      // Simulated mode must still feel conversational: it references the
+      // user's latest message and the active section instead of returning a
+      // byte-identical canned reply on every turn.
+      const lastUserMessage = [...messages].reverse().find(m => m.role === 'user')
+      const userTopic = lastUserMessage
+        ? lastUserMessage.content.trim().slice(0, 160)
+        : 'your request'
+      const activeSection = selectedSectionId
+        ? document.sections.find(s => s.id === selectedSectionId)
+        : undefined
+      const sectionLabel = activeSection ? ' (' + activeSection.title + ' section)' : ''
+      const priorAssistantTurns = messages.filter(m => m.role === 'assistant').length
+
       const currentSummary = profile.summary || 'I am a software engineer.'
       const proposedSummary = `Senior Software Architect and Engineer with a track record of building high-performance systems. Designed and deployed a dual-mode local/cloud persistence database layer, reducing average response latency by 35% and supporting 10,000+ local session transactions.`
 
-      const mockResponseText = `[SIMULATED ASSISTANT] I have analyzed your resume context and target profile.
+      const followUpNote =
+        priorAssistantTurns > 0
+          ? `Building on our conversation${sectionLabel}, and your latest message ("${userTopic}"), here is a refined proposal rather than a repeat of my earlier advice.`
+          : `I have analyzed your resume context${sectionLabel} in response to "${userTopic}".`
+
+      const mockResponseText = `[SIMULATED ASSISTANT — no AI provider key configured]
+
+${followUpNote}
 To optimize your visibility to hiring systems and highlight architectural execution, here is a proposed rewrite of your professional summary.
 
 \`\`\`json

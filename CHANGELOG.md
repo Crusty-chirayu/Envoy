@@ -614,3 +614,32 @@ A full-application visual refinement pass. No backend, auth, security, AI, ATS, 
 - Trigger SQL deployment: **DONE** — the updated `handle_new_user()` was successfully applied to the live Supabase project (see Required Live-SQL Step above).
 - **Dashboard-load test: PENDING** — the authenticated dashboard-load test has not yet been performed (portfolio creation must succeed with `portfolio_sites.profile_id = profiles.id` and zero 23503 errors). Successful SQL execution alone does not constitute runtime verification; this section will be finalized only after that test passes.
 
+---
+
+## [AI Fix] Context-Aware Chat Memory + Deterministic Section Navigation
+**Status**: Completed (code + automated validation) — live-provider interactive test pending the user's OpenRouter key  
+**Date**: August 23, 2026
+
+### Proven Root Causes (traced UI → store → API → provider)
+1. **Repetitive identical answers**: `.env.local` contained NO AI provider configuration (only Supabase variables). With `ENVOY_AI_PROVIDER` unset the server defaulted to `openai`, found no `OPENAI_API_KEY`, and `/api/chat` took the simulation branch on EVERY request — returning the byte-identical hardcoded `[SIMULATED ASSISTANT]` summary-rewrite proposal regardless of input. Conversation history WAS being sent by the client and accepted by the server (`validateChatMessages` permits up to 50 messages × 20k chars); the mock path simply ignored it entirely.
+2. **Broken section navigation**: the editor had NO active-section concept wired to chat. `selectedSectionId` only carried a value while the section-config overlay happened to be open; commands like "next", "continue", or "go to education" were forwarded to the LLM as ordinary chat text, and nothing in the application could act on them — an LLM cannot mutate application state.
+3. **Stateless feel**: the system prompt contained zero continuity instructions, so even with history present the model received no guidance to build on prior proposals instead of restarting its analysis.
+
+### Implementation (narrowly scoped; no DB/RLS/auth/UI-redesign changes)
+- **NEW `src/lib/ai/navigation.ts`** (+ 48 unit tests): pure deterministic navigation layer. `parseNavigationCommand()` strictly matches short imperative commands only ("next", "move to the next section", "continue", "carry on", "previous", "go/jump/switch/take me to X", "let's work on X now"); longer sentences with extra instructions never match and always reach the model. `resolveNavigation()` resolves against the document's REAL section model — visible sections only, ordered by `order` (same ordering the canvas renderer uses), aliases mapped onto actual `SectionType` values (work→experience, academics→education, etc.), graceful `already-last` / `already-first` / `unknown-target` outcomes instead of looping.
+- **Editor page (`src/app/editor/page.tsx`)**: added an `activeSectionId` focus state (initialized to the first visible section, self-healing when sections are removed/hidden). Navigation commands are intercepted BEFORE any API call: the application performs the state transition itself and appends an assistant message describing the move ("Moved to the Experience section (2 of 5)..."). Non-navigation messages send bounded history (last 20 messages) plus `selectedSectionId: activeSectionId`, so every AI request carries the real editing focus.
+- **System prompt continuity rules (`src/lib/ai/context.ts`)**: the model is now explicitly instructed that this is an ongoing session, must build on prior dialogue, must NOT repeat advice unless asked for a recap, must treat follow-ups ("more concise", "more technical") as revisions of ITS previous proposal, and must tailor responses to the Currently Selected Section block.
+- **Contextual simulation mode (`src/app/api/chat/route.ts`)**: when no provider key is configured, the simulated reply now references the user's latest message and the active section (and acknowledges prior turns) instead of returning a byte-identical canned response. Auth guard, rate limiting, body validation, and trust-boundary narrowing are untouched.
+
+### Provider Configuration (OpenRouter — already supported, nothing invented)
+- The existing multi-provider abstraction has full OpenRouter support: `ENVOY_AI_PROVIDER=openrouter`, `OPENROUTER_API_KEY` (server-side only, read exclusively inside `OpenRouterProvider.getHeaders()`), optional `OPENROUTER_MODEL` (default `openai/gpt-4o`). No key ever reaches a client bundle; no new environment variable was introduced.
+
+### Validation Results
+- `npm run typecheck` — PASS (zero errors)
+- `npm run lint` — PASS ("No ESLint warnings or errors")
+- `npm test` — PASS (8 files, 129/129 tests; includes 48 new navigation-contract tests)
+- `npm run build` — PASS (16 routes generated; only the pre-existing `pdf-parse` CJS-default warning)
+
+### Real Cloud Verification (honest status)
+- **PENDING** — the interactive browser sequence (improve summary → concise follow-up uses context → "next" advances the editor → section-aware advice → continuation) requires the user's OpenRouter key in `.env.local` plus an authenticated cloud session, and has NOT been executed by this change. Automated coverage proves the deterministic navigation contract, bounded-memory payload shape, and contextual mock behavior; live LLM behavior remains unverified until the key is added and the flow is exercised in the running app.
+

@@ -16,6 +16,7 @@ import { v4 as uuid } from 'uuid'
 // so the large `docx` dependency stays out of the initial editor bundle.
 import { generatePlainText } from '@/lib/export/txt'
 import { validateProposalBlock, type ValidatedProposal } from '@/lib/validation/proposal'
+import { parseNavigationCommand, resolveNavigation } from '@/lib/ai/navigation'
 
 function EditorWorkspace() {
   const router = useRouter()
@@ -43,6 +44,11 @@ function EditorWorkspace() {
   const [zoom, setZoom] = useState(0.85)
   const [editingSection, setEditingSection] = useState<DocumentSectionConfig | null>(null)
   const [showExportMenu, setShowExportMenu] = useState(false)
+
+  // Active section focus for AI context + deterministic navigation.
+  // Tracks which document section the user is currently working on so the
+  // AI request always carries the real editing focus.
+  const [activeSectionId, setActiveSectionId] = useState<string | null>(null)
   
   // AI related state
   const [conversation, setConversation] = useState<AIConversation | null>(null)
@@ -108,6 +114,21 @@ function EditorWorkspace() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [showVersionsModal, editingSection])
 
+  // Keep the AI active-section focus valid when sections are removed/hidden
+  useEffect(() => {
+    if (!document) return
+    const visible = [...document.sections]
+      .filter(s => s.visible)
+      .sort((a, b) => a.order - b.order)
+    if (visible.length === 0) {
+      if (activeSectionId !== null) setActiveSectionId(null)
+      return
+    }
+    if (!activeSectionId || !visible.some(s => s.id === activeSectionId)) {
+      setActiveSectionId(visible[0].id)
+    }
+  }, [document, activeSectionId])
+
   // Load document and profile from DB
   useEffect(() => {
     if (!documentId) {
@@ -123,6 +144,12 @@ function EditorWorkspace() {
           return
         }
         setDocument(doc)
+
+        // Initialize the AI active-section focus to the first visible section
+        const firstVisible = [...doc.sections]
+          .filter(s => s.visible)
+          .sort((a, b) => a.order - b.order)[0]
+        setActiveSectionId(firstVisible?.id ?? null)
 
         const prof = await dbProfile.get(doc.userId)
         if (prof) {
@@ -206,22 +233,78 @@ function EditorWorkspace() {
       messages: updatedMessages,
     })
 
+    // ── Deterministic navigation commands ────────────────────────────
+    // "next" / "continue" / "go to education" are APPLICATION ACTIONS,
+    // not conversation. They are executed here against the document's real
+    // section model and never sent to the LLM (which cannot mutate app
+    // state). This guarantees the editing workflow actually advances.
+    const navCommand = parseNavigationCommand(text)
+    if (navCommand) {
+      const resolution = resolveNavigation(document.sections, activeSectionId, navCommand)
+      let navMessage: string
+      if (resolution.ok) {
+        setActiveSectionId(resolution.sectionId)
+        navMessage =
+          resolution.direction === 'goto'
+            ? `Switched to the ${resolution.sectionTitle} section (${resolution.index + 1} of ${resolution.total}). Tell me what to improve here, or say "next" to keep moving.`
+            : resolution.direction === 'next'
+              ? `Moved to the ${resolution.sectionTitle} section (${resolution.index + 1} of ${resolution.total}). Tell me what to improve here, or say "next" to keep moving.`
+              : `Moved back to the ${resolution.sectionTitle} section (${resolution.index + 1} of ${resolution.total}).`
+      } else if (resolution.reason === 'already-last') {
+        navMessage = 'You are already on the last section of this document. Tell me what to refine here, or name another section (e.g. "go to experience").'
+      } else if (resolution.reason === 'already-first') {
+        navMessage = 'You are already on the first section of this document. Say "next" to move forward, or name a section (e.g. "go to skills").'
+      } else if (resolution.reason === 'unknown-target') {
+        const target = navCommand.kind === 'goto' ? navCommand.target : 'that'
+        const visibleTitles = [...document.sections]
+          .filter(s => s.visible)
+          .sort((a, b) => a.order - b.order)
+          .map(s => s.title)
+          .join(', ')
+        navMessage = `I could not find a section matching "${target}". This document has: ${visibleTitles}.`
+      } else {
+        navMessage = 'This document has no visible sections to navigate.'
+      }
+
+      setConversation(prev => {
+        if (!prev) return null
+        return {
+          ...prev,
+          messages: [
+            ...prev.messages,
+            {
+              id: uuid(),
+              conversationId: prev.id,
+              role: 'assistant' as const,
+              content: navMessage,
+              createdAt: new Date().toISOString(),
+            },
+          ],
+        }
+      })
+      return
+    }
+
     setIsThinking(true)
     setStreamText('')
 
     try {
+      // Bounded conversation memory: the most recent turns give the model
+      // real context without unbounded payload growth (server caps at 50).
+      const recentMessages = updatedMessages.slice(-20)
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: updatedMessages,
+          messages: recentMessages,
           profile,
           document,
           jobTarget,
           atsReport,
-          selectedSectionId: editingSection?.id,
+          selectedSectionId: activeSectionId,
         }),
       })
 
@@ -396,10 +479,7 @@ function EditorWorkspace() {
     // 1. Re-validate at the mutation boundary (defense in depth).
     const validation = validateProposalBlock({ action: 'propose_edit', data: rawProposal })
     if (!validation.ok) {
-      alert(
-        'This AI suggestion was blocked by the safety validator and was NOT applied.\n\n' +
-        `Reason: ${validation.error}`
-      )
+      alert(`This AI suggestion was blocked by the safety validator and was NOT applied. Reason: ${validation.error}`)
       return
     }
     const proposal = validation.proposal
@@ -504,10 +584,7 @@ function EditorWorkspace() {
     }
 
     if (rejectionReason) {
-      alert(
-        'This AI suggestion was blocked by the safety validator and was NOT applied.\n\n' +
-        `Reason: ${rejectionReason}`
-      )
+      alert(`This AI suggestion was blocked by the safety validator and was NOT applied. Reason: ${rejectionReason}`)
       return
     }
 
@@ -862,7 +939,7 @@ function EditorWorkspace() {
                         </div>
                         {selectedVersion.description && (
                           <div className="text-[11px] text-[#9898b3] italic border-l-2 border-[#6366f1] pl-2 mt-1">
-                            &quot;{selectedVersion.description}&quot;
+                            “{selectedVersion.description}”
                           </div>
                         )}
                       </div>
