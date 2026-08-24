@@ -226,16 +226,16 @@ gitGraph
    commit id: "6"
    checkout dev
    merge feature/chirayu id: "C2"
-   branch feature/sagar
-   checkout feature/sagar
+   branch feature/chirayu
+   checkout feature/chirayu
    commit id: "testing"
    checkout dev
-   merge feature/sagar id: "testing pass"
-   branch feature/prakash
-   checkout feature/prakash
+   merge feature/chirayu id: "testing pass"
+   branch feature/chirayu
+   checkout feature/chirayu
    commit id: "docs + keys"
    checkout dev
-   merge feature/prakash id: "docs merge"
+   merge feature/chirayu id: "docs merge"
    checkout feature/chirayu
    commit id: "7"
    commit id: "8"
