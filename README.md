@@ -202,7 +202,6 @@ Once the stack is finalized, this section gets swapped for exact, tested command
 <br/>
 
 ## 🌿 Branching Strategy & Contribution Flow
-
 The diagram below reflects actual commit share, not headcount — Chirayu drives continuous development on `feature/chirayu`, while Sagar and Prakash contribute focused, single-pass merges (testing, and docs/API key research respectively).
 
 ```mermaid
@@ -213,33 +212,31 @@ gitGraph
    commit id: "dev-init"
    branch feature/chirayu
    checkout feature/chirayu
-   commit id: "10"
-   commit id: "12"
-   commit id: "3"
-   commit id: "4"
-   commit id: "3"
+   commit id: "c-10"
+   commit id: "c-12"
+   commit id: "c-3a"
+   commit id: "c-4a"
+   commit id: "c-3b"
    checkout dev
    merge feature/chirayu id: "C1"
    checkout feature/chirayu
-   commit id: "4"
-   commit id: "5"
-   commit id: "6"
+   commit id: "c-4b"
+   commit id: "c-5"
+   commit id: "c-6"
    checkout dev
    merge feature/chirayu id: "C2"
-   branch feature/chirayu
    checkout feature/chirayu
    commit id: "testing"
    checkout dev
    merge feature/chirayu id: "testing pass"
-   branch feature/chirayu
    checkout feature/chirayu
    commit id: "docs + keys"
    checkout dev
    merge feature/chirayu id: "docs merge"
    checkout feature/chirayu
-   commit id: "7"
-   commit id: "8"
-   commit id: "9"
+   commit id: "c-7"
+   commit id: "c-8"
+   commit id: "c-9"
    checkout dev
    merge feature/chirayu id: "C3 Integration"
    checkout main
@@ -256,11 +253,9 @@ git commit -m "feat: add resume parser module"
 git push origin feature/your-feature-name
 # open a PR into dev
 ```
-
 <br/>
 
 ## 🗺️ Roadmap
-
 - [x] Repository scaffolding & team workflow
 - [ ] Document parser (PDF/DOCX → structured JSON)
 - [ ] Sector & keyword intelligence engine
@@ -268,11 +263,9 @@ git push origin feature/your-feature-name
 - [ ] Open template library (v1: 5 resume + 2 CV templates)
 - [ ] One-command portfolio deployment
 - [ ] Public beta
-
 <br/>
 
 ## 🤝 Contributing
-
 1. Fork the repo
 2. Branch off `dev`: `git checkout -b feature/AmazingFeature`
 3. Commit: `git commit -m "feat: add AmazingFeature"`
@@ -280,26 +273,20 @@ git push origin feature/your-feature-name
 5. Open a Pull Request into `dev`
 
 Full guidelines live in [`CONTRIBUTING.md`](CONTRIBUTING.md).
-
 <br/>
 
 ## 👥 The Builders
-
 <div align="center">
 
 | | Name | GitHub | Contribution | Focus |
 |---|---|---|---|---|
 | 🧠 | **Chirayu** | [@Crusty-chirayu](https://github.com/Crusty-chirayu) | **100%** | Core Architecture, Full Development, Design |
 
-
 </div>
-
 <br/>
 
 ## 📜 License
-
 Distributed under the **MIT License**. See [`LICENSE`](LICENSE) — free to use, modify, and distribute, no strings attached.
-
 <br/>
 
 <div align="center">
