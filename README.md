@@ -12,7 +12,6 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-WELCOME-06D6A0?style=for-the-badge&labelColor=0D1117)](CONTRIBUTING.md)
 [![Status](https://img.shields.io/badge/STATUS-ACTIVE_BUILD-FF6B6B?style=for-the-badge&labelColor=0D1117)](#-roadmap)
 [![Cost](https://img.shields.io/badge/COST-%240_FOREVER-06D6A0?style=for-the-badge&labelColor=0D1117)](#)
-[![Team](https://img.shields.io/badge/TEAM-3_BUILDERS-4CC9F0?style=for-the-badge&labelColor=0D1117)](#-the-builders)
 [![Agent](https://img.shields.io/badge/CORE-AGENTIC_PIPELINE-7A5CFA?style=for-the-badge&labelColor=0D1117)](#-how-envoy-thinks)
 
 <br/>
