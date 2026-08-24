@@ -1,6 +1,9 @@
 import React, { useState } from 'react'
 import type { ProfessionalProfile, EnvoyDocument, AIConversation, JobTarget, ATSReport } from '@/types'
-import { Send, Sparkles, Cpu, Award, Target, User, BrainCircuit, RefreshCw, Check, X, Edit3 } from 'lucide-react'
+import {
+  Send, Sparkles, Cpu, Award, Target, User, BrainCircuit, RefreshCw, Check, X, Edit3,
+  ArrowRight, AlertTriangle, ShieldCheck,
+} from 'lucide-react'
 import { extractProposal, type ValidatedProposal } from '@/lib/validation/proposal'
 
 interface AgentSidebarProps {
@@ -60,14 +63,14 @@ export function AgentSidebar({
 
   return (
     <aside className="w-[420px] bg-[#0c0c10] border-r border-[#1e1e2e] flex flex-col h-full shrink-0 relative z-20">
-      
+
       {/* Pane Switcher Bar */}
       <div className="border-b border-[#1e1e2e] px-3 py-2 bg-[#050507]/40">
         <div className="segmented w-full" role="group" aria-label="Agent panes">
           <button
             onClick={() => setActivePane('chat')}
             aria-pressed={activePane === 'chat'}
-            className={`segmented-item flex-1 justify-center ${activePane === 'chat' ? 'segmented-item-active' : ''}`}
+            className={`segmented-item flex-1 justify-center transition-all duration-150 ${activePane === 'chat' ? 'segmented-item-active' : ''}`}
           >
             <BrainCircuit size={13} aria-hidden="true" />
             <span>AI Agent</span>
@@ -75,7 +78,7 @@ export function AgentSidebar({
           <button
             onClick={() => setActivePane('job')}
             aria-pressed={activePane === 'job'}
-            className={`segmented-item flex-1 justify-center ${activePane === 'job' ? 'segmented-item-active' : ''}`}
+            className={`segmented-item flex-1 justify-center transition-all duration-150 ${activePane === 'job' ? 'segmented-item-active' : ''}`}
           >
             <Target size={13} aria-hidden="true" />
             <span>Job Target</span>
@@ -83,7 +86,7 @@ export function AgentSidebar({
           <button
             onClick={() => setActivePane('ats')}
             aria-pressed={activePane === 'ats'}
-            className={`segmented-item flex-1 justify-center ${activePane === 'ats' ? 'segmented-item-active' : ''}`}
+            className={`segmented-item flex-1 justify-center transition-all duration-150 ${activePane === 'ats' ? 'segmented-item-active' : ''}`}
           >
             <Award size={13} aria-hidden="true" />
             <span>ATS Check</span>
@@ -98,27 +101,33 @@ export function AgentSidebar({
           <div className="flex-1 overflow-y-auto p-4 space-y-4" aria-live="polite" aria-label="AI conversation">
             {(!conversation || conversation.messages.length === 0) && (
               <div className="flex flex-col items-center justify-center text-center p-6 h-full space-y-4">
-                <div className="w-12 h-12 rounded-xl bg-[#111118] border border-[#252535] flex items-center justify-center text-[#00d4ff] shadow-[0_0_28px_-10px_rgba(0,212,255,0.45)]">
+                <div className="w-12 h-12 rounded-xl bg-[#111118] border border-[#252535] flex items-center justify-center text-[#00d4ff] shadow-[0_0_28px_-10px_rgba(0,212,255,0.45)] animate-fade-in">
                   <Sparkles size={20} aria-hidden="true" />
                 </div>
                 <h4 className="text-sm font-bold text-[#f2f2f7]">Envoy Career Agent</h4>
-                <p className="text-xs text-[#9898b3] max-w-[280px]">Ask the agent to rewrite sections, align bullets to outcomes, or analyze keyword signals.</p>
-                
+                <p className="text-xs text-[#9898b3] max-w-[280px] leading-relaxed">Ask the agent to rewrite sections, align bullets to outcomes, or analyze keyword signals.</p>
+
                 <div className="w-full grid grid-cols-1 gap-2 pt-4 text-left">
                   {suggestedPrompts.map((p, idx) => (
                     <button
                       key={idx}
                       onClick={() => setInputText(p.text)}
-                      className="text-xs p-2.5 rounded-lg surface-inset hover:border-[#6366f1]/50 text-left text-[#9898b3] hover:text-[#f2f2f7] transition-colors"
+                      style={{ animationDelay: `${idx * 45}ms` }}
+                      className="group text-xs p-2.5 rounded-lg surface-inset hover:border-[#6366f1]/50 text-left text-[#9898b3] hover:text-[#f2f2f7] transition-all duration-150 animate-fade-in flex items-center justify-between gap-2"
                     >
-                      {p.label}
+                      <span>{p.label}</span>
+                      <ArrowRight
+                        size={12}
+                        className="shrink-0 text-[#5c5c7a] opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 group-hover:text-[#6366f1] transition-all duration-150"
+                        aria-hidden="true"
+                      />
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-             {conversation && conversation.messages.map(msg => {
+             {conversation && conversation.messages.map((msg, msgIdx) => {
                const isUser = msg.role === 'user'
 
                // Extract + VALIDATE any embedded proposal block. Invalid or
@@ -127,18 +136,18 @@ export function AgentSidebar({
                const proposalMatch = msg.role === 'assistant' ? extractProposal(msg.content) : null
 
               return (
-                <div key={msg.id} className="flex flex-col gap-3">
-                  <div 
+                <div key={msg.id} className="flex flex-col gap-3 animate-fade-in" style={{ animationDelay: msgIdx === 0 ? '0ms' : undefined }}>
+                  <div
                     className={`flex gap-3 text-xs max-w-[85%] ${
                       isUser ? 'ml-auto flex-row-reverse' : 'mr-auto'
                     }`}
                   >
                     <div className={`w-6 h-6 rounded-full shrink-0 flex items-center justify-center border text-[10px] ${
-                      isUser 
-                        ? 'bg-[#16161f] border-[#252535] text-[#f2f2f7]' 
+                      isUser
+                        ? 'bg-[#16161f] border-[#252535] text-[#f2f2f7]'
                         : 'bg-indigo-500/10 border-indigo-500/20 text-[#6366f1]'
                     }`}>
-                      {isUser ? <User size={12} /> : <Cpu size={12} />}
+                      {isUser ? <User size={12} aria-hidden="true" /> : <Cpu size={12} aria-hidden="true" />}
                     </div>
 
                     <div className={`p-3 rounded-lg leading-relaxed whitespace-pre-line ${
@@ -158,8 +167,12 @@ export function AgentSidebar({
                            <Sparkles size={10} aria-hidden="true" />
                            <span>{proposalMatch.proposal.sectionType} · {proposalMatch.proposal.field}</span>
                          </span>
+                         <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-[#5c5c7a] uppercase tracking-wide">
+                           <ShieldCheck size={11} className="text-emerald-400" aria-hidden="true" />
+                           Validated
+                         </span>
                       </div>
-                      
+
                       <div className="text-[11px] text-[#9898b3] leading-relaxed text-justify">
                         {proposalMatch.proposal.explanation}
                       </div>
@@ -169,26 +182,27 @@ export function AgentSidebar({
                         <div className="p-2.5 rounded bg-red-500/5 border border-red-500/10">
                           <span className="text-[8px] font-extrabold text-[#ef4444] uppercase tracking-wider block mb-1">Current state</span>
                           <span className="text-[#9898b3] whitespace-pre-line line-through decoration-red-500/30">
-                            {Array.isArray(proposalMatch.proposal.originalValue) 
-                              ? proposalMatch.proposal.originalValue.join('\n') 
+                            {Array.isArray(proposalMatch.proposal.originalValue)
+                              ? proposalMatch.proposal.originalValue.join('\n')
                               : proposalMatch.proposal.originalValue}
                           </span>
                         </div>
 
                         <div className="p-2.5 rounded bg-emerald-500/5 border border-emerald-500/10">
-                          <span className="text-[8px] font-extrabold text-emerald-400 uppercase tracking-wider block mb-1 font-bold">Proposed state</span>
-                          
+                          <span className="text-[8px] font-extrabold text-emerald-400 uppercase tracking-wider block mb-1">Proposed state</span>
+
                           {editingProposalId === msg.id ? (
                             <textarea
                               value={editingProposalValue}
                               onChange={(e) => setEditingProposalValue(e.target.value)}
                               rows={5}
-                              className="w-full bg-[#050507] border border-[#252535] rounded p-2 text-xs text-[#f2f2f7] focus:outline-none focus:border-[#6366f1] resize-none"
+                              autoFocus
+                              className="w-full bg-[#050507] border border-[#252535] rounded p-2 text-xs text-[#f2f2f7] focus:outline-none focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/15 transition-all duration-150 resize-none"
                             />
                           ) : (
                             <span className="text-gray-200 whitespace-pre-line">
-                              {Array.isArray(proposalMatch.proposal.newValue) 
-                                ? proposalMatch.proposal.newValue.join('\n') 
+                              {Array.isArray(proposalMatch.proposal.newValue)
+                                ? proposalMatch.proposal.newValue.join('\n')
                                 : proposalMatch.proposal.newValue}
                             </span>
                           )}
@@ -201,7 +215,7 @@ export function AgentSidebar({
                           <>
                             <button
                               onClick={() => setEditingProposalId(null)}
-                              className="btn btn-secondary btn-sm !px-2.5 !py-1 !text-[10px]"
+                              className="btn btn-secondary btn-sm !px-2.5 !py-1 !text-[10px] active:scale-95 transition-transform duration-150"
                             >
                               <X size={11} aria-hidden="true" />
                               <span>Cancel</span>
@@ -217,7 +231,7 @@ export function AgentSidebar({
                                 })
                                 setEditingProposalId(null)
                               }}
-                              className="btn btn-success btn-sm !px-2.5 !py-1 !text-[10px]"
+                              className="btn btn-success btn-sm !px-2.5 !py-1 !text-[10px] active:scale-95 transition-transform duration-150"
                             >
                               <Check size={11} aria-hidden="true" />
                               <span>Apply Edit</span>
@@ -234,14 +248,14 @@ export function AgentSidebar({
                                     : proposalMatch.proposal.newValue
                                 )
                               }}
-                              className="btn btn-secondary btn-sm !px-2.5 !py-1 !text-[10px]"
+                              className="btn btn-secondary btn-sm !px-2.5 !py-1 !text-[10px] active:scale-95 transition-transform duration-150"
                             >
                               <Edit3 size={11} aria-hidden="true" />
                               <span>Edit suggestion</span>
                             </button>
                             <button
                               onClick={() => onAcceptProposal(proposalMatch.proposal)}
-                              className="btn btn-success btn-sm !px-2.5 !py-1 !text-[10px]"
+                              className="btn btn-success btn-sm !px-2.5 !py-1 !text-[10px] active:scale-95 transition-transform duration-150"
                             >
                               <Check size={11} aria-hidden="true" />
                               <span>Accept suggestion</span>
@@ -257,9 +271,9 @@ export function AgentSidebar({
 
             {/* Live stream block */}
             {(isThinking || streamText) && (
-              <div className="flex gap-3 text-xs mr-auto max-w-[85%]">
-                <div className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center bg-indigo-500/10 border-indigo-500/20 text-[#6366f1]">
-                  <Cpu size={12} />
+              <div className="flex gap-3 text-xs mr-auto max-w-[85%] animate-fade-in">
+                <div className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center bg-indigo-500/10 border border-indigo-500/20 text-[#6366f1]">
+                  <Cpu size={12} aria-hidden="true" />
                 </div>
                 <div className="p-3 rounded-lg leading-relaxed bg-[#111118]/80 border border-[#1e1e2e] text-[#f2f2f7]">
                   {isThinking && !streamText ? (
@@ -285,15 +299,19 @@ export function AgentSidebar({
               onKeyDown={handleKeyPress}
               placeholder="Ask AI to improve experience bullet points or draft cover letters..."
               rows={2}
-              className="flex-1 bg-[#111118] border border-[#252535] rounded-md px-3 py-2 text-xs text-[#f2f2f7] placeholder-[#5c5c7a] focus:outline-none focus:border-[#6366f1] resize-none"
+              className="flex-1 bg-[#111118] border border-[#252535] rounded-md px-3 py-2 text-xs text-[#f2f2f7] placeholder-[#5c5c7a] focus:outline-none focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/15 transition-all duration-150 resize-none"
             />
             <button
               onClick={handleSend}
-              className="w-10 h-10 rounded-md bg-[#6366f1] hover:opacity-90 transition-opacity text-[#050507] flex items-center justify-center shrink-0 self-end shadow-md"
+              className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 self-end shadow-md transition-all duration-150 active:scale-95 ${
+                inputText.trim()
+                  ? 'bg-[#6366f1] hover:opacity-90 hover:shadow-[0_0_20px_-6px_rgba(99,102,241,0.7)] text-[#050507]'
+                  : 'bg-[#16161f] text-[#5c5c7a] cursor-default'
+              }`}
               aria-label="Send message"
               title="Send message"
             >
-              <Send size={15} />
+              <Send size={15} aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -301,10 +319,10 @@ export function AgentSidebar({
 
       {/* 2. JOB TARGET PANE */}
       {activePane === 'job' && (
-        <div className="flex-1 p-4 flex flex-col gap-4 min-h-0">
+        <div className="flex-1 p-4 flex flex-col gap-4 min-h-0 animate-fade-in">
           <div>
             <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#9898b3] mb-1.5">Target Job Description</h4>
-            <p className="text-[11px] text-[#5c5c7a]">Paste the job posting description below. Envoy parses target skills, required seniority, and keywords automatically.</p>
+            <p className="text-[11px] text-[#5c5c7a] leading-relaxed">Paste the job posting description below. Envoy parses target skills, required seniority, and keywords automatically.</p>
           </div>
 
           <textarea
@@ -312,7 +330,7 @@ export function AgentSidebar({
             onChange={(e) => setJobInput(e.target.value)}
             rows={12}
             placeholder="Paste role requirements here..."
-            className="flex-1 bg-[#111118]/80 border border-[#252535] rounded-md p-3 text-xs text-[#f2f2f7] placeholder-[#5c5c7a] focus:outline-none focus:border-[#6366f1] resize-none"
+            className="flex-1 bg-[#111118]/80 border border-[#252535] rounded-md p-3 text-xs text-[#f2f2f7] placeholder-[#5c5c7a] focus:outline-none focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/15 transition-all duration-150 resize-none"
           />
 
           <button
@@ -320,7 +338,7 @@ export function AgentSidebar({
               onUpdateJobTarget(jobInput)
             }}
             disabled={!jobInput.trim()}
-            className="btn btn-primary w-full !py-2 !text-xs"
+            className="btn btn-primary w-full !py-2 !text-xs active:scale-[0.98] transition-transform duration-150"
           >
             <Target size={13} aria-hidden="true" />
             <span>Update Target Job</span>
@@ -330,7 +348,7 @@ export function AgentSidebar({
 
       {/* 3. ATS CHECK PANE */}
       {activePane === 'ats' && (
-        <div className="flex-1 p-4 flex flex-col gap-5 min-h-0 overflow-y-auto">
+        <div className="flex-1 p-4 flex flex-col gap-5 min-h-0 overflow-y-auto animate-fade-in">
           <div className="flex items-center justify-between">
             <div>
               <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#9898b3] mb-1">ATS Scanner Gauge</h4>
@@ -338,10 +356,10 @@ export function AgentSidebar({
             </div>
             <button
               onClick={onRunATSAnalysis}
-              className="p-1.5 rounded bg-[#16161f] border border-[#252535] text-[#9898b3] hover:text-[#00d4ff] flex items-center gap-1 text-[10px]"
+              className="p-1.5 rounded bg-[#16161f] border border-[#252535] text-[#9898b3] hover:text-[#00d4ff] hover:border-[#00d4ff]/30 flex items-center gap-1 text-[10px] transition-colors duration-150 active:scale-95"
               title="Refresh Analysis"
             >
-              <RefreshCw size={11} />
+              <RefreshCw size={11} aria-hidden="true" />
               <span>Scan</span>
             </button>
           </div>
@@ -402,22 +420,33 @@ export function AgentSidebar({
               <div className="space-y-2.5">
                 <h5 className="text-[10px] font-extrabold uppercase tracking-widest text-[#9898b3]">Detected Issues</h5>
                 {atsReport.issues.length === 0 ? (
-                  <p className="text-[11px] text-[#5c5c7a] italic">No issues detected! Your resume is highly ATS-optimized.</p>
+                  <div className="flex items-center gap-2 p-2.5 rounded bg-emerald-500/5 border border-emerald-500/10">
+                    <ShieldCheck size={14} className="text-emerald-400 shrink-0" aria-hidden="true" />
+                    <p className="text-[11px] text-[#9898b3]">No issues detected — your resume is highly ATS-optimized.</p>
+                  </div>
                 ) : (
                   <div className="space-y-2">
-                    {atsReport.issues.map(iss => (
-                      <div key={iss.id} className="p-2.5 rounded bg-[#111118]/80 border border-[#1e1e2e] text-xs">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-gray-300">{iss.title}</span>
-                          <span className={`chip !rounded-md !px-1.5 !py-0.5 !text-[8px] font-extrabold uppercase tracking-wider shrink-0 ${
-                            iss.severity === 'critical' || iss.severity === 'high'
-                              ? 'chip-danger'
-                              : 'chip-warning'
-                          }`}>{iss.severity}</span>
+                    {atsReport.issues.map(iss => {
+                      const isSevere = iss.severity === 'critical' || iss.severity === 'high'
+                      return (
+                        <div key={iss.id} className="p-2.5 rounded bg-[#111118]/80 border border-[#1e1e2e] text-xs hover:border-[#252535] transition-colors duration-150">
+                          <div className="flex items-center justify-between mb-1 gap-2">
+                            <span className="font-bold text-gray-300 flex items-center gap-1.5 min-w-0">
+                              <AlertTriangle
+                                size={11}
+                                className={`shrink-0 ${isSevere ? 'text-red-400' : 'text-amber-400'}`}
+                                aria-hidden="true"
+                              />
+                              <span className="truncate">{iss.title}</span>
+                            </span>
+                            <span className={`chip !rounded-md !px-1.5 !py-0.5 !text-[8px] font-extrabold uppercase tracking-wider shrink-0 ${
+                              isSevere ? 'chip-danger' : 'chip-warning'
+                            }`}>{iss.severity}</span>
+                          </div>
+                          <p className="text-[11px] text-[#9898b3] leading-relaxed">{iss.description}</p>
                         </div>
-                        <p className="text-[11px] text-[#9898b3]">{iss.description}</p>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -427,10 +456,10 @@ export function AgentSidebar({
               <div className="w-12 h-12 rounded-xl bg-[#111118] border border-[#252535] flex items-center justify-center text-[#5c5c7a] mb-3">
                 <Award size={22} aria-hidden="true" />
               </div>
-              <p className="text-xs text-[#9898b3] mb-4 max-w-[240px]">Provide a target job post and run the scan to get automated ATS scoring feedback.</p>
+              <p className="text-xs text-[#9898b3] mb-4 max-w-[240px] leading-relaxed">Provide a target job post and run the scan to get automated ATS scoring feedback.</p>
               <button
                 onClick={onRunATSAnalysis}
-                className="btn btn-secondary btn-sm"
+                className="btn btn-secondary btn-sm active:scale-95 transition-transform duration-150"
               >
                 Scan Resume
               </button>

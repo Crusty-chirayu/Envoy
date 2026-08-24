@@ -26,17 +26,26 @@ export function AuthShell({ title, subtitle, error, success, children, footer }:
   return (
     <div className="min-h-screen bg-[#050507] text-[#f2f2f7] flex items-center justify-center p-6 relative overflow-hidden">
       {/* Restrained ambient glows */}
-      <div className="absolute top-[-25%] left-[-12%] w-[55%] h-[55%] rounded-full bg-gradient-radial from-[rgba(99,102,241,0.07)] to-transparent blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[-25%] right-[-12%] w-[55%] h-[55%] rounded-full bg-gradient-radial from-[rgba(0,212,255,0.06)] to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute top-[-25%] left-[-12%] w-[55%] h-[55%] rounded-full bg-gradient-radial from-[rgba(99,102,241,0.07)] to-transparent blur-3xl pointer-events-none" aria-hidden="true" />
+      <div className="absolute bottom-[-25%] right-[-12%] w-[55%] h-[55%] rounded-full bg-gradient-radial from-[rgba(0,212,255,0.06)] to-transparent blur-3xl pointer-events-none" aria-hidden="true" />
+      <div
+        className="absolute inset-0 opacity-[0.025] pointer-events-none"
+        style={{
+          backgroundImage:
+            'linear-gradient(to right, #f2f2f7 1px, transparent 1px), linear-gradient(to bottom, #f2f2f7 1px, transparent 1px)',
+          backgroundSize: '56px 56px',
+        }}
+        aria-hidden="true"
+      />
 
-      <div className="w-full max-w-md surface-card accent-hairline rounded-2xl p-8 relative z-10 animate-fade-in">
+      <div className="w-full max-w-md surface-card accent-hairline rounded-2xl p-8 relative z-10 animate-fade-in shadow-[0_24px_64px_-24px_rgba(0,0,0,0.6)]">
         <div className="flex flex-col items-center mb-7">
           <Logo iconSize={40} showText={true} textSize="lg" className="mb-1" />
         </div>
 
         <h1 className="text-xl font-bold text-center mb-1 tracking-tight">{title}</h1>
         {subtitle && (
-          <p className="text-xs text-[#9898b3] text-center mb-6">{subtitle}</p>
+          <p className="text-xs text-[#9898b3] text-center mb-6 leading-relaxed">{subtitle}</p>
         )}
         {!subtitle && <div className="mb-6" />}
 
@@ -46,7 +55,7 @@ export function AuthShell({ title, subtitle, error, success, children, footer }:
             className="mb-5 p-3.5 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/20 text-sm text-[#ef4444] flex items-start gap-2.5 animate-fade-in"
           >
             <ShieldAlert size={17} className="shrink-0 mt-0.5" aria-hidden="true" />
-            <span>{error}</span>
+            <span className="leading-relaxed">{error}</span>
           </div>
         )}
 
@@ -56,7 +65,7 @@ export function AuthShell({ title, subtitle, error, success, children, footer }:
             className="mb-5 p-3.5 rounded-lg bg-[#10b981]/10 border border-[#10b981]/20 text-sm text-emerald-400 flex items-start gap-2.5 animate-fade-in"
           >
             <CheckCircle size={17} className="shrink-0 mt-0.5" aria-hidden="true" />
-            <span>{success}</span>
+            <span className="leading-relaxed">{success}</span>
           </div>
         )}
 

@@ -27,6 +27,45 @@
     --font-inter: 'Inter', system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', Consolas, monospace;
     --font-document: 'Georgia', Times New Roman, serif;
+
+    /* ── Motion system ──────────────────────────────────
+       Named easing curves so every transition in the app
+       reasons about motion the same way. Prefer these over
+       ad-hoc "ease"/"ease-in-out" wherever a curve is set
+       outside of a Tailwind utility class. ─────────────── */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+
+    /* ── Depth system ────────────────────────────────────
+       Layered ambient + direct + inset-highlight shadows,
+       modeled as discrete elevation steps rather than a
+       single flat drop-shadow. Reused across surfaces,
+       buttons and elevated panels for a consistent light
+       source (soft, from above). ──────────────────────── */
+    --elevation-0: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    --elevation-1:
+      inset 0 1px 0 rgba(255, 255, 255, 0.03),
+      0 1px 2px rgba(0, 0, 0, 0.4),
+      0 1px 1px rgba(0, 0, 0, 0.3);
+    --elevation-2:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 2px 6px -2px rgba(0, 0, 0, 0.5),
+      0 8px 20px -8px rgba(0, 0, 0, 0.45);
+    --elevation-3:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 4px 12px -4px rgba(0, 0, 0, 0.55),
+      0 20px 48px -16px rgba(0, 0, 0, 0.5);
+
+    /* ── Brand gradients ─────────────────────────────────
+       Single source of truth for the ENVOY signature
+       gradient so hero text, primary buttons and glow
+       borders stay perfectly in sync. ──────────────────── */
+    --gradient-envoy: linear-gradient(100deg, #6366f1 0%, #22d3ee 55%, #00d4ff 100%);
+    --gradient-envoy-soft: linear-gradient(92deg, #00d4ff 0%, #6366f1 48%, #a78bfa 100%);
+    --glow-indigo: rgba(99, 102, 241, 0.45);
+    --glow-cyan: rgba(0, 212, 255, 0.4);
   }
 }
 
@@ -36,10 +75,13 @@
   }
   body {
     background-color: theme('colors.envoy.bg.base');
+    background-image:
+      radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(99, 102, 241, 0.05), transparent 60%);
     color: theme('colors.envoy.text.primary');
     font-family: var(--font-inter);
     overflow-x: hidden;
     text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* ─────────────────────────────────────────
@@ -57,18 +99,31 @@
     border: 1px solid theme('colors.envoy.border.default');
     border-radius: theme('borderRadius.md');
     color: theme('colors.envoy.text.primary');
-    transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+    box-shadow: var(--elevation-0);
+    transition:
+      border-color 200ms var(--ease-out-expo),
+      box-shadow 200ms var(--ease-out-expo),
+      background-color 200ms var(--ease-out-expo);
   }
   input::placeholder,
   textarea::placeholder {
     color: theme('colors.envoy.text.tertiary');
   }
+  input:hover:not(:focus):not(:disabled),
+  textarea:hover:not(:focus):not(:disabled),
+  select:hover:not(:focus):not(:disabled) {
+    border-color: theme('colors.envoy.border.strong');
+  }
   input:focus,
   textarea:focus,
   select:focus {
     outline: none;
+    background-color: rgba(17, 17, 24, 0.95);
     border-color: theme('colors.envoy.accent.indigo');
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.16);
+    box-shadow:
+      var(--elevation-0),
+      0 0 0 3px rgba(99, 102, 241, 0.16),
+      0 0 16px -6px var(--glow-indigo);
   }
   input:disabled,
   textarea:disabled,
@@ -95,17 +150,44 @@
   /* ── Surfaces ── */
   .surface-card {
     @apply bg-[#0c0c10]/70 border border-[#1e1e2e] rounded-xl;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 1px 2px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--elevation-1);
   }
   .surface-card-hover {
     @apply transition-all duration-200 hover:border-[#333350] hover:bg-[#0e0e14]/80;
-    will-change: transform;
+    transition-timing-function: var(--ease-out-expo);
+    will-change: transform, box-shadow;
+  }
+  .surface-card-hover:hover {
+    box-shadow: var(--elevation-2);
+    transform: translateY(-1px);
   }
   .surface-inset {
     @apply bg-[#111118]/60 border border-[#1e1e2e] rounded-lg;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
   }
   .panel-section {
     @apply bg-[#0c0c10]/40 border border-[#1e1e2e] rounded-xl p-6;
+    box-shadow: var(--elevation-1);
+  }
+
+  /* Higher-elevation surface for hero/spotlight moments — new primitive,
+     does not replace .surface-card, sits above it in the depth stack. */
+  .surface-elevated {
+    @apply bg-[#0e0e14]/80 border border-[#252535] rounded-xl;
+    box-shadow: var(--elevation-3);
+    backdrop-filter: blur(20px);
+  }
+
+  /* Bordered surface with a faint always-on brand glow, reserved for
+     single high-emphasis cards (e.g. a featured plan, a primary CTA panel). */
+  .card-glow-border {
+    @apply relative rounded-xl bg-[#0c0c10]/80 border border-[#252535];
+    box-shadow: var(--elevation-2), 0 0 0 1px rgba(99, 102, 241, 0.12);
+    transition: box-shadow 260ms var(--ease-out-expo), border-color 260ms var(--ease-out-expo);
+  }
+  .card-glow-border:hover {
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: var(--elevation-3), 0 0 32px -12px var(--glow-indigo);
   }
 
   /* Top accent hairline — restrained premium detail for hero cards */
@@ -123,6 +205,13 @@
     pointer-events: none;
   }
 
+  /* Standalone gradient divider — new primitive for separating dense
+     sections without a hard border line. */
+  .divider-glow {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08) 50%, transparent);
+  }
+
   /* ── Buttons ──
      Shared base via grouped selector (Tailwind cannot @apply a
      custom component class inside another one). Markup convention:
@@ -135,6 +224,7 @@
     @apply inline-flex items-center justify-center gap-2 rounded-md font-bold text-sm
       transition-all duration-200 select-none
       disabled:opacity-50 disabled:pointer-events-none;
+    transition-timing-function: var(--ease-out-expo);
   }
   .btn:focus-visible,
   .btn-primary:focus-visible,
@@ -150,12 +240,13 @@
   .btn-danger:active,
   .btn-success:active {
     transform: translateY(0.5px) scale(0.985);
+    transition-duration: 90ms;
   }
 
   /* Primary — signature ENVOY gradient with slow positional drift on hover */
   .btn-primary {
     @apply text-[#050507] px-5 py-2.5;
-    background-image: linear-gradient(100deg, #6366f1 0%, #22d3ee 55%, #00d4ff 100%);
+    background-image: var(--gradient-envoy);
     background-size: 180% 100%;
     background-position: 0% 50%;
     box-shadow:
@@ -167,21 +258,24 @@
     background-position: 95% 50%;
     box-shadow:
       0 0 0 1px rgba(0, 212, 255, 0.45),
-      0 12px 28px -8px rgba(0, 212, 255, 0.45),
+      0 4px 12px -4px rgba(0, 212, 255, 0.35),
+      0 16px 36px -10px rgba(0, 212, 255, 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.22);
     transform: translateY(-1px);
   }
   .btn-primary:active {
     transform: translateY(0) scale(0.985);
+    background-position: 95% 50%;
   }
 
   /* Secondary — quiet bordered surface */
   .btn-secondary {
     @apply bg-[#16161f] border border-[#252535] text-[#f2f2f7] px-5 py-2.5;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 1px 2px rgba(0, 0, 0, 0.3);
   }
   .btn-secondary:hover {
     @apply bg-[#1c1c28] border-[#333350];
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 6px 16px -8px rgba(0, 0, 0, 0.5);
     transform: translateY(-1px);
   }
   .btn-secondary:active {
@@ -191,25 +285,28 @@
   /* Ghost — icon / low-emphasis actions */
   .btn-ghost {
     @apply text-[#9898b3] hover:text-[#f2f2f7] hover:bg-[#16161f] rounded-md p-2;
+    transition: color 180ms var(--ease-out-expo), background-color 180ms var(--ease-out-expo);
   }
 
   /* Danger — destructive confirmations */
   .btn-danger {
     @apply bg-[#ef4444] text-[#050507] px-4 py-2;
-    box-shadow: 0 8px 20px -8px rgba(239, 68, 68, 0.5);
+    box-shadow: 0 8px 20px -8px rgba(239, 68, 68, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.14);
   }
   .btn-danger:hover {
     filter: brightness(1.08);
+    box-shadow: 0 12px 28px -8px rgba(239, 68, 68, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.18);
     transform: translateY(-1px);
   }
 
   /* Success — positive confirmations */
   .btn-success {
     @apply bg-emerald-500 text-[#050507] px-4 py-2;
-    box-shadow: 0 8px 20px -8px rgba(16, 185, 129, 0.5);
+    box-shadow: 0 8px 20px -8px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.14);
   }
   .btn-success:hover {
     filter: brightness(1.08);
+    box-shadow: 0 12px 28px -8px rgba(16, 185, 129, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.18);
     transform: translateY(-1px);
   }
 
@@ -220,7 +317,7 @@
 
   /* Arrow nudge inside CTAs (pair with class="arrow-shift" on the icon) */
   .btn .arrow-shift {
-    transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform 260ms var(--ease-spring);
   }
   .btn:hover .arrow-shift {
     transform: translateX(3px);
@@ -234,9 +331,27 @@
     @apply block text-[10px] font-semibold text-[#5c5c7a] uppercase tracking-wider mb-1;
   }
 
+  /* Monospace technical label — new primitive for values/ids/keys that
+     benefit from a code-like treatment (Linear/Raycast convention). */
+  .text-mono-label {
+    font-family: var(--font-mono);
+    @apply text-xs text-[#9898b3] tracking-tight;
+  }
+
+  /* Keyboard shortcut chip — new primitive, e.g. <span class="kbd">⌘K</span> */
+  .kbd {
+    @apply inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-semibold text-[#9898b3];
+    font-family: var(--font-mono);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    min-width: 1.25rem;
+  }
+
   /* ── Chips / badges ── */
   .chip {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
   }
   .chip-cyan {
     @apply text-[#00d4ff] bg-[#00d4ff]/[0.08] border-[#00d4ff]/20;
@@ -261,22 +376,25 @@
   .nav-item {
     @apply w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold
       text-[#9898b3] transition-all duration-150 relative;
+    transition-timing-function: var(--ease-out-expo);
   }
   .nav-item:hover {
     @apply text-[#f2f2f7] bg-[#0c0c10]/60;
   }
   .nav-item-active {
     @apply text-[#00d4ff] bg-[#16161f];
-    box-shadow: inset 2px 0 0 0 #00d4ff;
+    box-shadow: inset 2px 0 0 0 #00d4ff, inset 0 1px 0 rgba(255, 255, 255, 0.03);
   }
 
   /* ── Segmented control (pane/tab switchers) ── */
   .segmented {
     @apply inline-flex items-center gap-1 p-1 rounded-lg bg-[#050507]/60 border border-[#1e1e2e];
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
   }
   .segmented-item {
     @apply flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold text-[#9898b3]
       transition-all duration-150;
+    transition-timing-function: var(--ease-out-expo);
   }
   .segmented-item:hover {
     @apply text-[#f2f2f7];
@@ -299,10 +417,105 @@
 
   /* Gradient display text for hero moments */
   .text-gradient {
-    background: linear-gradient(92deg, #00d4ff 0%, #6366f1 48%, #a78bfa 100%);
+    background: var(--gradient-envoy-soft);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+
+  /* ── Loading / empty / success / error states ──────────
+     New primitives so every panel handles its four data
+     states the same way instead of ad-hoc markup per page. */
+  .state-panel {
+    @apply flex flex-col items-center justify-center text-center gap-3 rounded-xl border border-[#1e1e2e] bg-[#0c0c10]/40 px-6 py-12;
+  }
+  .state-icon {
+    @apply flex items-center justify-center w-12 h-12 rounded-full;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .state-title {
+    @apply text-sm font-semibold text-[#f2f2f7];
+  }
+  .state-description {
+    @apply text-xs text-[#9898b3] max-w-xs;
+  }
+  .state-panel-error .state-icon {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.2);
+  }
+  .state-panel-success .state-icon {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.2);
+  }
+  .state-panel-empty .state-icon {
+    color: #5c5c7a;
+  }
+
+  /* Skeleton loading block — shimmer sweep, respects reduced-motion
+     globally via the catch-all media query below. */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    border-radius: theme('borderRadius.md');
+    background: #16161f;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+    animation: envoy-shimmer 1.6s var(--ease-in-out-quart) infinite;
+  }
+
+  /* Inline spinner — CSS-only, no dependency */
+  .spinner {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    border-top-color: #00d4ff;
+    animation: envoy-spin 700ms linear infinite;
+  }
+
+  /* Success confirmation ping — pair with an inline checkmark icon */
+  .success-ping {
+    position: relative;
+  }
+  .success-ping::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 9999px;
+    background: rgba(16, 185, 129, 0.25);
+    animation: envoy-pulse-ring 900ms var(--ease-out-expo) 1;
+  }
+}
+
+/* ── Keyframes for component-layer primitives above ── */
+@keyframes envoy-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+@keyframes envoy-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes envoy-pulse-ring {
+  0% {
+    opacity: 1;
+    transform: scale(0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
   }
 }
 
@@ -323,6 +536,10 @@
    Honors the OS-level "reduce motion" setting
    by disabling non-essential animations and
    transitions across the entire application.
+   This single catch-all also covers every new
+   keyframe/animation added above (shimmer,
+   spinner, pulse-ring) — nothing extra needed
+   per-component.
    ───────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -346,6 +563,7 @@
 ::-webkit-scrollbar-thumb {
   background: theme('colors.envoy.border.default');
   border-radius: 3px;
+  transition: background-color 200ms var(--ease-out-expo);
 }
 ::-webkit-scrollbar-thumb:hover {
   background: theme('colors.envoy.border.strong');
@@ -373,12 +591,14 @@
   border-radius: 4px;
   font-size: 13px;
   font-weight: 600;
+  box-shadow: var(--elevation-2), 0 0 0 3px rgba(0, 212, 255, 0.16);
 }
 
 /* Print Media Styles for High-Fidelity PDF Export */
 @media print {
   html, body {
     background-color: white !important;
+    background-image: none !important;
     color: black !important;
     overflow: visible !important;
     height: auto !important;

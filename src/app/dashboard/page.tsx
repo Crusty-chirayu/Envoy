@@ -506,7 +506,7 @@ export default function DashboardPage() {
         
         <div className="flex items-center gap-6">
           {/* Cloud vs Demo Mode Indicator */}
-          <div className={`chip !px-3 text-[11px] ${isDemo ? 'chip-warning' : 'chip-indigo'}`}>
+          <div className={`chip !px-3 text-[11px] transition-all duration-300 ${isDemo ? 'chip-warning' : 'chip-indigo'}`}>
             {isDemo ? (
               <>
                 <CloudOff size={13} />
@@ -514,7 +514,7 @@ export default function DashboardPage() {
               </>
             ) : (
               <>
-                <Cloud size={13} />
+                <Cloud size={13} className="animate-pulse" aria-hidden="true" />
                 <span>Connected (Supabase Cloud)</span>
               </>
             )}
@@ -527,7 +527,7 @@ export default function DashboardPage() {
             </div>
             <button 
               onClick={handleSignOut}
-              className="btn btn-ghost"
+              className="btn btn-ghost envoy-btn-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff]"
               title="Sign Out"
               aria-label="Sign Out"
             >
@@ -541,15 +541,15 @@ export default function DashboardPage() {
           so tabs must remain reachable on small screens */}
       <div className="md:hidden sticky top-[64px] z-30 border-b border-[#1e1e2e] bg-[#050507]/92 backdrop-blur-md px-4 py-2.5">
         <div className="segmented w-full justify-between" role="tablist" aria-label="Dashboard sections">
-          <button role="tab" aria-selected={activeTab === 'docs'} onClick={() => setActiveTab('docs')} className={`segmented-item flex-1 justify-center ${activeTab === 'docs' ? 'segmented-item-active' : ''}`}>
+          <button role="tab" aria-selected={activeTab === 'docs'} onClick={() => setActiveTab('docs')} className={`segmented-item flex-1 justify-center transition-all duration-200 ${activeTab === 'docs' ? 'segmented-item-active' : ''}`}>
             <FileText size={14} aria-hidden="true" />
             <span>Documents</span>
           </button>
-          <button role="tab" aria-selected={activeTab === 'profile'} onClick={() => setActiveTab('profile')} className={`segmented-item flex-1 justify-center ${activeTab === 'profile' ? 'segmented-item-active' : ''}`}>
+          <button role="tab" aria-selected={activeTab === 'profile'} onClick={() => setActiveTab('profile')} className={`segmented-item flex-1 justify-center transition-all duration-200 ${activeTab === 'profile' ? 'segmented-item-active' : ''}`}>
             <User size={14} aria-hidden="true" />
             <span>Profile</span>
           </button>
-          <button role="tab" aria-selected={activeTab === 'portfolio'} onClick={() => setActiveTab('portfolio')} className={`segmented-item flex-1 justify-center ${activeTab === 'portfolio' ? 'segmented-item-active' : ''}`}>
+          <button role="tab" aria-selected={activeTab === 'portfolio'} onClick={() => setActiveTab('portfolio')} className={`segmented-item flex-1 justify-center transition-all duration-200 ${activeTab === 'portfolio' ? 'segmented-item-active' : ''}`}>
             <Layout size={14} aria-hidden="true" />
             <span>Portfolio</span>
           </button>
@@ -561,7 +561,7 @@ export default function DashboardPage() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-lg shadow-elevation-3 border bg-[#0c0c10] flex items-center gap-3 text-sm animate-fade-in border-[#252535]"
+          className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-lg shadow-elevation-3 border bg-[#0c0c10] flex items-center gap-3 text-sm envoy-toast-enter border-[#252535]"
         >
           {notification.type === 'success' && <CheckCircle size={16} className="text-emerald-400 shrink-0" aria-hidden="true" />}
           {notification.type === 'error' && <AlertCircle size={16} className="text-[#ef4444] shrink-0" aria-hidden="true" />}
@@ -582,7 +582,7 @@ export default function DashboardPage() {
             </div>
             <div className="w-full bg-[#050507] rounded-full h-1.5 overflow-hidden ring-1 ring-inset ring-[#252535]" role="progressbar" aria-valuenow={calculateProfileCompleteness()} aria-valuemin={0} aria-valuemax={100} aria-label="Profile completeness">
               <div 
-                className="bg-gradient-to-r from-[#6366f1] to-[#00d4ff] h-1.5 rounded-full transition-all duration-700 ease-out" 
+                className="bg-gradient-to-r from-[#6366f1] to-[#00d4ff] h-1.5 rounded-full transition-all duration-700 ease-out shadow-[0_0_12px_-2px_rgba(0,212,255,0.6)]" 
                 style={{ width: `${calculateProfileCompleteness()}%` }}
               />
             </div>
@@ -591,7 +591,7 @@ export default function DashboardPage() {
           <button
             onClick={() => setActiveTab('docs')}
             aria-current={activeTab === 'docs'}
-            className={`nav-item ${activeTab === 'docs' ? 'nav-item-active' : ''}`}
+            className={`nav-item envoy-nav-item ${activeTab === 'docs' ? 'nav-item-active' : ''}`}
           >
             <FileText size={17} aria-hidden="true" />
             <span>Documents Grid</span>
@@ -600,7 +600,7 @@ export default function DashboardPage() {
           <button
             onClick={() => setActiveTab('profile')}
             aria-current={activeTab === 'profile'}
-            className={`nav-item ${activeTab === 'profile' ? 'nav-item-active' : ''}`}
+            className={`nav-item envoy-nav-item ${activeTab === 'profile' ? 'nav-item-active' : ''}`}
           >
             <User size={17} aria-hidden="true" />
             <span>Master Profile</span>
@@ -609,7 +609,7 @@ export default function DashboardPage() {
           <button
             onClick={() => setActiveTab('portfolio')}
             aria-current={activeTab === 'portfolio'}
-            className={`nav-item ${activeTab === 'portfolio' ? 'nav-item-active' : ''}`}
+            className={`nav-item envoy-nav-item ${activeTab === 'portfolio' ? 'nav-item-active' : ''}`}
           >
             <Layout size={17} aria-hidden="true" />
             <span>Portfolio Setup</span>
@@ -621,7 +621,7 @@ export default function DashboardPage() {
           
           {/* DOCUMENTS TAB */}
           {activeTab === 'docs' && (
-            <div className="space-y-6">
+            <div className="space-y-6 envoy-tab-fade" key="docs-tab">
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-2xl font-bold tracking-tight">Your Career Documents</h1>
@@ -629,7 +629,7 @@ export default function DashboardPage() {
                 </div>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="btn btn-primary btn-sm"
+                  className="btn btn-primary btn-sm envoy-btn-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff]"
                 >
                   <Plus size={15} aria-hidden="true" />
                   <span>Create New</span>
@@ -638,7 +638,7 @@ export default function DashboardPage() {
 
               {/* Documents Grid */}
               {documents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center p-12 surface-card border-dashed !border-[#252535] text-center">
+                <div className="flex flex-col items-center justify-center p-12 surface-card border-dashed !border-[#252535] text-center envoy-field-enter">
                   <div className="w-14 h-14 rounded-xl bg-[#111118] border border-[#252535] flex items-center justify-center text-[#5c5c7a] mb-4">
                     <FileText size={26} aria-hidden="true" />
                   </div>
@@ -646,15 +646,19 @@ export default function DashboardPage() {
                   <p className="text-sm text-[#9898b3] max-w-sm mb-6">Create a resume or curriculum vitae to get started. All outputs automatically fetch data from your Canonical Profile.</p>
                   <button
                     onClick={() => setShowCreateModal(true)}
-                    className="btn btn-secondary btn-sm"
+                    className="btn btn-secondary btn-sm envoy-btn-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff]"
                   >
                     Create a Document
                   </button>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {documents.map(doc => (
-                    <div key={doc.id} className="surface-card surface-card-hover accent-hairline p-5 group flex flex-col h-48 justify-between">
+                  {documents.map((doc, idx) => (
+                    <div
+                      key={doc.id}
+                      className="surface-card surface-card-hover accent-hairline p-5 group flex flex-col h-48 justify-between envoy-field-enter transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_-20px_rgba(0,212,255,0.35)]"
+                      style={{ animationDelay: `${Math.min(idx, 8) * 40}ms` }}
+                    >
                       <div>
                         <div className="flex items-center justify-between mb-2.5">
                           <span className={`chip !rounded-md !px-2 !py-0.5 text-[10px] font-extrabold uppercase tracking-widest ${
@@ -673,7 +677,7 @@ export default function DashboardPage() {
                       <div className="flex items-center justify-between border-t border-[#1e1e2e]/60 pt-3.5">
                         <button
                           onClick={() => router.push(`/editor?id=${doc.id}`)}
-                          className="flex items-center gap-1.5 text-xs font-bold text-[#6366f1] hover:text-[#00d4ff] transition-colors"
+                          className="flex items-center gap-1.5 text-xs font-bold text-[#6366f1] hover:text-[#00d4ff] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff] rounded-sm"
                         >
                           <Edit size={13} aria-hidden="true" />
                           <span>Open Editor</span>
@@ -681,7 +685,7 @@ export default function DashboardPage() {
 
                         <button
                           onClick={() => handleDeleteDocument(doc.id)}
-                          className="p-1.5 rounded-md text-[#5c5c7a] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors"
+                          className="p-1.5 rounded-md text-[#5c5c7a] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef4444]"
                           title="Delete Document"
                           aria-label={`Delete document ${doc.title}`}
                         >
@@ -697,7 +701,7 @@ export default function DashboardPage() {
 
           {/* MASTER CANONICAL PROFILE TAB */}
           {activeTab === 'profile' && profile && (
-            <div className="space-y-6">
+            <div className="space-y-6 envoy-tab-fade" key="profile-tab">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                   <h1 className="text-2xl font-bold tracking-tight">Canonical Master Profile</h1>
@@ -706,7 +710,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Document Ingestion / File Drop uploader */}
-              <div className="p-5 bg-[#0c0c10]/80 border border-dashed border-[#252535] hover:border-[#6366f1]/50 rounded-xl transition-all relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="p-5 bg-[#0c0c10]/80 border border-dashed border-[#252535] hover:border-[#6366f1]/50 rounded-xl transition-all duration-300 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[#6366f1] flex items-center justify-center shrink-0">
                     <Upload size={18} className={isIngesting ? "animate-pulse" : ""} />
@@ -734,7 +738,7 @@ export default function DashboardPage() {
                       />
                       <label
                         htmlFor="resume-upload"
-                        className="bg-[#16161f] border border-[#252535] hover:border-[#6366f1] text-[#f2f2f7] hover:text-[#6366f1] transition-all px-4 py-2 rounded-md font-bold text-xs cursor-pointer inline-flex items-center gap-2"
+                        className="bg-[#16161f] border border-[#252535] hover:border-[#6366f1] text-[#f2f2f7] hover:text-[#6366f1] transition-all duration-200 px-4 py-2 rounded-md font-bold text-xs cursor-pointer inline-flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff]"
                       >
                         <span>Upload File</span>
                       </label>
@@ -749,7 +753,7 @@ export default function DashboardPage() {
                   role="tab"
                   aria-selected={profileTab === 'identity'}
                   onClick={() => setProfileTab('identity')}
-                  className={`segmented-item ${profileTab === 'identity' ? 'segmented-item-active' : ''}`}
+                  className={`segmented-item transition-all duration-200 ${profileTab === 'identity' ? 'segmented-item-active' : ''}`}
                 >
                   <User size={13} aria-hidden="true" />
                   <span>Identity</span>
@@ -758,7 +762,7 @@ export default function DashboardPage() {
                   role="tab"
                   aria-selected={profileTab === 'experience'}
                   onClick={() => setProfileTab('experience')}
-                  className={`segmented-item ${profileTab === 'experience' ? 'segmented-item-active' : ''}`}
+                  className={`segmented-item transition-all duration-200 ${profileTab === 'experience' ? 'segmented-item-active' : ''}`}
                 >
                   <Briefcase size={13} aria-hidden="true" />
                   <span>Experience ({profile.experience.length})</span>
@@ -767,7 +771,7 @@ export default function DashboardPage() {
                   role="tab"
                   aria-selected={profileTab === 'education'}
                   onClick={() => setProfileTab('education')}
-                  className={`segmented-item ${profileTab === 'education' ? 'segmented-item-active' : ''}`}
+                  className={`segmented-item transition-all duration-200 ${profileTab === 'education' ? 'segmented-item-active' : ''}`}
                 >
                   <GraduationCap size={13} aria-hidden="true" />
                   <span>Education ({profile.education.length})</span>
@@ -776,7 +780,7 @@ export default function DashboardPage() {
                   role="tab"
                   aria-selected={profileTab === 'skills'}
                   onClick={() => setProfileTab('skills')}
-                  className={`segmented-item ${profileTab === 'skills' ? 'segmented-item-active' : ''}`}
+                  className={`segmented-item transition-all duration-200 ${profileTab === 'skills' ? 'segmented-item-active' : ''}`}
                 >
                   <Code size={13} aria-hidden="true" />
                   <span>Skills ({profile.skills.length})</span>
@@ -785,7 +789,7 @@ export default function DashboardPage() {
                   role="tab"
                   aria-selected={profileTab === 'projects'}
                   onClick={() => setProfileTab('projects')}
-                  className={`segmented-item ${profileTab === 'projects' ? 'segmented-item-active' : ''}`}
+                  className={`segmented-item transition-all duration-200 ${profileTab === 'projects' ? 'segmented-item-active' : ''}`}
                 >
                   <FolderGit size={13} aria-hidden="true" />
                   <span>Projects ({profile.projects.length})</span>
@@ -793,7 +797,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Sub-tab content */}
-              <div className="bg-[#0c0c10]/40 border border-[#1e1e2e] rounded-xl p-6">
+              <div className="bg-[#0c0c10]/40 border border-[#1e1e2e] rounded-xl p-6 envoy-tab-fade" key={profileTab}>
                 
                 {/* 1. IDENTITY FORM */}
                 {profileTab === 'identity' && (
@@ -805,7 +809,7 @@ export default function DashboardPage() {
                         type="text"
                         value={profile.identity.name}
                         onChange={(e) => handleIdentityChange('name', e.target.value)}
-                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
+                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                       />
                     </div>
                     <div>
@@ -815,7 +819,7 @@ export default function DashboardPage() {
                         type="text"
                         value={profile.identity.headline}
                         onChange={(e) => handleIdentityChange('headline', e.target.value)}
-                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
+                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                       />
                     </div>
                     <div>
@@ -825,7 +829,7 @@ export default function DashboardPage() {
                         type="email"
                         value={profile.identity.email}
                         onChange={(e) => handleIdentityChange('email', e.target.value)}
-                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
+                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                       />
                     </div>
                     <div>
@@ -836,7 +840,7 @@ export default function DashboardPage() {
                         value={profile.identity.phone || ''}
                         onChange={(e) => handleIdentityChange('phone', e.target.value)}
                         placeholder="+1 (555) 000-0000"
-                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
+                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                       />
                     </div>
                     <div>
@@ -847,7 +851,7 @@ export default function DashboardPage() {
                         value={profile.identity.location || ''}
                         onChange={(e) => handleIdentityChange('location', e.target.value)}
                         placeholder="San Francisco, CA"
-                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
+                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                       />
                     </div>
                     <div>
@@ -858,7 +862,7 @@ export default function DashboardPage() {
                         value={profile.identity.linkedin || ''}
                         onChange={(e) => handleIdentityChange('linkedin', e.target.value)}
                         placeholder="https://linkedin.com/in/username"
-                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
+                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                       />
                     </div>
                     <div>
@@ -869,7 +873,7 @@ export default function DashboardPage() {
                         value={profile.identity.github || ''}
                         onChange={(e) => handleIdentityChange('github', e.target.value)}
                         placeholder="https://github.com/username"
-                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
+                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                       />
                     </div>
                     <div>
@@ -880,7 +884,7 @@ export default function DashboardPage() {
                         value={profile.identity.website || ''}
                         onChange={(e) => handleIdentityChange('website', e.target.value)}
                         placeholder="https://yourwebsite.com"
-                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
+                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                       />
                     </div>
                     <div className="sm:col-span-2">
@@ -894,7 +898,7 @@ export default function DashboardPage() {
                         }}
                         rows={4}
                         placeholder="A short summary detailing your professional career background, key competencies, and career goals."
-                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] focus:outline-none focus:border-[#6366f1] resize-none"
+                        className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1] resize-none"
                       />
                     </div>
                   </div>
@@ -907,7 +911,7 @@ export default function DashboardPage() {
                       <span className="text-xs text-[#9898b3]">Document entries are ordered in reverse chronological sorting automatically.</span>
                       <button
                         onClick={addExperience}
-                        className="btn btn-secondary btn-sm"
+                        className="btn btn-secondary btn-sm envoy-btn-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff]"
                       >
                         <Plus size={13} aria-hidden="true" />
                         <span>Add Position</span>
@@ -919,7 +923,7 @@ export default function DashboardPage() {
                     ) : (
                       <div className="space-y-4">
                         {profile.experience.map(exp => (
-                          <div key={exp.id} className="border border-[#1e1e2e] bg-[#111118]/50 p-4 rounded-lg space-y-4">
+                          <div key={exp.id} className="border border-[#1e1e2e] bg-[#111118]/50 p-4 rounded-lg space-y-4 transition-colors duration-200 hover:border-[#252535]">
                             <div className="flex justify-between items-start gap-4">
                               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 flex-1">
                                 <div>
@@ -928,7 +932,7 @@ export default function DashboardPage() {
                                     type="text"
                                     value={exp.company}
                                     onChange={(e) => updateExperience(exp.id, 'company', e.target.value)}
-                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7]"
+                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                                   />
                                 </div>
                                 <div>
@@ -937,7 +941,7 @@ export default function DashboardPage() {
                                     type="text"
                                     value={exp.role}
                                     onChange={(e) => updateExperience(exp.id, 'role', e.target.value)}
-                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7]"
+                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                                   />
                                 </div>
                                 <div>
@@ -947,7 +951,7 @@ export default function DashboardPage() {
                                     value={exp.startDate}
                                     onChange={(e) => updateExperience(exp.id, 'startDate', e.target.value)}
                                     placeholder="YYYY-MM"
-                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7]"
+                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                                   />
                                 </div>
                                 <div>
@@ -959,7 +963,7 @@ export default function DashboardPage() {
                                       onChange={(e) => updateExperience(exp.id, 'endDate', e.target.value)}
                                       disabled={exp.current}
                                       placeholder="YYYY-MM"
-                                      className="flex-1 bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7] disabled:opacity-50"
+                                      className="flex-1 bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1] disabled:opacity-50"
                                     />
                                     <label className="flex items-center gap-1 text-[10px] font-semibold text-[#5c5c7a]">
                                       <input 
@@ -975,7 +979,7 @@ export default function DashboardPage() {
                               </div>
                               <button
                                 onClick={() => deleteExperience(exp.id)}
-                                className="p-1.5 rounded hover:bg-[#ef4444]/10 text-[#5c5c7a] hover:text-[#ef4444] transition-colors shrink-0 mt-5"
+                                className="p-1.5 rounded hover:bg-[#ef4444]/10 text-[#5c5c7a] hover:text-[#ef4444] transition-colors shrink-0 mt-5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef4444]"
                                 aria-label={`Delete experience at ${exp.company}`}
                               >
                                 <Trash2 size={14} />
@@ -988,7 +992,7 @@ export default function DashboardPage() {
                                 value={exp.bullets.join('\n')}
                                 onChange={(e) => updateExperience(exp.id, 'bullets', e.target.value.split('\n'))}
                                 rows={3}
-                                className="w-full bg-[#050507] border border-[#252535] rounded p-2 text-xs text-[#f2f2f7] resize-none"
+                                className="w-full bg-[#050507] border border-[#252535] rounded p-2 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1] resize-none"
                               />
                             </div>
                           </div>
@@ -1005,7 +1009,7 @@ export default function DashboardPage() {
                       <span className="text-xs text-[#9898b3]">Add university degree or credential entries.</span>
                       <button
                         onClick={addEducation}
-                        className="btn btn-secondary btn-sm"
+                        className="btn btn-secondary btn-sm envoy-btn-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff]"
                       >
                         <Plus size={13} aria-hidden="true" />
                         <span>Add Education</span>
@@ -1017,7 +1021,7 @@ export default function DashboardPage() {
                     ) : (
                       <div className="space-y-4">
                         {profile.education.map(edu => (
-                          <div key={edu.id} className="border border-[#1e1e2e] bg-[#111118]/50 p-4 rounded-lg space-y-4">
+                          <div key={edu.id} className="border border-[#1e1e2e] bg-[#111118]/50 p-4 rounded-lg space-y-4 transition-colors duration-200 hover:border-[#252535]">
                             <div className="flex justify-between items-start gap-4">
                               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 flex-1">
                                 <div>
@@ -1026,7 +1030,7 @@ export default function DashboardPage() {
                                     type="text"
                                     value={edu.institution}
                                     onChange={(e) => updateEducation(edu.id, 'institution', e.target.value)}
-                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7]"
+                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                                   />
                                 </div>
                                 <div>
@@ -1035,7 +1039,7 @@ export default function DashboardPage() {
                                     type="text"
                                     value={edu.degree}
                                     onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)}
-                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7]"
+                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                                   />
                                 </div>
                                 <div>
@@ -1045,7 +1049,7 @@ export default function DashboardPage() {
                                     value={edu.startDate}
                                     onChange={(e) => updateEducation(edu.id, 'startDate', e.target.value)}
                                     placeholder="YYYY-MM"
-                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7]"
+                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                                   />
                                 </div>
                                 <div>
@@ -1057,7 +1061,7 @@ export default function DashboardPage() {
                                       onChange={(e) => updateEducation(edu.id, 'endDate', e.target.value)}
                                       disabled={edu.current}
                                       placeholder="YYYY-MM"
-                                      className="flex-1 bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7] disabled:opacity-50"
+                                      className="flex-1 bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1] disabled:opacity-50"
                                     />
                                     <label className="flex items-center gap-1 text-[10px] font-semibold text-[#5c5c7a]">
                                       <input 
@@ -1073,7 +1077,7 @@ export default function DashboardPage() {
                               </div>
                               <button
                                 onClick={() => deleteEducation(edu.id)}
-                                className="p-1.5 rounded hover:bg-[#ef4444]/10 text-[#5c5c7a] hover:text-[#ef4444] transition-colors shrink-0 mt-5"
+                                className="p-1.5 rounded hover:bg-[#ef4444]/10 text-[#5c5c7a] hover:text-[#ef4444] transition-colors shrink-0 mt-5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef4444]"
                                 aria-label={`Delete education at ${edu.institution}`}
                               >
                                 <Trash2 size={14} />
@@ -1093,7 +1097,7 @@ export default function DashboardPage() {
                       <span className="text-xs text-[#9898b3]">Define structured groups of technical competencies.</span>
                       <button
                         onClick={addSkillGroup}
-                        className="btn btn-secondary btn-sm"
+                        className="btn btn-secondary btn-sm envoy-btn-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff]"
                       >
                         <Plus size={13} aria-hidden="true" />
                         <span>Add Category</span>
@@ -1105,7 +1109,7 @@ export default function DashboardPage() {
                     ) : (
                       <div className="space-y-4">
                         {profile.skills.map(group => (
-                          <div key={group.id} className="border border-[#1e1e2e] bg-[#111118]/50 p-4 rounded-lg space-y-4">
+                          <div key={group.id} className="border border-[#1e1e2e] bg-[#111118]/50 p-4 rounded-lg space-y-4 transition-colors duration-200 hover:border-[#252535]">
                             <div className="flex justify-between items-start gap-4">
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
                                 <div>
@@ -1114,7 +1118,7 @@ export default function DashboardPage() {
                                     type="text"
                                     value={group.category}
                                     onChange={(e) => updateSkillGroup(group.id, 'category', e.target.value)}
-                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7]"
+                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                                   />
                                 </div>
                                 <div>
@@ -1123,13 +1127,13 @@ export default function DashboardPage() {
                                     type="text"
                                     value={group.skills.join(', ')}
                                     onChange={(e) => updateSkillGroup(group.id, 'skills', e.target.value.split(',').map(s => s.trim()))}
-                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7]"
+                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                                   />
                                 </div>
                               </div>
                               <button
                                 onClick={() => deleteSkillGroup(group.id)}
-                                className="p-1.5 rounded hover:bg-[#ef4444]/10 text-[#5c5c7a] hover:text-[#ef4444] transition-colors shrink-0 mt-5"
+                                className="p-1.5 rounded hover:bg-[#ef4444]/10 text-[#5c5c7a] hover:text-[#ef4444] transition-colors shrink-0 mt-5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef4444]"
                                 aria-label={`Delete skill group ${group.category}`}
                               >
                                 <Trash2 size={14} />
@@ -1149,7 +1153,7 @@ export default function DashboardPage() {
                       <span className="text-xs text-[#9898b3]">Detail projects you have built and showcase them.</span>
                       <button
                         onClick={addProject}
-                        className="btn btn-secondary btn-sm"
+                        className="btn btn-secondary btn-sm envoy-btn-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff]"
                       >
                         <Plus size={13} aria-hidden="true" />
                         <span>Add Project</span>
@@ -1161,7 +1165,7 @@ export default function DashboardPage() {
                     ) : (
                       <div className="space-y-4">
                         {profile.projects.map(proj => (
-                          <div key={proj.id} className="border border-[#1e1e2e] bg-[#111118]/50 p-4 rounded-lg space-y-4">
+                          <div key={proj.id} className="border border-[#1e1e2e] bg-[#111118]/50 p-4 rounded-lg space-y-4 transition-colors duration-200 hover:border-[#252535]">
                             <div className="flex justify-between items-start gap-4">
                               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 flex-1">
                                 <div>
@@ -1170,7 +1174,7 @@ export default function DashboardPage() {
                                     type="text"
                                     value={proj.name}
                                     onChange={(e) => updateProject(proj.id, 'name', e.target.value)}
-                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7]"
+                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                                   />
                                 </div>
                                 <div>
@@ -1179,7 +1183,7 @@ export default function DashboardPage() {
                                     type="text"
                                     value={proj.github || ''}
                                     onChange={(e) => updateProject(proj.id, 'github', e.target.value)}
-                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7]"
+                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                                   />
                                 </div>
                                 <div>
@@ -1188,13 +1192,13 @@ export default function DashboardPage() {
                                     type="text"
                                     value={proj.url || ''}
                                     onChange={(e) => updateProject(proj.id, 'url', e.target.value)}
-                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7]"
+                                    className="w-full bg-[#050507] border border-[#252535] rounded px-2 py-1 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                                   />
                                 </div>
                               </div>
                               <button
                                 onClick={() => deleteProject(proj.id)}
-                                className="p-1.5 rounded hover:bg-[#ef4444]/10 text-[#5c5c7a] hover:text-[#ef4444] transition-colors shrink-0 mt-5"
+                                className="p-1.5 rounded hover:bg-[#ef4444]/10 text-[#5c5c7a] hover:text-[#ef4444] transition-colors shrink-0 mt-5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef4444]"
                                 aria-label={`Delete project ${proj.name}`}
                               >
                                 <Trash2 size={14} />
@@ -1207,7 +1211,7 @@ export default function DashboardPage() {
                                 value={proj.description}
                                 onChange={(e) => updateProject(proj.id, 'description', e.target.value)}
                                 rows={2}
-                                className="w-full bg-[#050507] border border-[#252535] rounded p-2 text-xs text-[#f2f2f7] resize-none"
+                                className="w-full bg-[#050507] border border-[#252535] rounded p-2 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1] resize-none"
                               />
                             </div>
                           </div>
@@ -1222,7 +1226,7 @@ export default function DashboardPage() {
 
           {/* PORTFOLIO SETTINGS TAB */}
           {activeTab === 'portfolio' && portfolio && (
-            <div className="space-y-6">
+            <div className="space-y-6 envoy-tab-fade" key="portfolio-tab">
               <div>
                 <h1 className="text-2xl font-bold tracking-tight">Portfolio Settings</h1>
                 <p className="text-sm text-[#9898b3] mt-1">Deploy a beautiful, responsive portfolio site showcasing your projects and background with a single command.</p>
@@ -1231,7 +1235,7 @@ export default function DashboardPage() {
               <div className="bg-[#0c0c10]/40 border border-[#1e1e2e] rounded-xl p-6 space-y-6">
                 
                 {/* Visibility status banner */}
-                <div className={`p-4 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                <div className={`p-4 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors duration-300 ${
                   portfolio.visibility === 'private'
                     ? 'bg-[#111118]/60 border-[#252535]'
                     : 'bg-emerald-500/[0.06] border-emerald-500/20'
@@ -1264,7 +1268,7 @@ export default function DashboardPage() {
                     href={`/p/${portfolio.slug}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-xs text-[#00d4ff] hover:underline font-bold whitespace-nowrap"
+                    className="text-xs text-[#00d4ff] hover:underline font-bold whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff] rounded-sm"
                   >
                     View Published Site →
                   </a>
@@ -1282,7 +1286,7 @@ export default function DashboardPage() {
                         type="text"
                         value={portfolio.slug}
                         onChange={(e) => setPortfolioState({ ...portfolio, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
-                        className="flex-1 bg-[#111118]/80 border border-[#252535] rounded-r-md py-2 px-3 text-xs text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
+                        className="flex-1 bg-[#111118]/80 border border-[#252535] rounded-r-md py-2 px-3 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                       />
                     </div>
                   </div>
@@ -1293,7 +1297,7 @@ export default function DashboardPage() {
                     <select 
                       value={portfolio.theme}
                       onChange={(e) => setPortfolioState({ ...portfolio, theme: e.target.value as PortfolioTheme })}
-                      className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-xs text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
+                      className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                     >
                       <option value="minimal">Minimal (Elegant Editorial)</option>
                       <option value="developer">Developer (IDE Console Layout)</option>
@@ -1308,7 +1312,7 @@ export default function DashboardPage() {
                       id="portfolio-visibility"
                       value={portfolio.visibility}
                       onChange={(e) => setPortfolioState({ ...portfolio, visibility: e.target.value as PortfolioVisibility })}
-                      className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-xs text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
+                      className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-xs text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                     >
                       <option value="public">Public (Indexed & Searchable)</option>
                       <option value="unlisted">Unlisted (Direct Link Only)</option>
@@ -1327,7 +1331,7 @@ export default function DashboardPage() {
                   <h3 className="text-xs font-bold text-[#f2f2f7] uppercase tracking-wider">Visible Sections & Order</h3>
                   <div className="space-y-2">
                     {portfolio.sections.map((sec, idx) => (
-                      <div key={sec.id} className="flex items-center justify-between p-3 bg-[#111118]/40 border border-[#1e1e2e] rounded-lg">
+                      <div key={sec.id} className="flex items-center justify-between p-3 bg-[#111118]/40 border border-[#1e1e2e] rounded-lg transition-colors duration-200 hover:border-[#252535]">
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] text-[#5c5c7a] font-mono">#{idx + 1}</span>
                           <span className="text-xs font-bold text-gray-200 capitalize">{sec.title || sec.type}</span>
@@ -1338,7 +1342,7 @@ export default function DashboardPage() {
                             updated[idx] = { ...sec, visible: !sec.visible }
                             setPortfolioState({ ...portfolio, sections: updated })
                           }}
-                          className={`text-[10px] px-2.5 py-1 rounded font-bold uppercase transition-all ${
+                          className={`text-[10px] px-2.5 py-1 rounded font-bold uppercase transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff] ${
                             sec.visible 
                               ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                               : 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
@@ -1378,7 +1382,7 @@ export default function DashboardPage() {
                       showNotification('Save failed', 'error')
                     }
                   }}
-                  className="btn btn-primary btn-sm"
+                  className="btn btn-primary btn-sm envoy-btn-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff]"
                 >
                   {portfolio.visibility === 'private' ? 'Save Portfolio Settings' : 'Save & Publish Portfolio'}
                 </button>
@@ -1392,7 +1396,7 @@ export default function DashboardPage() {
       {/* CREATE DOCUMENT MODAL */}
       {showCreateModal && (
         <div
-          className="fixed inset-0 bg-[#000000]/70 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+          className="fixed inset-0 bg-[#000000]/70 backdrop-blur-sm z-50 flex items-center justify-center p-6 envoy-modal-backdrop"
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowCreateModal(false)
           }}
@@ -1418,7 +1422,7 @@ export default function DashboardPage() {
                   onChange={(e) => setNewDocTitle(e.target.value)}
                   placeholder="e.g. Senior Backend Resume"
                   autoFocus
-                  className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
+                  className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                 />
               </div>
 
@@ -1429,7 +1433,7 @@ export default function DashboardPage() {
                     id="create-doc-type"
                     value={newDocType}
                     onChange={(e) => setNewDocType(e.target.value as DocumentType)}
-                    className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] focus:outline-none"
+                    className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                   >
                     <option value="resume">Resume (A4)</option>
                     <option value="cv">Academic CV</option>
@@ -1442,7 +1446,7 @@ export default function DashboardPage() {
                     id="create-doc-template"
                     value={newDocTemplate}
                     onChange={(e) => setNewDocTemplate(e.target.value as TemplateId)}
-                    className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] focus:outline-none"
+                    className="w-full bg-[#111118]/80 border border-[#252535] rounded-md py-2 px-3 text-sm text-[#f2f2f7] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]"
                   >
                     <option value="minimal">Minimal</option>
                     <option value="modern">Modern</option>
@@ -1456,13 +1460,13 @@ export default function DashboardPage() {
             <div className="flex items-center justify-end gap-3">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="btn btn-secondary btn-sm"
+                className="btn btn-secondary btn-sm envoy-btn-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateDocument}
-                className="btn btn-primary btn-sm"
+                className="btn btn-primary btn-sm envoy-btn-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff]"
               >
                 Create Document
               </button>
@@ -1470,6 +1474,93 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      <style jsx global>{`
+        @keyframes envoyFormFieldEnter {
+          from {
+            opacity: 0;
+            transform: translateY(14px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes envoyTabFade {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes envoyToastEnter {
+          from {
+            opacity: 0;
+            transform: translateY(12px) scale(0.97);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        @keyframes envoyModalBackdropIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        .envoy-field-enter {
+          opacity: 0;
+          animation: envoyFormFieldEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .envoy-tab-fade {
+          animation: envoyTabFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .envoy-toast-enter {
+          animation: envoyToastEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .envoy-modal-backdrop {
+          animation: envoyModalBackdropIn 0.2s ease-out forwards;
+        }
+
+        .envoy-nav-item {
+          transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+        .envoy-nav-item:hover {
+          transform: translateX(2px);
+        }
+
+        .envoy-btn-lift {
+          transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, filter 0.2s ease;
+        }
+        .envoy-btn-lift:hover:not(:disabled) {
+          transform: translateY(-1px);
+        }
+        .envoy-btn-lift:active:not(:disabled) {
+          transform: translateY(0px) scale(0.98);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .envoy-field-enter,
+          .envoy-tab-fade,
+          .envoy-toast-enter,
+          .envoy-modal-backdrop {
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+          }
+          .envoy-nav-item:hover,
+          .envoy-btn-lift:hover:not(:disabled),
+          .envoy-btn-lift:active:not(:disabled) {
+            transform: none !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }

@@ -14,21 +14,76 @@ import { Logo } from '@/components/Logo'
 import { Mail, Phone, MapPin, Linkedin, Github, ExternalLink } from 'lucide-react'
 import type { PublicPortfolioProfile, PublicPortfolioSite } from '@/lib/portfolio/public-projection'
 
+// Shared entrance/ambient animation styles for the public portfolio surface.
+// Plain <style> (not styled-jsx) so this keeps working in a server component
+// with no client-side hooks. Class names are prefixed to avoid collisions
+// with any global stylesheet.
+function PortfolioMotionStyles() {
+  return (
+    <style>{`
+      @keyframes envoy-pf-fade-up {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes envoy-pf-fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes envoy-pf-glow-drift {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(2%, -3%) scale(1.06); }
+      }
+      @keyframes envoy-pf-blink {
+        0%, 45% { opacity: 1; }
+        50%, 95% { opacity: 0; }
+        100% { opacity: 1; }
+      }
+      @keyframes envoy-pf-ring {
+        0% { transform: scale(0.85); opacity: 0.7; }
+        80%, 100% { transform: scale(1.4); opacity: 0; }
+      }
+      .envoy-pf-fade-up { animation: envoy-pf-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+      .envoy-pf-fade-in { animation: envoy-pf-fade-in 0.5s ease-out both; }
+      .envoy-pf-glow-drift { animation: envoy-pf-glow-drift 14s ease-in-out infinite; }
+      .envoy-pf-cursor { animation: envoy-pf-blink 1.1s step-end infinite; }
+      .envoy-pf-ring { animation: envoy-pf-ring 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+      @media (prefers-reduced-motion: reduce) {
+        .envoy-pf-fade-up, .envoy-pf-fade-in, .envoy-pf-glow-drift, .envoy-pf-cursor, .envoy-pf-ring {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+        }
+      }
+    `}</style>
+  )
+}
+
 export function PublicPortfolioNotFound() {
   return (
     <div className="min-h-screen bg-[#050507] text-[#f2f2f7] flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+      <PortfolioMotionStyles />
       {/* Restrained ambient glow */}
-      <div className="absolute top-[-25%] left-1/2 -translate-x-1/2 w-[60%] h-[50%] rounded-full bg-gradient-radial from-[rgba(99,102,241,0.08)] to-transparent blur-3xl pointer-events-none" />
-      <Logo iconSize={44} showText={false} className="mb-6 opacity-70" />
-      <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2 [text-wrap:balance]">
-        Portfolio Not Found
-      </h1>
-      <p className="text-sm text-[#9898b3] max-w-md leading-relaxed">
-        This portfolio site does not exist or has been set to private by the owner.
-      </p>
-      <Link href="/" className="btn btn-secondary btn-sm mt-7">
-        Go Back Home
-      </Link>
+      <div className="absolute top-[-25%] left-1/2 -translate-x-1/2 w-[60%] h-[50%] rounded-full bg-gradient-radial from-[rgba(99,102,241,0.08)] to-transparent blur-3xl pointer-events-none envoy-pf-glow-drift" aria-hidden="true" />
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            'linear-gradient(to right, #f2f2f7 1px, transparent 1px), linear-gradient(to bottom, #f2f2f7 1px, transparent 1px)',
+          backgroundSize: '56px 56px',
+        }}
+        aria-hidden="true"
+      />
+      <div className="relative envoy-pf-fade-up">
+        <Logo iconSize={44} showText={false} className="mb-6 opacity-70 mx-auto" />
+        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2 [text-wrap:balance]">
+          Portfolio Not Found
+        </h1>
+        <p className="text-sm text-[#9898b3] max-w-md leading-relaxed mx-auto">
+          This portfolio site does not exist or has been set to private by the owner.
+        </p>
+        <Link href="/" className="btn btn-secondary btn-sm mt-7 inline-flex">
+          Go Back Home
+        </Link>
+      </div>
     </div>
   )
 }
@@ -36,10 +91,14 @@ export function PublicPortfolioNotFound() {
 export function PublicPortfolioLoader() {
   return (
     <div className="min-h-screen bg-[#050507] text-[#f2f2f7] flex flex-col items-center justify-center gap-4" role="status" aria-label="Loading portfolio">
-      <div
-        className="animate-spin rounded-full h-8 w-8 border-2 border-[#1e1e2e] border-t-[#00d4ff]"
-        aria-hidden="true"
-      />
+      <PortfolioMotionStyles />
+      <div className="relative flex items-center justify-center">
+        <span className="absolute h-12 w-12 rounded-full border border-[#00d4ff]/20 envoy-pf-ring" aria-hidden="true" />
+        <div
+          className="animate-spin rounded-full h-8 w-8 border-2 border-[#1e1e2e] border-t-[#00d4ff]"
+          aria-hidden="true"
+        />
+      </div>
       <p className="text-xs text-[#5c5c7a] font-semibold uppercase tracking-widest">Loading portfolio</p>
     </div>
   )
@@ -64,6 +123,7 @@ export default function PublicPortfolioViews({
           : 'bg-[#0a0a0c] text-[#f2f2f7]'
       }`}
     >
+      <PortfolioMotionStyles />
       {theme === 'developer' && <DeveloperThemeView profile={profile} site={site} />}
       {theme === 'bold' && <BoldThemeView profile={profile} site={site} />}
       {theme === 'minimal' && <MinimalThemeView profile={profile} site={site} />}
@@ -75,28 +135,53 @@ function MinimalThemeView({ profile, site }: { profile: PublicPortfolioProfile; 
   const visible = (type: string) => site.sections.find(s => s.type === type)?.visible !== false
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-20 space-y-16">
+    <div className="max-w-3xl mx-auto px-6 py-20 space-y-16 relative">
+      {/* Quiet ambient presence behind the hero, echoing the app's own identity */}
+      <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 w-[520px] h-72 rounded-full bg-[#00d4ff]/[0.05] blur-[110px] envoy-pf-glow-drift" aria-hidden="true" />
+
       {visible('hero') && (
-        <header className="space-y-6">
+        <header className="space-y-6 relative envoy-pf-fade-up">
           <div className="space-y-2">
-            <h1 className="text-4xl font-extrabold tracking-tight text-white">{profile.identity.name}</h1>
+            <h1 className="text-4xl md:text-[2.75rem] font-extrabold tracking-tight text-white leading-[1.05]">{profile.identity.name}</h1>
             {profile.identity.headline && (
               <p className="text-lg text-[#00d4ff] font-semibold">{profile.identity.headline}</p>
             )}
           </div>
 
-          <div className="flex flex-wrap gap-4 text-xs text-[#9898b3] border-y border-[#1e1e2e] py-4">
-            {profile.identity.email && <div className="flex items-center gap-1.5"><Mail size={13} /> {profile.identity.email}</div>}
-            {profile.identity.phone && <div className="flex items-center gap-1.5"><Phone size={13} /> {profile.identity.phone}</div>}
-            {profile.identity.location && <div className="flex items-center gap-1.5"><MapPin size={13} /> {profile.identity.location}</div>}
+          <div className="flex flex-wrap gap-2 text-xs text-[#9898b3] border-y border-[#1e1e2e] py-4">
+            {profile.identity.email && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.02] border border-white/[0.04]">
+                <Mail size={13} aria-hidden="true" /> {profile.identity.email}
+              </span>
+            )}
+            {profile.identity.phone && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.02] border border-white/[0.04]">
+                <Phone size={13} aria-hidden="true" /> {profile.identity.phone}
+              </span>
+            )}
+            {profile.identity.location && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.02] border border-white/[0.04]">
+                <MapPin size={13} aria-hidden="true" /> {profile.identity.location}
+              </span>
+            )}
             {profile.identity.linkedin && (
-              <a href={`https://linkedin.com/in/${profile.identity.linkedin}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-white transition-colors">
-                <Linkedin size={13} /> LinkedIn
+              <a
+                href={`https://linkedin.com/in/${profile.identity.linkedin}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.02] border border-white/[0.04] hover:border-[#00d4ff]/30 hover:text-white transition-colors duration-150"
+              >
+                <Linkedin size={13} aria-hidden="true" /> LinkedIn
               </a>
             )}
             {profile.identity.github && (
-              <a href={`https://github.com/${profile.identity.github}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-white transition-colors">
-                <Github size={13} /> GitHub
+              <a
+                href={`https://github.com/${profile.identity.github}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.02] border border-white/[0.04] hover:border-[#00d4ff]/30 hover:text-white transition-colors duration-150"
+              >
+                <Github size={13} aria-hidden="true" /> GitHub
               </a>
             )}
           </div>
@@ -104,26 +189,27 @@ function MinimalThemeView({ profile, site }: { profile: PublicPortfolioProfile; 
       )}
 
       {visible('about') && profile.summary && (
-        <section className="space-y-3">
+        <section className="space-y-3 envoy-pf-fade-up" style={{ animationDelay: '60ms' }}>
           <h2 className="text-xs uppercase tracking-widest text-[#5c5c7a] font-bold border-b border-[#1e1e2e] pb-2">About</h2>
           <p className="text-sm text-[#c5c5d2] leading-relaxed">{profile.summary}</p>
         </section>
       )}
 
       {visible('experience') && profile.experience.length > 0 && (
-        <section className="space-y-6">
+        <section className="space-y-6 envoy-pf-fade-up" style={{ animationDelay: '100ms' }}>
           <h2 className="text-xs uppercase tracking-widest text-[#5c5c7a] font-bold border-b border-[#1e1e2e] pb-2">Experience</h2>
           <div className="space-y-6">
             {profile.experience.map(exp => (
-              <div key={exp.id} className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="font-bold text-white">{exp.role} <span className="font-normal text-[#9898b3]">at</span> {exp.company}</div>
-                  <div className="text-xs text-[#5c5c7a] font-semibold">{exp.startDate} - {exp.current ? 'Present' : exp.endDate}</div>
+              <div key={exp.id} className="space-y-2 relative pl-4 border-l border-[#1e1e2e]">
+                <span className="absolute -left-[3.5px] top-1.5 w-[7px] h-[7px] rounded-full bg-[#00d4ff]/60" aria-hidden="true" />
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <div className="font-bold text-white min-w-0 truncate">{exp.role} <span className="font-normal text-[#9898b3]">at</span> {exp.company}</div>
+                  <div className="text-xs text-[#5c5c7a] font-semibold shrink-0 tabular-nums">{exp.startDate} - {exp.current ? 'Present' : exp.endDate}</div>
                 </div>
                 {exp.technologies && exp.technologies.length > 0 && (
                   <div className="text-[10px] text-[#00d4ff] font-semibold">Technologies: {exp.technologies.join(', ')}</div>
                 )}
-                <ul className="list-disc pl-4 text-xs text-[#9898b3] space-y-1 leading-relaxed">
+                <ul className="list-disc marker:text-[#333349] pl-4 text-xs text-[#9898b3] space-y-1 leading-relaxed">
                   {exp.bullets.map((b, i) => <li key={i}>{b}</li>)}
                 </ul>
               </div>
@@ -133,22 +219,22 @@ function MinimalThemeView({ profile, site }: { profile: PublicPortfolioProfile; 
       )}
 
       {visible('projects') && profile.projects.length > 0 && (
-        <section className="space-y-6">
+        <section className="space-y-6 envoy-pf-fade-up" style={{ animationDelay: '140ms' }}>
           <h2 className="text-xs uppercase tracking-widest text-[#5c5c7a] font-bold border-b border-[#1e1e2e] pb-2">Projects</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {profile.projects.map(proj => (
-              <div key={proj.id} className="p-5 rounded-lg border border-[#1e1e2e] bg-[#0c0c10]/40 space-y-3">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-bold text-sm text-white">{proj.name}</h3>
-                  <div className="flex gap-2">
+              <div key={proj.id} className="p-5 rounded-lg border border-[#1e1e2e] bg-[#0c0c10]/40 space-y-3 hover:border-[#252535] hover:bg-[#0c0c10]/70 transition-all duration-200">
+                <div className="flex justify-between items-center gap-2">
+                  <h3 className="font-bold text-sm text-white truncate">{proj.name}</h3>
+                  <div className="flex gap-2 shrink-0">
                     {proj.github && (
-                      <a href={`https://github.com/${proj.github}`} target="_blank" rel="noopener noreferrer" className="text-[#5c5c7a] hover:text-[#00d4ff]" aria-label={`View ${proj.name} on GitHub`}>
-                        <Github size={13} />
+                      <a href={`https://github.com/${proj.github}`} target="_blank" rel="noopener noreferrer" className="text-[#5c5c7a] hover:text-[#00d4ff] transition-colors duration-150" aria-label={`View ${proj.name} on GitHub`}>
+                        <Github size={13} aria-hidden="true" />
                       </a>
                     )}
                     {proj.url && (
-                      <a href={proj.url} target="_blank" rel="noopener noreferrer" className="text-[#5c5c7a] hover:text-[#00d4ff]" aria-label={`Open ${proj.name} live site`}>
-                        <ExternalLink size={13} />
+                      <a href={proj.url} target="_blank" rel="noopener noreferrer" className="text-[#5c5c7a] hover:text-[#00d4ff] transition-colors duration-150" aria-label={`Open ${proj.name} live site`}>
+                        <ExternalLink size={13} aria-hidden="true" />
                       </a>
                     )}
                   </div>
@@ -156,7 +242,7 @@ function MinimalThemeView({ profile, site }: { profile: PublicPortfolioProfile; 
                 <p className="text-xs text-[#9898b3] leading-relaxed">{proj.description}</p>
                 <div className="flex flex-wrap gap-1">
                   {proj.technologies.map((t, idx) => (
-                    <span key={idx} className="text-[9px] bg-[#161622] text-[#c5c5d2] px-1.5 py-0.5 rounded">
+                    <span key={idx} className="text-[9px] bg-[#161622] text-[#c5c5d2] px-1.5 py-0.5 rounded border border-white/[0.03]">
                       {t}
                     </span>
                   ))}
@@ -168,7 +254,7 @@ function MinimalThemeView({ profile, site }: { profile: PublicPortfolioProfile; 
       )}
 
       {visible('skills') && profile.skills.length > 0 && (
-        <section className="space-y-4">
+        <section className="space-y-4 envoy-pf-fade-up" style={{ animationDelay: '180ms' }}>
           <h2 className="text-xs uppercase tracking-widest text-[#5c5c7a] font-bold border-b border-[#1e1e2e] pb-2">Skills</h2>
           <div className="space-y-3">
             {profile.skills.map(group => (
@@ -182,16 +268,16 @@ function MinimalThemeView({ profile, site }: { profile: PublicPortfolioProfile; 
       )}
 
       {visible('education') && profile.education.length > 0 && (
-        <section className="space-y-4">
+        <section className="space-y-4 envoy-pf-fade-up" style={{ animationDelay: '220ms' }}>
           <h2 className="text-xs uppercase tracking-widest text-[#5c5c7a] font-bold border-b border-[#1e1e2e] pb-2">Education</h2>
           <div className="space-y-4">
             {profile.education.map(edu => (
-              <div key={edu.id} className="flex justify-between items-start text-xs">
-                <div>
+              <div key={edu.id} className="flex justify-between items-start gap-3 text-xs">
+                <div className="min-w-0">
                   <div className="font-bold text-white">{edu.degree} in {edu.field}</div>
                   <div className="text-[#9898b3] italic mt-0.5">{edu.institution}</div>
                 </div>
-                <span className="text-[#5c5c7a] font-semibold">{edu.startDate} - {edu.current ? 'Present' : edu.endDate}</span>
+                <span className="text-[#5c5c7a] font-semibold shrink-0 tabular-nums">{edu.startDate} - {edu.current ? 'Present' : edu.endDate}</span>
               </div>
             ))}
           </div>
@@ -205,15 +291,17 @@ function DeveloperThemeView({ profile, site }: { profile: PublicPortfolioProfile
   const visible = (type: string) => site.sections.find(s => s.type === type)?.visible !== false
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12 space-y-8 font-mono">
-      <div className="rounded-lg border border-emerald-900 bg-[#0c0c10] overflow-hidden shadow-2xl">
+    <div className="max-w-4xl mx-auto px-6 py-12 space-y-8 font-mono relative">
+      <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[560px] h-64 rounded-full bg-emerald-500/[0.04] blur-[110px] envoy-pf-glow-drift" aria-hidden="true" />
+
+      <div className="rounded-lg border border-emerald-900 bg-[#0c0c10] overflow-hidden shadow-2xl relative envoy-pf-fade-up">
         <div className="bg-[#111118] px-4 py-2 border-b border-emerald-950 flex items-center justify-between">
           <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
-            <div className="w-2.5 h-2.5 rounded-full bg-amber-500/60" />
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/60" />
+            <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" aria-hidden="true" />
+            <div className="w-2.5 h-2.5 rounded-full bg-amber-500/60" aria-hidden="true" />
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/60" aria-hidden="true" />
           </div>
-          <span className="text-[10px] text-emerald-600">bash - {profile.identity.name.toLowerCase().replace(/\s+/g, '')}@envoy</span>
+          <span className="text-[10px] text-emerald-600">bash — {profile.identity.name.toLowerCase().replace(/\s+/g, '')}@envoy</span>
           <div className="w-10" />
         </div>
 
@@ -230,12 +318,12 @@ function DeveloperThemeView({ profile, site }: { profile: PublicPortfolioProfile
               {profile.identity.phone && <div>phone: {profile.identity.phone}</div>}
               {profile.identity.location && <div>location: {profile.identity.location}</div>}
               {profile.identity.linkedin && (
-                <a href={`https://linkedin.com/in/${profile.identity.linkedin}`} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-emerald-400">
+                <a href={`https://linkedin.com/in/${profile.identity.linkedin}`} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-emerald-400 transition-colors duration-150">
                   linkedin: {profile.identity.linkedin}
                 </a>
               )}
               {profile.identity.github && (
-                <a href={`https://github.com/${profile.identity.github}`} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-emerald-400">
+                <a href={`https://github.com/${profile.identity.github}`} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-emerald-400 transition-colors duration-150">
                   github: {profile.identity.github}
                 </a>
               )}
@@ -243,21 +331,21 @@ function DeveloperThemeView({ profile, site }: { profile: PublicPortfolioProfile
           </div>
 
           {visible('about') && profile.summary && (
-            <div>
+            <div className="envoy-pf-fade-up" style={{ animationDelay: '60ms' }}>
               <div className="text-emerald-700">$ cat about_me.md</div>
               <p className="mt-2 text-emerald-300/90 leading-relaxed pl-4 border-l border-emerald-900/50">{profile.summary}</p>
             </div>
           )}
 
           {visible('experience') && profile.experience.length > 0 && (
-            <div>
+            <div className="envoy-pf-fade-up" style={{ animationDelay: '100ms' }}>
               <div className="text-emerald-700">$ cat experience.json</div>
               <div className="mt-2 pl-4 border-l border-emerald-900/50 space-y-4">
                 {profile.experience.map(exp => (
                   <div key={exp.id} className="space-y-1 text-emerald-300/80">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-emerald-400">{'>'} {exp.role} @ {exp.company}</span>
-                      <span className="text-emerald-600">{exp.startDate} - {exp.current ? 'Present' : exp.endDate}</span>
+                    <div className="flex justify-between items-center gap-3 text-xs">
+                      <span className="font-bold text-emerald-400 min-w-0 truncate">{'>'} {exp.role} @ {exp.company}</span>
+                      <span className="text-emerald-600 shrink-0 tabular-nums">{exp.startDate} - {exp.current ? 'Present' : exp.endDate}</span>
                     </div>
                     {exp.technologies && exp.technologies.length > 0 && (
                       <div className="text-[11px] text-emerald-500">Tech: {exp.technologies.join(', ')}</div>
@@ -272,16 +360,16 @@ function DeveloperThemeView({ profile, site }: { profile: PublicPortfolioProfile
           )}
 
           {visible('projects') && profile.projects.length > 0 && (
-            <div>
+            <div className="envoy-pf-fade-up" style={{ animationDelay: '140ms' }}>
               <div className="text-emerald-700">$ ls projects/</div>
               <div className="mt-2 pl-4 border-l border-emerald-900/50 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {profile.projects.map(proj => (
-                  <div key={proj.id} className="p-4 border border-emerald-950 bg-[#050507] rounded space-y-2">
-                    <div className="flex justify-between items-center text-emerald-400 font-bold">
-                      <span>{proj.name}</span>
-                      <div className="flex gap-2">
-                        {proj.github && <a href={`https://github.com/${proj.github}`} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-200" aria-label={`View ${proj.name} on GitHub`}><Github size={12} /></a>}
-                        {proj.url && <a href={proj.url} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-200" aria-label={`Open ${proj.name} live site`}><ExternalLink size={12} /></a>}
+                  <div key={proj.id} className="p-4 border border-emerald-950 bg-[#050507] rounded space-y-2 hover:border-emerald-800 transition-colors duration-200">
+                    <div className="flex justify-between items-center gap-2 text-emerald-400 font-bold">
+                      <span className="min-w-0 truncate">{proj.name}</span>
+                      <div className="flex gap-2 shrink-0">
+                        {proj.github && <a href={`https://github.com/${proj.github}`} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-200 transition-colors duration-150" aria-label={`View ${proj.name} on GitHub`}><Github size={12} aria-hidden="true" /></a>}
+                        {proj.url && <a href={proj.url} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-200 transition-colors duration-150" aria-label={`Open ${proj.name} live site`}><ExternalLink size={12} aria-hidden="true" /></a>}
                       </div>
                     </div>
                     <p className="text-[11px] text-emerald-600/90 leading-normal">{proj.description}</p>
@@ -293,7 +381,7 @@ function DeveloperThemeView({ profile, site }: { profile: PublicPortfolioProfile
           )}
 
           {visible('skills') && profile.skills.length > 0 && (
-            <div>
+            <div className="envoy-pf-fade-up" style={{ animationDelay: '180ms' }}>
               <div className="text-emerald-700">$ print_skills --verbose</div>
               <div className="mt-2 pl-4 border-l border-emerald-900/50 space-y-1">
                 {profile.skills.map(group => (
@@ -304,6 +392,11 @@ function DeveloperThemeView({ profile, site }: { profile: PublicPortfolioProfile
               </div>
             </div>
           )}
+
+          <div className="flex items-center gap-1 text-emerald-700" aria-hidden="true">
+            <span>$</span>
+            <span className="inline-block w-[7px] h-[14px] bg-emerald-500/70 envoy-pf-cursor" />
+          </div>
         </div>
       </div>
     </div>
@@ -316,12 +409,12 @@ function BoldThemeView({ profile, site }: { profile: PublicPortfolioProfile; sit
   return (
     <div className="max-w-5xl mx-auto px-6 py-20 space-y-16">
       {visible('hero') && (
-        <div className="p-8 md:p-12 rounded-2xl bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl shadow-2xl space-y-6 relative overflow-hidden">
-          <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-[#6366f1]/10 blur-[100px] pointer-events-none" />
-          <div className="absolute -left-20 -bottom-20 w-80 h-80 rounded-full bg-[#00d4ff]/10 blur-[100px] pointer-events-none" />
+        <div className="p-8 md:p-12 rounded-2xl bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl shadow-2xl space-y-6 relative overflow-hidden envoy-pf-fade-up">
+          <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-[#6366f1]/10 blur-[100px] pointer-events-none envoy-pf-glow-drift" aria-hidden="true" />
+          <div className="absolute -left-20 -bottom-20 w-80 h-80 rounded-full bg-[#00d4ff]/10 blur-[100px] pointer-events-none envoy-pf-glow-drift" style={{ animationDelay: '-7s' }} aria-hidden="true" />
 
-          <div className="space-y-4">
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white via-indigo-200 to-[#00d4ff] bg-clip-text text-transparent">
+          <div className="space-y-4 relative">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white via-indigo-200 to-[#00d4ff] bg-clip-text text-transparent leading-[1.05]">
               {profile.identity.name}
             </h1>
             {profile.identity.headline && (
@@ -329,18 +422,18 @@ function BoldThemeView({ profile, site }: { profile: PublicPortfolioProfile; sit
             )}
           </div>
 
-          <div className="flex flex-wrap gap-4 text-xs text-[#9898b3]">
-            {profile.identity.email && <div className="px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05] flex items-center gap-1.5"><Mail size={13} /> {profile.identity.email}</div>}
-            {profile.identity.phone && <div className="px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05] flex items-center gap-1.5"><Phone size={13} /> {profile.identity.phone}</div>}
-            {profile.identity.location && <div className="px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05] flex items-center gap-1.5"><MapPin size={13} /> {profile.identity.location}</div>}
+          <div className="flex flex-wrap gap-4 text-xs text-[#9898b3] relative">
+            {profile.identity.email && <div className="px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05] flex items-center gap-1.5"><Mail size={13} aria-hidden="true" /> {profile.identity.email}</div>}
+            {profile.identity.phone && <div className="px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05] flex items-center gap-1.5"><Phone size={13} aria-hidden="true" /> {profile.identity.phone}</div>}
+            {profile.identity.location && <div className="px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05] flex items-center gap-1.5"><MapPin size={13} aria-hidden="true" /> {profile.identity.location}</div>}
             {profile.identity.linkedin && (
-              <a href={`https://linkedin.com/in/${profile.identity.linkedin}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05] flex items-center gap-1.5 hover:bg-[#6366f1]/20 hover:text-white transition-all">
-                <Linkedin size={13} /> LinkedIn
+              <a href={`https://linkedin.com/in/${profile.identity.linkedin}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05] flex items-center gap-1.5 hover:bg-[#6366f1]/20 hover:text-white transition-all duration-200">
+                <Linkedin size={13} aria-hidden="true" /> LinkedIn
               </a>
             )}
             {profile.identity.github && (
-              <a href={`https://github.com/${profile.identity.github}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05] flex items-center gap-1.5 hover:bg-[#00d4ff]/20 hover:text-white transition-all">
-                <Github size={13} /> GitHub
+              <a href={`https://github.com/${profile.identity.github}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05] flex items-center gap-1.5 hover:bg-[#00d4ff]/20 hover:text-white transition-all duration-200">
+                <Github size={13} aria-hidden="true" /> GitHub
               </a>
             )}
           </div>
@@ -350,14 +443,14 @@ function BoldThemeView({ profile, site }: { profile: PublicPortfolioProfile; sit
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
         <div className="md:col-span-1 space-y-6">
           {visible('about') && profile.summary && (
-            <div className="p-6 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-4">
+            <div className="p-6 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-4 envoy-pf-fade-up" style={{ animationDelay: '80ms' }}>
               <h2 className="text-xs uppercase tracking-widest text-[#00d4ff] font-extrabold">About Me</h2>
               <p className="text-xs text-[#9898b3] leading-relaxed">{profile.summary}</p>
             </div>
           )}
 
           {visible('skills') && profile.skills.length > 0 && (
-            <div className="p-6 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-4">
+            <div className="p-6 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-4 envoy-pf-fade-up" style={{ animationDelay: '140ms' }}>
               <h2 className="text-xs uppercase tracking-widest text-[#00d4ff] font-extrabold">Skills Stack</h2>
               <div className="space-y-4">
                 {profile.skills.map(group => (
@@ -379,20 +472,20 @@ function BoldThemeView({ profile, site }: { profile: PublicPortfolioProfile; sit
 
         <div className="md:col-span-2 space-y-6">
           {visible('experience') && profile.experience.length > 0 && (
-            <div className="p-6 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-6">
+            <div className="p-6 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-6 envoy-pf-fade-up" style={{ animationDelay: '100ms' }}>
               <h2 className="text-xs uppercase tracking-widest text-[#00d4ff] font-extrabold">Professional Journey</h2>
               <div className="space-y-6">
                 {profile.experience.map(exp => (
                   <div key={exp.id} className="space-y-2 border-l border-white/[0.05] pl-4 relative">
-                    <div className="absolute -left-[4px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#6366f1]" />
+                    <div className="absolute -left-[4px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#6366f1] shadow-[0_0_10px_rgba(99,102,241,0.6)]" aria-hidden="true" />
                     <div className="flex justify-between items-start gap-4">
-                      <div>
-                        <h3 className="font-bold text-sm text-white">{exp.role}</h3>
-                        <p className="text-xs text-[#9898b3]">{exp.company}</p>
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-sm text-white truncate">{exp.role}</h3>
+                        <p className="text-xs text-[#9898b3] truncate">{exp.company}</p>
                       </div>
-                      <span className="text-[10px] text-[#5c5c7a] font-bold uppercase">{exp.startDate} - {exp.current ? 'Present' : exp.endDate}</span>
+                      <span className="text-[10px] text-[#5c5c7a] font-bold uppercase shrink-0 tabular-nums">{exp.startDate} - {exp.current ? 'Present' : exp.endDate}</span>
                     </div>
-                    <ul className="list-disc pl-4 text-xs text-[#9898b3] space-y-1">
+                    <ul className="list-disc marker:text-[#333349] pl-4 text-xs text-[#9898b3] space-y-1">
                       {exp.bullets.map((b, i) => <li key={i}>{b}</li>)}
                     </ul>
                   </div>
@@ -402,17 +495,17 @@ function BoldThemeView({ profile, site }: { profile: PublicPortfolioProfile; sit
           )}
 
           {visible('projects') && profile.projects.length > 0 && (
-            <div className="p-6 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-6">
+            <div className="p-6 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-6 envoy-pf-fade-up" style={{ animationDelay: '160ms' }}>
               <h2 className="text-xs uppercase tracking-widest text-[#00d4ff] font-extrabold">Featured Releases</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {profile.projects.map(proj => (
-                  <div key={proj.id} className="p-4 rounded-lg bg-white/[0.01] border border-white/[0.04] hover:border-[#6366f1]/50 transition-all flex flex-col justify-between h-40">
+                  <div key={proj.id} className="p-4 rounded-lg bg-white/[0.01] border border-white/[0.04] hover:border-[#6366f1]/50 hover:bg-white/[0.03] transition-all duration-200 flex flex-col justify-between h-40">
                     <div>
-                      <div className="flex justify-between items-start">
+                      <div className="flex justify-between items-start gap-2">
                         <h4 className="font-bold text-xs text-white truncate max-w-[80%]">{proj.name}</h4>
-                        <div className="flex gap-2">
-                          {proj.github && <a href={`https://github.com/${proj.github}`} target="_blank" rel="noopener noreferrer" className="text-[#5c5c7a] hover:text-[#00d4ff]" aria-label={`View ${proj.name} on GitHub`}><Github size={12} /></a>}
-                          {proj.url && <a href={proj.url} target="_blank" rel="noopener noreferrer" className="text-[#5c5c7a] hover:text-[#00d4ff]" aria-label={`Open ${proj.name} live site`}><ExternalLink size={12} /></a>}
+                        <div className="flex gap-2 shrink-0">
+                          {proj.github && <a href={`https://github.com/${proj.github}`} target="_blank" rel="noopener noreferrer" className="text-[#5c5c7a] hover:text-[#00d4ff] transition-colors duration-150" aria-label={`View ${proj.name} on GitHub`}><Github size={12} aria-hidden="true" /></a>}
+                          {proj.url && <a href={proj.url} target="_blank" rel="noopener noreferrer" className="text-[#5c5c7a] hover:text-[#00d4ff] transition-colors duration-150" aria-label={`Open ${proj.name} live site`}><ExternalLink size={12} aria-hidden="true" /></a>}
                         </div>
                       </div>
                       <p className="text-[11px] text-[#9898b3] mt-2 line-clamp-3 leading-relaxed">{proj.description}</p>

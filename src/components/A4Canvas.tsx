@@ -53,19 +53,19 @@ export function A4Canvas({
     <div className="flex flex-col items-center h-full bg-[#111118]/40 border-l border-[#1e1e2e] flex-1">
       {/* Canvas Toolbars */}
       <div className="w-full bg-[#0c0c10]/80 border-b border-[#1e1e2e] px-6 py-2.5 flex items-center justify-between sticky top-0 z-30 backdrop-blur-md">
-        <div className="flex items-center gap-1.5 text-xs text-[#9898b3]">
-          <span className="font-semibold text-[#f2f2f7]">{document.title}</span>
-          <span>•</span>
-          <span className="capitalize">{document.type}</span>
-          <span>•</span>
-          <span>Page 1 of 1</span>
+        <div className="flex items-center gap-2 text-xs text-[#9898b3] min-w-0">
+          <span className="font-semibold text-[#f2f2f7] truncate">{document.title}</span>
+          <span className="text-[#333349]" aria-hidden="true">•</span>
+          <span className="capitalize shrink-0">{document.type}</span>
+          <span className="text-[#333349]" aria-hidden="true">•</span>
+          <span className="shrink-0">Page 1 of 1</span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-[#050507]/60 border border-[#1e1e2e]" role="group" aria-label="Zoom controls">
             <button
               onClick={handleZoomOut}
-              className="p-1.5 rounded-md text-[#9898b3] hover:text-[#f2f2f7] hover:bg-[#16161f] transition-colors"
+              className="p-1.5 rounded-md text-[#9898b3] hover:text-[#f2f2f7] hover:bg-[#16161f] active:scale-90 transition-all duration-150"
               title="Zoom Out"
               aria-label="Zoom Out"
             >
@@ -76,7 +76,7 @@ export function A4Canvas({
             </span>
             <button
               onClick={handleZoomIn}
-              className="p-1.5 rounded-md text-[#9898b3] hover:text-[#f2f2f7] hover:bg-[#16161f] transition-colors"
+              className="p-1.5 rounded-md text-[#9898b3] hover:text-[#f2f2f7] hover:bg-[#16161f] active:scale-90 transition-all duration-150"
               title="Zoom In"
               aria-label="Zoom In"
             >
@@ -87,13 +87,13 @@ export function A4Canvas({
           <div className="hidden sm:flex items-center gap-2">
             <button
               onClick={handleFitPage}
-              className="btn btn-secondary !px-2.5 !py-1 !text-[11px]"
+              className="btn btn-secondary !px-2.5 !py-1 !text-[11px] active:scale-95 transition-transform duration-150"
             >
               Fit Page
             </button>
             <button
               onClick={handleFitWidth}
-              className="btn btn-secondary !px-2.5 !py-1 !text-[11px]"
+              className="btn btn-secondary !px-2.5 !py-1 !text-[11px] active:scale-95 transition-transform duration-150"
             >
               Fit Width
             </button>
@@ -103,17 +103,22 @@ export function A4Canvas({
 
       {/* Page Canvas Frame Container */}
       <div className="flex-1 w-full overflow-auto flex justify-center items-start p-8 relative">
-        <div 
-          className="relative transition-transform duration-200 origin-top shadow-[0_4px_32px_rgba(0,0,0,0.4)]"
+        {/* Ambient stage glow behind the sheet — quiet depth cue, not decoration */}
+        <div
+          className="pointer-events-none absolute top-16 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-[#00d4ff]/[0.04] blur-[100px]"
+          aria-hidden="true"
+        />
+        <div
+          className="relative transition-transform duration-200 origin-top shadow-[0_8px_48px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.03]"
           style={{ transform: `scale(${zoom})` }}
         >
           {/* A4 Sheet Dimensions: 210mm x 297mm (Standard resolution equivalent ~794px x 1123px) */}
           <div id="envoy-a4-sheet" className="w-[794px] min-h-[1123px] bg-white text-gray-900 overflow-hidden relative print:shadow-none">
-            
+
             {/* Active Template Render */}
-            <TemplateRenderer 
-              profile={profile} 
-              document={document} 
+            <TemplateRenderer
+              profile={profile}
+              document={document}
               onSelectSection={handleSelectSection}
             />
 
@@ -136,50 +141,50 @@ export function A4Canvas({
       {/* Editor Section Overlays HUD */}
       <div className="w-full border-t border-[#1e1e2e] bg-[#0c0c10]/40 p-4 flex flex-wrap gap-3 items-center justify-between text-xs">
         <span className="text-[#9898b3]">Hover over any section inside the sheet to edit, hide, or arrange its layout.</span>
-        
+
         <div className="flex flex-wrap gap-2">
           {sortedSections.map((sec, idx) => (
-            <div 
-              key={sec.id} 
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border ${
-                sec.visible 
-                  ? 'bg-[#16161f] border-[#252535] text-[#f2f2f7]' 
+            <div
+              key={sec.id}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border transition-colors duration-150 ${
+                sec.visible
+                  ? 'bg-[#16161f] border-[#252535] text-[#f2f2f7] hover:border-[#333349]'
                   : 'bg-[#0c0c10] border-[#1e1e2e]/40 text-[#5c5c7a]'
               }`}
             >
-              <span>{sec.title}</span>
+              <span className={!sec.visible ? 'line-through decoration-[#333349]' : ''}>{sec.title}</span>
               <div className="flex items-center gap-1 ml-1.5 border-l border-[#252535] pl-1.5 shrink-0">
                 <button
                   onClick={() => onEditSection(sec)}
-                  className="hover:text-[#00d4ff] text-[#9898b3]"
+                  className="hover:text-[#00d4ff] text-[#9898b3] transition-colors duration-150"
                   title="Edit Settings"
                   aria-label={`Edit settings for section ${sec.title}`}
                 >
-                  <Edit2 size={10} />
+                  <Edit2 size={10} aria-hidden="true" />
                 </button>
                 <button
                   onClick={() => onToggleVisibility(sec.id)}
-                  className="hover:text-[#6366f1]"
+                  className="hover:text-[#6366f1] transition-colors duration-150"
                   title={sec.visible ? 'Hide Section' : 'Show Section'}
                   aria-label={sec.visible ? `Hide section ${sec.title}` : `Show section ${sec.title}`}
                 >
-                  {sec.visible ? <Eye size={10} /> : <EyeOff size={10} />}
+                  {sec.visible ? <Eye size={10} aria-hidden="true" /> : <EyeOff size={10} aria-hidden="true" />}
                 </button>
                 <button
                   onClick={() => moveSection(idx, 'up')}
                   disabled={idx === 0}
-                  className="hover:text-[#00d4ff] disabled:opacity-40"
+                  className="hover:text-[#00d4ff] disabled:opacity-40 transition-colors duration-150"
                   aria-label={`Move section ${sec.title} up`}
                 >
-                  <ArrowUp size={10} />
+                  <ArrowUp size={10} aria-hidden="true" />
                 </button>
                 <button
                   onClick={() => moveSection(idx, 'down')}
                   disabled={idx === sortedSections.length - 1}
-                  className="hover:text-[#00d4ff] disabled:opacity-40"
+                  className="hover:text-[#00d4ff] disabled:opacity-40 transition-colors duration-150"
                   aria-label={`Move section ${sec.title} down`}
                 >
-                  <ArrowDown size={10} />
+                  <ArrowDown size={10} aria-hidden="true" />
                 </button>
               </div>
             </div>

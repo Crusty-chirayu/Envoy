@@ -8,8 +8,9 @@ import { useDocumentStore } from '@/stores/document'
 import { A4Canvas } from '@/components/A4Canvas'
 import { AgentSidebar } from '@/components/AgentSidebar'
 import type { DocumentSectionConfig, AIConversation, AIMessage, JobTarget, ATSReport, TemplateId, DocumentVersion, ExperienceEntry, SkillGroup, ProjectEntry } from '@/types'
-import { 
-  ArrowLeft, Download, Loader, Eye, History
+import {
+  ArrowLeft, Download, Loader, Eye, EyeOff, History, ChevronDown, X,
+  FileText, FileType, FileCode, RotateCcw, Sparkles, Clock, Check
 } from 'lucide-react'
 import { v4 as uuid } from 'uuid'
 // NOTE: The docx generator is dynamically imported inside its export handler
@@ -49,7 +50,7 @@ function EditorWorkspace() {
   // Tracks which document section the user is currently working on so the
   // AI request always carries the real editing focus.
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null)
-  
+
   // AI related state
   const [conversation, setConversation] = useState<AIConversation | null>(null)
   const [isThinking, setIsThinking] = useState(false)
@@ -379,7 +380,7 @@ function EditorWorkspace() {
   // Update target job posting using backend extraction route
   const handleUpdateJobTarget = async (desc: string) => {
     if (!document || !profile) return
-    
+
     try {
       const response = await fetch('/api/jobs/extract', {
         method: 'POST',
@@ -394,7 +395,7 @@ function EditorWorkspace() {
       }
 
       const parsed = await response.json()
-      
+
       const newTarget: JobTarget = {
         id: uuid(),
         userId: document.userId,
@@ -406,10 +407,10 @@ function EditorWorkspace() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
-      
+
       await dbJobTargets.save(newTarget)
       setJobTarget(newTarget)
-      
+
       // Associate with document
       updateDocument({ targetJobId: newTarget.id })
 
@@ -431,7 +432,7 @@ function EditorWorkspace() {
         await dbATSReports.save(report)
         setAtsReport(report)
       }
-      
+
       alert('Job target updated and ATS matching recalculated successfully!')
     } catch (err: unknown) {
       console.error('Job target update failed:', err)
@@ -442,7 +443,7 @@ function EditorWorkspace() {
   // Execute backend algorithmic ATS check
   const handleRunATSAnalysis = async () => {
     if (!profile || !document) return
-    
+
     try {
       const response = await fetch('/api/ats', {
         method: 'POST',
@@ -610,62 +611,135 @@ function EditorWorkspace() {
 
   if (loading || !document || !profile) {
     return (
-      <div className="min-h-screen bg-[#050507] text-[#f2f2f7] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader className="animate-spin text-[#00d4ff]" size={28} />
-          <p className="text-sm text-[#9898b3]">Loading A4 Canvas elements...</p>
+      <div className="min-h-screen bg-[#050507] text-[#f2f2f7] flex items-center justify-center relative overflow-hidden">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              'linear-gradient(to right, #f2f2f7 1px, transparent 1px), linear-gradient(to bottom, #f2f2f7 1px, transparent 1px)',
+            backgroundSize: '48px 48px',
+          }}
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-96 w-[36rem] rounded-full bg-[#00d4ff]/10 blur-[120px]"
+          aria-hidden="true"
+        />
+        <div className="relative flex flex-col items-center gap-5 animate-envoy-fade-in">
+          <div className="relative flex items-center justify-center">
+            <span className="absolute h-14 w-14 rounded-full border border-[#00d4ff]/20 animate-envoy-ring" aria-hidden="true" />
+            <Loader className="animate-spin text-[#00d4ff]" size={26} strokeWidth={2} />
+          </div>
+          <div className="flex flex-col items-center gap-1.5">
+            <p className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#9898b3]">Envoy</p>
+            <p className="text-sm text-[#5c5c7a]">Loading A4 canvas elements…</p>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#050507] text-[#f2f2f7] flex flex-col h-screen overflow-hidden">
-      
+    <div className="min-h-screen bg-[#050507] text-[#f2f2f7] flex flex-col h-screen overflow-hidden antialiased">
+
+      <style jsx global>{`
+        @keyframes envoy-fade-in {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes envoy-fade-in-fast {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes envoy-ring {
+          0% { transform: scale(0.85); opacity: 0.7; }
+          80%, 100% { transform: scale(1.35); opacity: 0; }
+        }
+        @keyframes envoy-pulse-dot {
+          0%, 100% { opacity: 1; box-shadow: 0 0 0 0 currentColor; }
+          50% { opacity: 0.55; }
+        }
+        @keyframes envoy-shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        @keyframes envoy-menu-item {
+          from { opacity: 0; transform: translateY(-3px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-envoy-fade-in { animation: envoy-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .animate-envoy-ring { animation: envoy-ring 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+        .envoy-menu-item { animation: envoy-menu-item 0.16s ease-out both; }
+        .envoy-focus-ring:focus-visible {
+          outline: 2px solid #00d4ff;
+          outline-offset: 2px;
+          border-radius: 6px;
+        }
+        .envoy-title-input:focus {
+          box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.12);
+        }
+        .envoy-select {
+          background-image: none;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .animate-envoy-fade-in, .animate-envoy-ring, .envoy-menu-item, .animate-spin,
+          .animate-scale-in, .animate-slide-in-right {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+          }
+        }
+      `}</style>
+
       {/* Editor Header */}
-      <header className="border-b border-[#1e1e2e] bg-[#0c0c10] px-6 py-3.5 flex items-center justify-between shrink-0 relative z-30">
-        <div className="flex items-center gap-4">
+      <header className="border-b border-[#1e1e2e] bg-[#0c0c10]/95 backdrop-blur-sm px-6 py-3.5 flex items-center justify-between shrink-0 relative z-30">
+        <div className="flex items-center gap-4 min-w-0">
           <button
             onClick={() => router.push('/dashboard')}
-            className="p-2 rounded-md hover:bg-[#16161f] text-[#9898b3] hover:text-[#f2f2f7] transition-colors"
+            className="envoy-focus-ring p-2 rounded-md text-[#9898b3] hover:text-[#f2f2f7] hover:bg-[#16161f] active:scale-95 transition-all duration-150"
             aria-label="Back to Dashboard"
             title="Back to Dashboard"
           >
-            <ArrowLeft size={16} />
+            <ArrowLeft size={16} strokeWidth={2} />
           </button>
-          
+
+          <div className="h-6 w-px bg-[#1e1e2e] hidden sm:block" aria-hidden="true" />
+
           <Logo iconSize={32} showText={false} />
-          
+
           <div className="flex flex-col min-w-0">
             <input
               type="text"
               value={document.title}
               onChange={(e) => updateDocument({ title: e.target.value })}
               aria-label="Document title"
-              className="bg-transparent border-b border-transparent hover:border-[#252535] focus:border-[#6366f1] focus:outline-none text-sm font-bold text-[#f2f2f7] py-0.5 px-1 w-40 sm:w-56 md:w-64 transition-colors truncate"
+              className="envoy-title-input bg-transparent border-b border-transparent hover:border-[#252535] focus:border-[#00d4ff] focus:outline-none text-sm font-bold text-[#f2f2f7] py-0.5 px-1 -mx-1 rounded-sm w-40 sm:w-56 md:w-64 transition-all duration-150 truncate"
             />
             {/* Save Status Indicators */}
-            <div className="text-[10px] px-1 font-semibold flex items-center gap-1.5 mt-0.5">
+            <div className="text-[10px] px-1 font-semibold flex items-center gap-1.5 mt-0.5" role="status" aria-live="polite">
               {saveStatus === 'saved' && (
-                <span className="inline-flex items-center gap-1 text-emerald-400">
+                <span className="inline-flex items-center gap-1.5 text-emerald-400">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
                   Saved {checkDemoMode() ? '(Local)' : '(Cloud)'}
                 </span>
               )}
               {saveStatus === 'saving' && (
-                <span className="inline-flex items-center gap-1 text-[#00d4ff]">
+                <span className="inline-flex items-center gap-1.5 text-[#00d4ff]">
                   <Loader size={9} className="animate-spin" aria-hidden="true" />
-                  Saving draft...
+                  Saving draft…
                 </span>
               )}
               {saveStatus === 'unsaved' && (
-                <span className="inline-flex items-center gap-1 text-amber-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" aria-hidden="true" />
+                <span className="inline-flex items-center gap-1.5 text-amber-400">
+                  <span
+                    className="w-1.5 h-1.5 rounded-full bg-amber-400"
+                    style={{ animation: 'envoy-pulse-dot 1.6s ease-in-out infinite' }}
+                    aria-hidden="true"
+                  />
                   Unsaved changes
                 </span>
               )}
               {saveStatus === 'error' && (
-                <span className="inline-flex items-center gap-1 text-red-400">
+                <span className="inline-flex items-center gap-1.5 text-red-400">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-400" aria-hidden="true" />
                   Autosave failed
                 </span>
@@ -675,20 +749,24 @@ function EditorWorkspace() {
         </div>
 
         {/* Configurations */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
           {/* Template gallery switcher */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-[#9898b3]">Layout:</span>
-            <select
-              value={document.settings.template}
-              onChange={(e) => setTemplate(e.target.value as TemplateId)}
-              className="bg-[#16161f] border border-[#252535] rounded-md text-xs text-[#f2f2f7] py-1.5 px-3 focus:outline-none focus:border-[#6366f1]"
-            >
-              <option value="minimal">Minimal</option>
-              <option value="modern">Modern</option>
-              <option value="developer">Developer</option>
-              <option value="academic">Academic (CV)</option>
-            </select>
+          <div className="hidden md:flex items-center gap-2">
+            <span className="text-[11px] font-medium text-[#5c5c7a] tracking-wide">Layout</span>
+            <div className="relative">
+              <select
+                value={document.settings.template}
+                onChange={(e) => setTemplate(e.target.value as TemplateId)}
+                aria-label="Document layout template"
+                className="envoy-focus-ring envoy-select appearance-none bg-[#111118] border border-[#252535] rounded-md text-xs font-medium text-[#f2f2f7] py-1.5 pl-3 pr-8 hover:border-[#333349] focus:outline-none focus:border-[#00d4ff] transition-colors duration-150 cursor-pointer"
+              >
+                <option value="minimal">Minimal</option>
+                <option value="modern">Modern</option>
+                <option value="developer">Developer</option>
+                <option value="academic">Academic (CV)</option>
+              </select>
+              <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[#5c5c7a]" aria-hidden="true" />
+            </div>
           </div>
 
           {/* Version History Trigger Button */}
@@ -700,11 +778,16 @@ function EditorWorkspace() {
               }
               setShowVersionsModal(true)
             }}
-            className="btn btn-secondary btn-sm hidden sm:inline-flex"
+            className="envoy-focus-ring btn btn-secondary btn-sm hidden sm:inline-flex items-center gap-1.5 hover:border-[#333349] active:scale-[0.97] transition-all duration-150"
             title="Version Checkpoints"
           >
             <History size={12} aria-hidden="true" />
-            <span>History ({versions.length})</span>
+            <span>History</span>
+            {versions.length > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-[#1e1e2e] text-[9px] font-bold text-[#9898b3]">
+                {versions.length}
+              </span>
+            )}
           </button>
 
           <div className="relative" data-export-menu>
@@ -712,25 +795,38 @@ function EditorWorkspace() {
               onClick={() => setShowExportMenu(!showExportMenu)}
               aria-expanded={showExportMenu}
               aria-haspopup="menu"
-              className="btn btn-primary btn-sm"
+              className="envoy-focus-ring btn btn-primary btn-sm active:scale-[0.97] transition-transform duration-150"
             >
               <Download size={12} aria-hidden="true" />
               <span>Export</span>
+              <ChevronDown size={11} className={`transition-transform duration-200 ${showExportMenu ? 'rotate-180' : ''}`} aria-hidden="true" />
             </button>
 
             {showExportMenu && (
-              <div role="menu" aria-label="Export options" className="absolute right-0 mt-2 w-52 surface-card !bg-[#0c0c10] rounded-lg shadow-elevation-3 z-50 py-1.5 text-xs animate-scale-in origin-top-right">
+              <div
+                role="menu"
+                aria-label="Export options"
+                className="absolute right-0 mt-2 w-56 surface-card !bg-[#0c0c10] rounded-lg shadow-elevation-3 z-50 py-1.5 text-xs animate-scale-in origin-top-right overflow-hidden"
+              >
                 <button
                   role="menuitem"
                   onClick={() => {
                     setShowExportMenu(false)
                     window.print()
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-[#16161f] text-[#f2f2f7] hover:text-[#00d4ff] transition-colors font-semibold"
+                  style={{ animationDelay: '0ms' }}
+                  className="envoy-menu-item group w-full text-left px-3.5 py-2.5 flex items-center gap-3 hover:bg-[#16161f] text-[#f2f2f7] transition-colors duration-100"
                 >
-                  Download PDF (Printable)
+                  <span className="flex items-center justify-center w-7 h-7 rounded-md bg-[#111118] text-[#9898b3] group-hover:text-[#00d4ff] group-hover:bg-[#00d4ff]/10 transition-colors duration-150 shrink-0">
+                    <FileText size={13} aria-hidden="true" />
+                  </span>
+                  <span className="flex flex-col">
+                    <span className="font-semibold">Download PDF</span>
+                    <span className="text-[10px] text-[#5c5c7a] font-normal">Printable, ready to send</span>
+                  </span>
                 </button>
                 <button
+                  role="menuitem"
                   onClick={async () => {
                     setShowExportMenu(false)
                     if (!profile || !document) return
@@ -750,11 +846,19 @@ function EditorWorkspace() {
                       alert('Word document generation failed. Please check logs.')
                     }
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-[#16161f] text-[#f2f2f7] hover:text-[#00d4ff] transition-colors font-semibold"
+                  style={{ animationDelay: '30ms' }}
+                  className="envoy-menu-item group w-full text-left px-3.5 py-2.5 flex items-center gap-3 hover:bg-[#16161f] text-[#f2f2f7] transition-colors duration-100"
                 >
-                  Download Word (.docx)
+                  <span className="flex items-center justify-center w-7 h-7 rounded-md bg-[#111118] text-[#9898b3] group-hover:text-[#00d4ff] group-hover:bg-[#00d4ff]/10 transition-colors duration-150 shrink-0">
+                    <FileType size={13} aria-hidden="true" />
+                  </span>
+                  <span className="flex flex-col">
+                    <span className="font-semibold">Download Word</span>
+                    <span className="text-[10px] text-[#5c5c7a] font-normal">Editable .docx file</span>
+                  </span>
                 </button>
                 <button
+                  role="menuitem"
                   onClick={() => {
                     setShowExportMenu(false)
                     if (!profile) return
@@ -774,9 +878,16 @@ function EditorWorkspace() {
                       alert('Plain text generation failed.')
                     }
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-[#16161f] text-[#f2f2f7] hover:text-[#00d4ff] transition-colors font-semibold"
+                  style={{ animationDelay: '60ms' }}
+                  className="envoy-menu-item group w-full text-left px-3.5 py-2.5 flex items-center gap-3 hover:bg-[#16161f] text-[#f2f2f7] transition-colors duration-100"
                 >
-                  Download Plain Text (.txt)
+                  <span className="flex items-center justify-center w-7 h-7 rounded-md bg-[#111118] text-[#9898b3] group-hover:text-[#00d4ff] group-hover:bg-[#00d4ff]/10 transition-colors duration-150 shrink-0">
+                    <FileCode size={13} aria-hidden="true" />
+                  </span>
+                  <span className="flex flex-col">
+                    <span className="font-semibold">Download Plain Text</span>
+                    <span className="text-[10px] text-[#5c5c7a] font-normal">ATS-safe .txt file</span>
+                  </span>
                 </button>
               </div>
             )}
@@ -786,9 +897,9 @@ function EditorWorkspace() {
 
       {/* Editor Split Columns Pane */}
       <div className="flex-1 flex overflow-hidden min-h-0 relative">
-        
+
         {/* Left Side AI Assistant Sidebar */}
-        <AgentSidebar 
+        <AgentSidebar
           profile={profile}
           document={document}
           conversation={conversation}
@@ -803,7 +914,7 @@ function EditorWorkspace() {
         />
 
         {/* Right Side Canvas Page */}
-        <A4Canvas 
+        <A4Canvas
           profile={profile}
           document={document}
           zoom={zoom}
@@ -817,61 +928,77 @@ function EditorWorkspace() {
 
       {/* SECTION CONFIG EDIT OVERLAY SIDEBAR */}
       {editingSection && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Edit section ${editingSection.title}`}
-          className="fixed inset-y-0 right-0 w-80 bg-[#0c0c10] border-l border-[#1e1e2e] shadow-2xl z-50 p-6 space-y-6 animate-slide-in-right"
-        >
-          <div className="flex items-center justify-between border-b border-[#1e1e2e] pb-3">
-            <h3 className="text-sm font-bold text-[#f2f2f7]">Edit Section: {editingSection.title}</h3>
-            <button
-              onClick={() => setEditingSection(null)}
-              className="text-xs text-[#9898b3] hover:text-[#f2f2f7]"
-            >
-              Close
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Display Title</label>
-              <input
-                type="text"
-                value={editingSection.title}
-                onChange={(e) => {
-                  updateSection(editingSection.id, { title: e.target.value })
-                  setEditingSection({ ...editingSection, title: e.target.value })
-                }}
-                className="w-full bg-[#111118] border border-[#252535] rounded-md py-2 px-3 text-xs text-[#f2f2f7] focus:outline-none focus:border-[#6366f1]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Visibility</label>
+        <>
+          <div
+            className="fixed inset-0 bg-[#050507]/60 backdrop-blur-[2px] z-40 animate-envoy-fade-in"
+            style={{ animationDuration: '0.2s' }}
+            onClick={() => setEditingSection(null)}
+            aria-hidden="true"
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Edit section ${editingSection.title}`}
+            className="fixed inset-y-0 right-0 w-80 bg-[#0c0c10] border-l border-[#1e1e2e] shadow-2xl z-50 p-6 space-y-6 animate-slide-in-right overflow-y-auto"
+          >
+            <div className="flex items-center justify-between border-b border-[#1e1e2e] pb-4">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#5c5c7a] mb-1">Section settings</p>
+                <h3 className="text-sm font-bold text-[#f2f2f7]">{editingSection.title}</h3>
+              </div>
               <button
-                onClick={() => {
-                  toggleSectionVisibility(editingSection.id)
-                  setEditingSection({ ...editingSection, visible: !editingSection.visible })
-                }}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-md border text-xs font-semibold ${
-                  editingSection.visible 
-                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
-                    : 'bg-gray-500/10 border-gray-500/20 text-gray-400'
-                }`}
+                onClick={() => setEditingSection(null)}
+                aria-label="Close section settings"
+                className="envoy-focus-ring flex items-center justify-center w-7 h-7 rounded-md text-[#9898b3] hover:text-[#f2f2f7] hover:bg-[#16161f] transition-colors duration-150"
               >
-                <span>{editingSection.visible ? 'Visible on Document' : 'Hidden on Document'}</span>
-                {editingSection.visible ? <Eye size={14} /> : <Eye size={14} className="opacity-55" />}
+                <X size={14} aria-hidden="true" />
               </button>
             </div>
+
+            <div className="space-y-5">
+              <div>
+                <label htmlFor="section-title-input" className="block text-[10px] font-semibold text-[#9898b3] uppercase tracking-wider mb-2">
+                  Display Title
+                </label>
+                <input
+                  id="section-title-input"
+                  type="text"
+                  value={editingSection.title}
+                  onChange={(e) => {
+                    updateSection(editingSection.id, { title: e.target.value })
+                    setEditingSection({ ...editingSection, title: e.target.value })
+                  }}
+                  className="envoy-focus-ring w-full bg-[#111118] border border-[#252535] rounded-md py-2.5 px-3 text-xs text-[#f2f2f7] focus:outline-none focus:border-[#00d4ff] focus:ring-2 focus:ring-[#00d4ff]/15 transition-all duration-150"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-semibold text-[#9898b3] uppercase tracking-wider mb-2">Visibility</label>
+                <button
+                  onClick={() => {
+                    toggleSectionVisibility(editingSection.id)
+                    setEditingSection({ ...editingSection, visible: !editingSection.visible })
+                  }}
+                  className={`envoy-focus-ring w-full flex items-center justify-between px-3.5 py-2.5 rounded-md border text-xs font-semibold transition-all duration-150 active:scale-[0.98] ${
+                    editingSection.visible
+                      ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/15'
+                      : 'bg-[#16161f] border-[#252535] text-[#5c5c7a] hover:border-[#333349]'
+                  }`}
+                >
+                  <span>{editingSection.visible ? 'Visible on Document' : 'Hidden on Document'}</span>
+                  {editingSection.visible ? <Eye size={14} aria-hidden="true" /> : <EyeOff size={14} aria-hidden="true" />}
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* VERSION HISTORY MODAL OVERLAY */}
       {showVersionsModal && (
         <div
-          className="fixed inset-0 bg-[#050507]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-[#050507]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-envoy-fade-in"
+          style={{ animationDuration: '0.2s' }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowVersionsModal(false)
@@ -885,43 +1012,61 @@ function EditorWorkspace() {
             aria-labelledby="version-history-title"
             className="surface-card accent-hairline w-full max-w-3xl max-h-[80vh] flex flex-col overflow-hidden shadow-elevation-3 animate-scale-in"
           >
-            <div className="p-4 border-b border-[#1e1e2e] flex items-center justify-between">
-              <div>
-                <h3 id="version-history-title" className="font-bold text-sm text-[#f2f2f7]">Document Version History</h3>
-                <p className="text-[10px] text-[#9898b3] mt-0.5">View and restore past snapshots of this document and profile.</p>
+            <div className="p-5 border-b border-[#1e1e2e] flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#00d4ff]/10 text-[#00d4ff] shrink-0">
+                  <Clock size={16} aria-hidden="true" />
+                </span>
+                <div>
+                  <h3 id="version-history-title" className="font-bold text-sm text-[#f2f2f7]">Document Version History</h3>
+                  <p className="text-[11px] text-[#9898b3] mt-0.5">View and restore past snapshots of this document and profile.</p>
+                </div>
               </div>
               <button
                 onClick={() => {
                   setShowVersionsModal(false)
                   setSelectedVersion(null)
                 }}
-                className="text-xs text-[#9898b3] hover:text-[#f2f2f7] font-semibold"
+                aria-label="Close version history"
+                className="envoy-focus-ring flex items-center justify-center w-8 h-8 rounded-md text-[#9898b3] hover:text-[#f2f2f7] hover:bg-[#16161f] transition-colors duration-150"
               >
-                Close
+                <X size={15} aria-hidden="true" />
               </button>
             </div>
 
             <div className="flex-1 flex overflow-hidden min-h-0">
               {/* Left Side: Versions List */}
-              <div className="w-1/2 border-r border-[#1e1e2e] overflow-y-auto p-4 space-y-3">
+              <div className="w-1/2 border-r border-[#1e1e2e] overflow-y-auto p-4 space-y-2.5">
                 {versions.length === 0 ? (
-                  <div className="text-center py-8 text-xs text-[#5c5c7a]">
-                    No past snapshots recorded for this document yet. Checkpoints are automatically captured during key changes.
+                  <div className="flex flex-col items-center justify-center text-center py-14 gap-3">
+                    <span className="flex items-center justify-center w-11 h-11 rounded-full bg-[#111118] border border-[#252535] text-[#5c5c7a]">
+                      <History size={16} aria-hidden="true" />
+                    </span>
+                    <p className="text-xs text-[#5c5c7a] max-w-[220px]">
+                      No past snapshots recorded yet. Checkpoints are captured automatically during key changes.
+                    </p>
                   </div>
                 ) : (
-                  versions.map(ver => (
+                  versions.map((ver, i) => (
                     <button
                       key={ver.id}
                       onClick={() => setSelectedVersion(ver)}
-                      className={`w-full text-left p-3 rounded-lg border transition-all flex flex-col gap-1 ${
+                      style={{ animationDelay: `${Math.min(i, 8) * 25}ms` }}
+                      className={`envoy-menu-item group relative w-full text-left p-3.5 rounded-lg border transition-all duration-150 flex flex-col gap-1.5 ${
                         selectedVersion?.id === ver.id
-                          ? 'bg-[#16161f] border-[#00d4ff]'
-                          : 'bg-[#050507]/40 border-[#252535] hover:border-[#1e1e2e]'
+                          ? 'bg-[#16161f] border-[#00d4ff]/60 shadow-[0_0_0_1px_rgba(0,212,255,0.15)]'
+                          : 'bg-[#050507]/40 border-[#252535] hover:border-[#333349] hover:bg-[#0d0d13]'
                       }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-[#f2f2f7] truncate max-w-[70%]">{ver.label}</span>
-                        <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[#111118] text-[#00d4ff]">
+                      {selectedVersion?.id === ver.id && (
+                        <span className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[#00d4ff]" aria-hidden="true" />
+                      )}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-bold text-[#f2f2f7] truncate flex items-center gap-1.5">
+                          {ver.trigger === 'ai_accept' && <Sparkles size={11} className="text-[#00d4ff] shrink-0" aria-hidden="true" />}
+                          {ver.label}
+                        </span>
+                        <span className="shrink-0 text-[8px] font-extrabold uppercase tracking-wide px-1.5 py-0.5 rounded bg-[#111118] text-[#00d4ff] border border-[#252535]">
                           {ver.trigger}
                         </span>
                       </div>
@@ -934,43 +1079,65 @@ function EditorWorkspace() {
               </div>
 
               {/* Right Side: Version Details & Rollback action */}
-              <div className="w-1/2 p-4 overflow-y-auto bg-[#050507]/20 flex flex-col justify-between">
+              <div className="w-1/2 p-5 overflow-y-auto bg-[#050507]/20 flex flex-col justify-between">
                 {selectedVersion ? (
-                  <div className="space-y-4 h-full flex flex-col justify-between">
+                  <div key={selectedVersion.id} className="space-y-4 h-full flex flex-col justify-between animate-envoy-fade-in" style={{ animationDuration: '0.25s' }}>
                     <div className="space-y-3">
-                      <div className="p-3 bg-[#111118] border border-[#252535] rounded-lg space-y-2">
+                      <div className="p-3.5 bg-[#111118] border border-[#252535] rounded-lg space-y-2">
                         <div className="text-[10px] font-extrabold text-[#00d4ff] uppercase tracking-wider">Snapshot Metadata</div>
                         <div className="text-xs text-gray-200 font-bold">{selectedVersion.label}</div>
-                        <div className="text-[10px] text-[#9898b3]">
-                          Created: {new Date(selectedVersion.createdAt).toLocaleString()}
+                        <div className="text-[10px] text-[#9898b3] flex items-center gap-1.5">
+                          <Clock size={10} aria-hidden="true" />
+                          {new Date(selectedVersion.createdAt).toLocaleString()}
                         </div>
                         {selectedVersion.description && (
-                          <div className="text-[11px] text-[#9898b3] italic border-l-2 border-[#6366f1] pl-2 mt-1">
-                            “{selectedVersion.description}”
+                          <div className="text-[11px] text-[#9898b3] italic border-l-2 border-[#6366f1] pl-2.5 mt-1.5 leading-relaxed">
+                            &ldquo;{selectedVersion.description}&rdquo;
                           </div>
                         )}
                       </div>
 
-                      <div className="p-3 bg-[#111118] border border-[#252535] rounded-lg space-y-1">
+                      <div className="p-3.5 bg-[#111118] border border-[#252535] rounded-lg space-y-1.5">
                         <div className="text-[10px] font-extrabold text-[#00d4ff] uppercase tracking-wider mb-2">Content Included</div>
-                        <div className="text-xs text-gray-300">Name: {selectedVersion.profileSnapshot.identity.name}</div>
-                        <div className="text-xs text-gray-300">Headline: {selectedVersion.profileSnapshot.identity.headline || 'None'}</div>
-                        <div className="text-xs text-gray-300">Experience entries: {selectedVersion.profileSnapshot.experience.length}</div>
-                        <div className="text-xs text-gray-300">Skills categories: {selectedVersion.profileSnapshot.skills.length}</div>
-                        <div className="text-xs text-gray-300">Projects: {selectedVersion.profileSnapshot.projects.length}</div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-[#5c5c7a]">Name</span>
+                          <span className="text-gray-300 font-medium">{selectedVersion.profileSnapshot.identity.name}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-[#5c5c7a]">Headline</span>
+                          <span className="text-gray-300 font-medium truncate max-w-[60%] text-right">{selectedVersion.profileSnapshot.identity.headline || 'None'}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-[#5c5c7a]">Experience entries</span>
+                          <span className="text-gray-300 font-medium">{selectedVersion.profileSnapshot.experience.length}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-[#5c5c7a]">Skills categories</span>
+                          <span className="text-gray-300 font-medium">{selectedVersion.profileSnapshot.skills.length}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-[#5c5c7a]">Projects</span>
+                          <span className="text-gray-300 font-medium">{selectedVersion.profileSnapshot.projects.length}</span>
+                        </div>
                       </div>
                     </div>
 
                     <button
                       onClick={() => handleRollbackVersion(selectedVersion)}
-                      className="btn btn-danger w-full mt-auto"
+                      className="envoy-focus-ring btn btn-danger w-full mt-auto flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-150"
                     >
+                      <RotateCcw size={13} aria-hidden="true" />
                       Revert Workspace to this Snapshot
                     </button>
                   </div>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-center text-xs text-[#5c5c7a] p-6">
-                    Select a snapshot from the timeline to view its contents and perform rollback.
+                  <div className="h-full flex flex-col items-center justify-center text-center gap-3 p-6">
+                    <span className="flex items-center justify-center w-11 h-11 rounded-full bg-[#111118] border border-[#252535] text-[#5c5c7a]">
+                      <Check size={16} aria-hidden="true" />
+                    </span>
+                    <p className="text-xs text-[#5c5c7a] max-w-[220px]">
+                      Select a snapshot from the timeline to view its contents and perform rollback.
+                    </p>
                   </div>
                 )}
               </div>

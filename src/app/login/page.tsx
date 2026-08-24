@@ -62,19 +62,22 @@ function LoginForm() {
       footer={
         <>
           {"Don't have an account?"}{' '}
-          <Link href="/signup" className="text-[#6366f1] hover:text-[#00d4ff] hover:underline font-semibold transition-colors">
+          <Link href="/signup" className="text-[#6366f1] hover:text-[#00d4ff] hover:underline font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff] rounded-sm">
             Create one
           </Link>
         </>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
+      <form onSubmit={handleSubmit} className="space-y-5 envoy-form-enter">
+        <div className="envoy-field envoy-field-enter" style={{ animationDelay: '60ms' }}>
           <label htmlFor="login-email" className="field-label">
             Email Address
           </label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#5c5c7a] pointer-events-none" aria-hidden="true" />
+          <div className="relative group">
+            <Mail
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#5c5c7a] pointer-events-none transition-colors duration-200 peer-focus:text-[#00d4ff] group-focus-within:text-[#00d4ff]"
+              aria-hidden="true"
+            />
             <input
               id="login-email"
               type="email"
@@ -83,22 +86,28 @@ function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full py-2.5 pl-10 pr-4 text-sm"
+              className="peer w-full py-2.5 pl-10 pr-4 text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#00d4ff]/30 focus:border-[#00d4ff]/60"
             />
           </div>
         </div>
 
-        <div>
+        <div className="envoy-field envoy-field-enter" style={{ animationDelay: '120ms' }}>
           <div className="flex justify-between items-center mb-2">
             <label htmlFor="login-password" className="field-label !mb-0">
               Password
             </label>
-            <Link href="/reset" className="text-xs text-[#6366f1] hover:text-[#00d4ff] hover:underline transition-colors">
+            <Link
+              href="/reset"
+              className="text-xs text-[#6366f1] hover:text-[#00d4ff] hover:underline transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff] rounded-sm"
+            >
               Forgot?
             </Link>
           </div>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#5c5c7a] pointer-events-none" aria-hidden="true" />
+          <div className="relative group">
+            <Lock
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#5c5c7a] pointer-events-none transition-colors duration-200 peer-focus:text-[#00d4ff] group-focus-within:text-[#00d4ff]"
+              aria-hidden="true"
+            />
             <input
               id="login-password"
               type={showPassword ? 'text' : 'password'}
@@ -107,21 +116,26 @@ function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full py-2.5 pl-10 pr-11 text-sm"
+              className="peer w-full py-2.5 pl-10 pr-11 text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#00d4ff]/30 focus:border-[#00d4ff]/60"
             />
             <button
               type="button"
-              onClick={() => setShowPassword(v => !v)}
+              onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
               aria-pressed={showPassword}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded text-[#5c5c7a] hover:text-[#f2f2f7] transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-[#5c5c7a] hover:text-[#f2f2f7] hover:bg-[#16161f] transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff]"
             >
               {showPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
             </button>
           </div>
         </div>
 
-        <button type="submit" disabled={loading} className="btn btn-primary w-full mt-1">
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn btn-primary w-full mt-1 envoy-btn-lift envoy-field-enter disabled:opacity-70 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff]"
+          style={{ animationDelay: '180ms' }}
+        >
           {loading ? (
             <>
               <Loader size={15} className="animate-spin" aria-hidden="true" />
@@ -135,17 +149,62 @@ function LoginForm() {
           )}
         </button>
       </form>
+
+      <style jsx global>{`
+        @keyframes envoyFormFieldEnter {
+          from {
+            opacity: 0;
+            transform: translateY(14px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .envoy-field-enter {
+          opacity: 0;
+          animation: envoyFormFieldEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .envoy-btn-lift {
+          transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, filter 0.2s ease;
+        }
+        .envoy-btn-lift:hover:not(:disabled) {
+          transform: translateY(-1px);
+        }
+        .envoy-btn-lift:active:not(:disabled) {
+          transform: translateY(0px) scale(0.98);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .envoy-field-enter {
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+          }
+          .envoy-btn-lift:hover:not(:disabled),
+          .envoy-btn-lift:active:not(:disabled) {
+            transform: none !important;
+          }
+        }
+      `}</style>
     </AuthShell>
   )
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[#050507] text-[#f2f2f7] flex items-center justify-center">
-        <p className="text-sm text-[#9898b3]">Loading authentication form...</p>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#050507] text-[#f2f2f7] flex items-center justify-center">
+          <div className="flex items-center gap-2.5 text-sm text-[#9898b3]">
+            <Loader size={15} className="animate-spin text-[#00d4ff]" aria-hidden="true" />
+            <span>Loading authentication form...</span>
+          </div>
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   )
