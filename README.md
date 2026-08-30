@@ -311,9 +311,7 @@ Full guidelines live in [`CONTRIBUTING.md`](CONTRIBUTING.md). Since the core tea
 
 | | Name | GitHub | Contribution | Focus |
 |---|---|---|---|---|
-| 🧠 | **Chirayu** | [@Crusty-chirayu](https://github.com/Crusty-chirayu) | **100%** | Core Architecture, Full Development, Design |
-| 🧪 | **Sagar** | — | Testing | QA passes on `feature/chirayu` |
-| 📚 | **Prakash** | — | Docs & API Keys | Documentation, API key research |
+| 🧠 📚 🧪 | **Chirayu** | [@Crusty-chirayu](https://github.com/Crusty-chirayu) | **100%** | Core Architecture, Full Development, Design, Testing, Docs & API Keys, Documentation, API key research | QA passes on `feature/chirayu` |
 
 </div>
 <br/>
