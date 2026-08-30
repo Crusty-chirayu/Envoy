@@ -2,7 +2,7 @@
 
 <br/>
 
-# ⚡ E N V O Y
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=28&pause=1000&color=FFD60A&background=0D111700&center=true&vCenter=true&width=700&lines=%E2%9A%A1+E+N+V+O+Y;Your+Career+Story%2C+Written+Right;Reads+the+Job.+Reads+You.+Writes+the+Fit." alt="Typing SVG" />
 
 ### *The Career Story You Deserve, Written by an Agent That Actually Reads the Room.*
 
@@ -14,15 +14,44 @@
 [![Cost](https://img.shields.io/badge/COST-%240_FOREVER-06D6A0?style=for-the-badge&labelColor=0D1117)](#)
 [![Agent](https://img.shields.io/badge/CORE-AGENTIC_PIPELINE-7A5CFA?style=for-the-badge&labelColor=0D1117)](#-how-envoy-thinks)
 
+[![Stars](https://img.shields.io/github/stars/Crusty-chirayu/envoy?style=social)](https://github.com/Crusty-chirayu/envoy/stargazers)
+[![Forks](https://img.shields.io/github/forks/Crusty-chirayu/envoy?style=social)](https://github.com/Crusty-chirayu/envoy/network/members)
+[![Last Commit](https://img.shields.io/github/last-commit/Crusty-chirayu/envoy?color=FFD60A&labelColor=0D1117)](https://github.com/Crusty-chirayu/envoy/commits/dev)
+[![Open Issues](https://img.shields.io/github/issues/Crusty-chirayu/envoy?color=FF6B6B&labelColor=0D1117)](https://github.com/Crusty-chirayu/envoy/issues)
+
 <br/>
 
 **[Why Envoy](#-why-envoy-exists)** · **[Features](#-what-envoy-actually-does)** · **[How It Thinks](#-how-envoy-thinks)** · **[Architecture](#-system-architecture)** · **[Quick Start](#-quick-start)** · **[Roadmap](#-roadmap)** · **[Team](#-the-builders)**
 
 <br/>
 
+<img src="https://user-images.githubusercontent.com/74038190/212284158-e840e285-664b-44d7-b79b-e264b5e54825.gif" width="500">
+
 </div>
 
 ---
+
+<br/>
+
+## 🚧 Project Status — Build in Progress
+
+<div align="center">
+
+| Stage | Status | Progress |
+|---|---|---|
+| Repository scaffolding & team workflow | ✅ Done | ![100%](https://progress-bar.xyz/100/?title=done&color=06D6A0) |
+| Document parser (PDF/DOCX → structured JSON) | 🟡 In progress | ![35%](https://progress-bar.xyz/35/?title=building&color=FFD60A) |
+| Sector & keyword intelligence engine | ⬜ Planned | ![0%](https://progress-bar.xyz/0/?title=planned&color=7A5CFA) |
+| Agentic rewrite / optimization pipeline | ⬜ Planned | ![0%](https://progress-bar.xyz/0/?title=planned&color=7A5CFA) |
+| Open template library (5 resume + 2 CV) | ⬜ Planned | ![0%](https://progress-bar.xyz/0/?title=planned&color=7A5CFA) |
+| One-command portfolio deployment | ⬜ Planned | ![0%](https://progress-bar.xyz/0/?title=planned&color=7A5CFA) |
+| Public beta | ⬜ Planned | ![0%](https://progress-bar.xyz/0/?title=planned&color=7A5CFA) |
+
+**Overall: ~15% toward public beta** — the architecture, branching workflow, and pipeline design are locked in; the parser, intelligence engine, and rendering layer are the core build ahead.
+
+</div>
+
+> 🛠️ **Development is continuing, but at a slower pace right now** — [@Crusty-chirayu](https://github.com/Crusty-chirayu) is currently splitting time across a few other projects (including [TrailMate](https://github.com/Crusty-chirayu/TrailMate)) and dealing with some unforeseen interruptions. Envoy is **not on hold indefinitely** — the architecture and pipeline in this README are already designed and being built out incrementally, and active development is expected to pick back up soon. If the idea resonates, ⭐ starring or watching the repo is the easiest way to catch the public beta the moment it ships — and contributors are genuinely welcome to help close the gap faster.
 
 <br/>
 
@@ -262,6 +291,9 @@ git push origin feature/your-feature-name
 - [ ] Open template library (v1: 5 resume + 2 CV templates)
 - [ ] One-command portfolio deployment
 - [ ] Public beta
+
+> 📌 **Development to be continued** — this roadmap is actively maintained, not abandoned. Progress has slowed while the maintainer works through other commitments, but each unchecked item above is scoped and designed (see [System Architecture](#-system-architecture)), not just aspirational. Expect checkboxes to keep moving as time frees up.
+
 <br/>
 
 ## 🤝 Contributing
@@ -271,7 +303,7 @@ git push origin feature/your-feature-name
 4. Push: `git push origin feature/AmazingFeature`
 5. Open a Pull Request into `dev`
 
-Full guidelines live in [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Full guidelines live in [`CONTRIBUTING.md`](CONTRIBUTING.md). Since the core team's bandwidth is limited right now, PRs against roadmap items — especially the parser and template library — are especially welcome and will be reviewed as promptly as possible.
 <br/>
 
 ## 👥 The Builders
@@ -280,6 +312,8 @@ Full guidelines live in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 | | Name | GitHub | Contribution | Focus |
 |---|---|---|---|---|
 | 🧠 | **Chirayu** | [@Crusty-chirayu](https://github.com/Crusty-chirayu) | **100%** | Core Architecture, Full Development, Design |
+| 🧪 | **Sagar** | — | Testing | QA passes on `feature/chirayu` |
+| 📚 | **Prakash** | — | Docs & API Keys | Documentation, API key research |
 
 </div>
 <br/>
@@ -293,5 +327,7 @@ Distributed under the **MIT License**. See [`LICENSE`](LICENSE) — free to use,
 **Built because career tools that actually work shouldn't cost a subscription.**
 
 ⭐ **Star this repo** if you want to watch Envoy grow from scratch.
+
+<img src="https://user-images.githubusercontent.com/74038190/212257467-871d32b7-e401-42e8-a166-fcfd7baa4c6b.gif" width="100">
 
 </div>
