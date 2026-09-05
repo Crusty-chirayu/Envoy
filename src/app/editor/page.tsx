@@ -863,7 +863,7 @@ function EditorWorkspace() {
                     setShowExportMenu(false)
                     if (!profile) return
                     try {
-                      const text = generatePlainText(profile)
+                      const text = generatePlainText(profile, document)
                       const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
                       const url = URL.createObjectURL(blob)
                       const a = window.document.createElement('a')

@@ -1,13 +1,10 @@
 /**
- * Tests for the plain-text exporter (audit finding D2).
- *
- * D2: an education entry without a `field` must not render a literal
- * "in undefined" in exported files.
+ * Tests for the plain-text exporter (audit findings D1 / D2).
  */
 
 import { describe, expect, it } from 'vitest'
 import { generatePlainText } from './txt'
-import type { ProfessionalProfile } from '@/types'
+import type { ProfessionalProfile, EnvoyDocument } from '@/types'
 
 function makeProfile(overrides?: Partial<ProfessionalProfile>): ProfessionalProfile {
   return {
@@ -35,6 +32,32 @@ function makeProfile(overrides?: Partial<ProfessionalProfile>): ProfessionalProf
     languages: [],
     interests: [],
     customSections: [],
+    ...overrides,
+  }
+}
+
+function makeDocument(overrides?: Partial<EnvoyDocument>): EnvoyDocument {
+  return {
+    id: 'doc-1',
+    userId: 'user-1',
+    profileId: 'profile-1',
+    type: 'resume',
+    title: 'My Resume',
+    sections: [
+      { id: 's1', type: 'summary', title: 'Summary', visible: true, order: 0 },
+      { id: 's2', type: 'experience', title: 'Experience', visible: true, order: 1 },
+      { id: 's3', type: 'education', title: 'Education', visible: true, order: 2 },
+    ],
+    settings: {
+      template: 'minimal',
+      accentColor: '#6366f1',
+      fontFamily: 'inter',
+      fontSize: 'normal',
+      pageMargin: 'normal',
+      showPhoto: false,
+    },
+    createdAt: '2026-08-22T00:00:00.000Z',
+    updatedAt: '2026-08-22T00:00:00.000Z',
     ...overrides,
   }
 }
@@ -81,5 +104,58 @@ describe('generatePlainText — export correctness', () => {
     expect(text.startsWith('JANE DOE')).toBe(true)
     expect(text).toContain('PROFESSIONAL SUMMARY')
     expect(text).toContain('Experienced engineer.')
+  })
+
+  it('omits invisible sections when document configuration is provided (D1)', () => {
+    const profile = makeProfile({
+      summary: 'Experienced engineer.',
+      experience: [
+        {
+          id: 'exp-1',
+          role: 'Lead Dev',
+          company: 'Acme',
+          startDate: '2021',
+          current: true,
+          bullets: ['Built things'],
+        },
+      ],
+    })
+    const doc = makeDocument({
+      sections: [
+        { id: 's1', type: 'summary', title: 'Summary', visible: false, order: 0 },
+        { id: 's2', type: 'experience', title: 'Experience', visible: true, order: 1 },
+      ],
+    })
+    const text = generatePlainText(profile, doc)
+    expect(text).not.toContain('Experienced engineer.')
+    expect(text).toContain('LEAD DEV | Acme')
+  })
+
+  it('respects section ordering specified in document configuration (D1)', () => {
+    const profile = makeProfile({
+      summary: 'Summary text',
+      experience: [
+        {
+          id: 'exp-1',
+          role: 'Dev',
+          company: 'Corp',
+          startDate: '2021',
+          current: true,
+          bullets: [],
+        },
+      ],
+    })
+    const doc = makeDocument({
+      sections: [
+        { id: 's1', type: 'experience', title: 'Experience', visible: true, order: 0 },
+        { id: 's2', type: 'summary', title: 'Summary', visible: true, order: 1 },
+      ],
+    })
+    const text = generatePlainText(profile, doc)
+    const expIndex = text.indexOf('EXPERIENCE')
+    const summaryIndex = text.indexOf('SUMMARY')
+    expect(expIndex).toBeGreaterThan(-1)
+    expect(summaryIndex).toBeGreaterThan(-1)
+    expect(expIndex).toBeLessThan(summaryIndex)
   })
 })

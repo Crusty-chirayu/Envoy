@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, JetBrains_Mono } from 'next/font/google'
+import { Inter, JetBrains_Mono, Manrope } from 'next/font/google'
 import './globals.css'
 
 const inter = Inter({
@@ -14,9 +14,15 @@ const mono = JetBrains_Mono({
   display: 'swap',
 })
 
+const manrope = Manrope({
+  subsets: ['latin'],
+  variable: '--font-manrope',
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
   title: 'ENVOY — Professional Identity Workspace',
-  description: 'AI-powered professional identity & career document workspace.',
+  description: 'Open-source AI-powered professional identity & career document workspace.',
 }
 
 export default function RootLayout({
@@ -25,8 +31,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${mono.variable} dark`}>
-      <body className="antialiased min-h-screen bg-[#050507] text-[#f2f2f7]">
+    <html lang="en" className={`${inter.variable} ${mono.variable} ${manrope.variable} dark`}>
+      <body className="antialiased min-h-screen bg-black text-[#f2f2f7] selection-red">
         <a href="#main-content" className="skip-to-content">
           Skip to main content
         </a>

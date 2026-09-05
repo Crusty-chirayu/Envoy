@@ -1,331 +1,128 @@
-<div align="center">
+# ENVOY — Open-Source AI Career Operating System
 
-<br/>
-
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=28&pause=1000&color=FFD60A&background=0D111700&center=true&vCenter=true&width=700&lines=%E2%9A%A1+E+N+V+O+Y;Your+Career+Story%2C+Written+Right;Reads+the+Job.+Reads+You.+Writes+the+Fit." alt="Typing SVG" />
-
-### *The Career Story You Deserve, Written by an Agent That Actually Reads the Room.*
-
-<br/>
-
-[![License](https://img.shields.io/badge/LICENSE-MIT-FFD60A?style=for-the-badge&labelColor=0D1117)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-WELCOME-06D6A0?style=for-the-badge&labelColor=0D1117)](CONTRIBUTING.md)
-[![Status](https://img.shields.io/badge/STATUS-ACTIVE_BUILD-FF6B6B?style=for-the-badge&labelColor=0D1117)](#-roadmap)
-[![Cost](https://img.shields.io/badge/COST-%240_FOREVER-06D6A0?style=for-the-badge&labelColor=0D1117)](#)
-[![Agent](https://img.shields.io/badge/CORE-AGENTIC_PIPELINE-7A5CFA?style=for-the-badge&labelColor=0D1117)](#-how-envoy-thinks)
-
-[![Stars](https://img.shields.io/github/stars/Crusty-chirayu/envoy?style=social)](https://github.com/Crusty-chirayu/envoy/stargazers)
-[![Forks](https://img.shields.io/github/forks/Crusty-chirayu/envoy?style=social)](https://github.com/Crusty-chirayu/envoy/network/members)
-[![Last Commit](https://img.shields.io/github/last-commit/Crusty-chirayu/envoy?color=FFD60A&labelColor=0D1117)](https://github.com/Crusty-chirayu/envoy/commits/dev)
-[![Open Issues](https://img.shields.io/github/issues/Crusty-chirayu/envoy?color=FF6B6B&labelColor=0D1117)](https://github.com/Crusty-chirayu/envoy/issues)
-
-<br/>
-
-**[Why Envoy](#-why-envoy-exists)** · **[Features](#-what-envoy-actually-does)** · **[How It Thinks](#-how-envoy-thinks)** · **[Architecture](#-system-architecture)** · **[Quick Start](#-quick-start)** · **[Roadmap](#-roadmap)** · **[Team](#-the-builders)**
-
-<br/>
-
-<img src="https://user-images.githubusercontent.com/74038190/212284158-e840e285-664b-44d7-b79b-e264b5e54825.gif" width="500">
-
-</div>
+> **Reads the Job. Reads You. Writes the Fit.**  
+> Envoy is an open-source, AI-powered professional identity workspace designed to parse your background, strategize against target job postings, score ATS compatibility deterministically, compose tailored resumes and academic CVs, and deploy live personal web portfolios — all from a single source of truth.
 
 ---
 
-<br/>
+## 🌟 Key Capabilities
 
-## 🚧 Project Status — Build in Progress
+- 📄 **Structured Profile Ingestion:** Safe PDF/DOCX resume parser extracting experience timelines, technical stacks, quantifiable impact metrics, and certifications into a canonical profile.
+- 🎯 **Target Job Intelligence:** Automatic job description parsing uncovers key skills, required technologies, seniority level, and keyword gaps.
+- 📊 **Deterministic ATS Scoring Engine:** Algorithmic keyword matching, word boundary checks, alias resolutions, formatting risk detection, and clear explanations for your score.
+- 🤖 **Multi-Provider AI Copilot:** Provider abstraction layer supporting OpenAI, Anthropic Claude, Google Gemini, and OpenRouter with streaming, resilience timeouts, and automatic retry.
+- 🛡️ **Human-Controlled Proposals & Diffs:** AI suggestions are presented as side-by-side diffs. Mutations require explicit user approval and auto-capture a recoverable version snapshot.
+- 🌐 **One-Click Public Portfolios:** Generate clean, responsive, publishable web portfolios directly from your canonical data with custom slug validation and server-side privacy projections.
+- 🔒 **Dual Persistence Architecture:** Full offline Demo Mode (local browser storage) and Cloud Mode (Supabase Auth & PostgreSQL RLS) with transparent runtime dispatching.
+- 📦 **Multi-Format Export:** Export documents to PDF, editable Word (.docx), or ATS-safe plain text (.txt) while respecting document section visibility and ordering.
 
-<div align="center">
-
-| Stage | Status | Progress |
-|---|---|---|
-| Repository scaffolding & team workflow | ✅ Done | ![100%](https://progress-bar.xyz/100/?title=done&color=06D6A0) |
-| Document parser (PDF/DOCX → structured JSON) | 🟡 In progress | ![35%](https://progress-bar.xyz/35/?title=building&color=FFD60A) |
-| Sector & keyword intelligence engine | ⬜ Planned | ![0%](https://progress-bar.xyz/0/?title=planned&color=7A5CFA) |
-| Agentic rewrite / optimization pipeline | ⬜ Planned | ![0%](https://progress-bar.xyz/0/?title=planned&color=7A5CFA) |
-| Open template library (5 resume + 2 CV) | ⬜ Planned | ![0%](https://progress-bar.xyz/0/?title=planned&color=7A5CFA) |
-| One-command portfolio deployment | ⬜ Planned | ![0%](https://progress-bar.xyz/0/?title=planned&color=7A5CFA) |
-| Public beta | ⬜ Planned | ![0%](https://progress-bar.xyz/0/?title=planned&color=7A5CFA) |
-
-**Overall: ~15% toward public beta** — the architecture, branching workflow, and pipeline design are locked in; the parser, intelligence engine, and rendering layer are the core build ahead.
-
-</div>
-
-> 🛠️ **Development is continuing, but at a slower pace right now** — [@Crusty-chirayu](https://github.com/Crusty-chirayu) is currently splitting time across a few other projects (including [TrailMate](https://github.com/Crusty-chirayu/TrailMate)) and dealing with some unforeseen interruptions. Envoy is **not on hold indefinitely** — the architecture and pipeline in this README are already designed and being built out incrementally, and active development is expected to pick back up soon. If the idea resonates, ⭐ starring or watching the repo is the easiest way to catch the public beta the moment it ships — and contributors are genuinely welcome to help close the gap faster.
-
-<br/>
-
-## 🧭 Why Envoy Exists
-
-Every serious job seeker hits the same wall, over and over:
-
-- Rewrite the same resume for the fortieth time because a new role needs different keywords.
-- Have zero idea what an ATS is actually scoring you on.
-- Watch every genuinely good resume tool sit behind a $12/month paywall.
-- End up with a portfolio site that looks like a 2014 template because building one from scratch takes a weekend you don't have.
-
-None of that is a *skill* problem. It's a *tooling* problem. Envoy exists to close it — permanently, and for free.
-
-> **Envoy is not a form that spits out a PDF.** It's an agent that reads your background the way a sharp recruiter would, cross-references it against the role and sector you're chasing, and writes the version of your story that gets past the filter and into a human's hands.
-
-<br/>
-
-## 🎯 What Envoy Actually Does
-
-<table>
-<tr>
-<td width="33%" valign="top">
-
-### 🧠 Understand
-Parses your raw background or an existing resume (PDF/DOCX) into a structured profile — skills, roles, impact, gaps and all.
-
-</td>
-<td width="33%" valign="top">
-
-### 🎯 Target
-Cross-references that profile against the job description, sector norms, and current market signal to figure out what actually needs to be said.
-
-</td>
-<td width="33%" valign="top">
-
-### ✍️ Deliver
-Renders the result into an ATS-ready resume, an academic CV, or a live, deployable portfolio — your choice, your template.
-
-</td>
-</tr>
-</table>
-
-**Feature-by-feature:**
-
-- 🤖 **Autonomous Career Agent** — doesn't just fill a template, it *decides* what to keep, cut, reframe, or quantify based on the target role.
-- 📄 **Legacy Resume Enhancer** — upload what you already have; Envoy fixes structure, rewrites weak bullets into measurable ones, and closes ATS gaps.
-- 🎯 **Sector-Aware Tailoring** — tech, finance, healthcare, academia, design — each has different keyword weight and tone, and Envoy knows the difference.
-- 🎨 **Open Template Library** — every template is free, versioned, and community-extendable. No "Pro" tier hiding the good fonts.
-- 🌐 **One-Command Portfolio** — structured profile data becomes a deployable personal site instantly, no frontend work required.
-- 🔓 **Radically Free** — this isn't a freemium funnel. Envoy ships fully open-source, every feature, forever.
-
-<br/>
-
-## 🔮 How Envoy Thinks
-
-Envoy's core is a four-stage agentic loop — not a single prompt-and-pray call, but a pipeline where each stage checks and enriches the one before it.
-
-```text
-  STAGE 1              STAGE 2                STAGE 3               STAGE 4
-  ────────             ────────                ────────              ────────
-  INGEST      ──────▶  UNDERSTAND    ──────▶   STRATEGIZE   ──────▶  COMPOSE
-  
-  Parse raw input       Build a structured      Compare profile        Render final
-  — resume file,        profile: roles,         against target role    output — PDF,
-  free-text bio,        skills, impact,         + sector, decide       CV, or live
-  or manual form         timeline, gaps          what to emphasize      web portfolio
-```
-
-Each stage hands a structured artifact to the next — never raw text — so nothing gets lost in translation and every output stays traceable back to real input.
-
-<br/>
+---
 
 ## 🏗️ System Architecture
 
-```mermaid
-flowchart TD
-    classDef input fill:#1F2A44,stroke:#4CC9F0,color:#E8F4FF,stroke-width:1px
-    classDef parser fill:#2B1F44,stroke:#7A5CFA,color:#EEE8FF,stroke-width:1px
-    classDef agent fill:#3A1F1F,stroke:#FF6B6B,color:#FFE8E8,stroke-width:1px
-    classDef store fill:#1F3A2E,stroke:#06D6A0,color:#E4FFF4,stroke-width:1px
-    classDef output fill:#3A2E1F,stroke:#FFD60A,color:#FFF6DC,stroke-width:1px
-
-    subgraph IN["📥 Input Sources"]
-        A1["Resume PDF / DOCX"]:::input
-        A2["Free-text bio"]:::input
-        A3["Job description + sector"]:::input
-    end
-
-    subgraph PARSE["apps/parser"]
-        B1["OCR / text extraction"]:::parser
-        B2["Structured profile builder"]:::parser
-    end
-
-    subgraph AGENT["apps/agent — the pipeline"]
-        C1["INGEST"]:::agent
-        C2["UNDERSTAND"]:::agent
-        C3["STRATEGIZE\nsector + keyword engine"]:::agent
-        C4["COMPOSE"]:::agent
-    end
-
-    subgraph TPL["packages/templates + ui"]
-        D1["Resume / CV templates"]:::store
-        D2["Portfolio components"]:::store
-    end
-
-    subgraph OUT["apps/web — delivery"]
-        E1["ATS-ready resume"]:::output
-        E2["Academic CV"]:::output
-        E3["Live web portfolio"]:::output
-    end
-
-    A1 --> B1 --> B2
-    A2 --> B2
-    B2 --> C1 --> C2 --> C3
-    A3 --> C3
-    C3 --> C4
-    D1 --> C4
-    D2 --> C4
-    C4 --> E1
-    C4 --> E2
-    C4 --> E3
-```
-
-> Every arrow in this diagram is a structured hand-off, not a prompt string — the parser never talks directly to the renderer, and the agent never sees raw files. That separation is what keeps outputs traceable and testable stage-by-stage.
-
-<br/>
-
-## 📂 Project Structure
-
 ```text
-envoy/
-├── .github/                 # CI/CD workflows, issue & PR templates
-├── apps/
-│   ├── agent/                # LLM prompts, agent orchestration, optimization logic
-│   ├── parser/                # PDF/DOCX/OCR extraction → structured JSON
-│   └── web/                    # Dashboard, template studio, portfolio host
-├── packages/
-│   ├── templates/              # Open-source LaTeX / HTML / Markdown templates
-│   └── ui/                      # Shared component library across apps
-├── docs/                     # Architecture decision records, setup guides
-├── .gitignore
-├── CONTRIBUTING.md
-├── LICENSE
-└── README.md
+  INPUT SOURCES              CANONICAL ENGINE              DELIVERY SURFACES
+ ───────────────            ──────────────────            ───────────────────
+  Resume PDF / DOCX ──┐
+  Free-text Bio     ──┼──▶  Canonical Profile  ──┬──▶  ATS Resumes & Academic CVs
+  Target Job Posting ──┘    (Single Truth)       │──▶  Live Web Portfolio (/p/[slug])
+                                                 └──▶  PDF / DOCX / TXT Exports
+                                  │
+                                  ▼
+                         Multi-Provider AI &
+                       Deterministic ATS Engine
 ```
 
-<br/>
+### Server/Client Data Boundaries
+1. **Canonical Profile as Single Source of Truth:** Resumes, CVs, portfolios, and exports all derive from the `ProfessionalProfile` domain model.
+2. **Public Portfolio Projection (`/api/p/[slug]`):** Public portfolio pages do not expose private profile fields or internal IDs. Anonymous visitors receive a strictly whitelisted public projection.
+3. **AI Proposal Validation Gate:** All AI-proposed edits pass strict Zod schema validation before mutating workspace state, preventing prompt injection or payload corruption.
 
-## 🛠️ Quick Start
+---
+
+## 🛠️ Tech Stack
+
+- **Framework:** Next.js 15 (App Router, Server Components & Client Components)
+- **Language:** TypeScript 5 (Strict typing)
+- **Styling:** Tailwind CSS 3 (Red Noir Superdesign system), Framer Motion, Lucide Icons
+- **State Management:** Zustand 5 (Document store with debounced persistence)
+- **Data & Auth:** Supabase (`@supabase/ssr`, PostgreSQL with Row Level Security)
+- **AI Providers:** OpenAI API, Anthropic Messages API, Google Gemini API, OpenRouter
+- **Parsing & Exports:** `docx`, `pdf-parse`, `mammoth`
+- **Testing:** Vitest 2 (130+ unit & integration tests)
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
+- Node.js `>= 18.x`
+- npm `>= 9.x`
 
-- Node.js `>= 18.x` or Python `>= 3.10`
-- Git
-
-### Setup
+### Setup Instructions
 
 ```bash
-# 1. Clone it
-git clone https://github.com/Crusty-chirayu/envoy.git
-cd envoy
+# 1. Clone the repository
+git clone https://github.com/Crusty-chirayu/Envoy.git
+cd Envoy
 
-# 2. Install dependencies
-npm install               # or: pip install -r requirements.txt
+# 2. Install dependencies (peer deps flag for React 19 / Next 15 environment)
+npm install --legacy-peer-deps
 
-# 3. Configure environment
-cp .env.example .env       # add your API keys / config
+# 3. Configure environment variables
+cp .env.example .env.local
 
-# 4. Run it
+# 4. Start local development server
 npm run dev
 ```
 
-Once the stack is finalized, this section gets swapped for exact, tested commands — no placeholders left behind.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-<br/>
+---
 
-## 🌿 Branching Strategy & Contribution Flow
-The diagram below reflects actual commit share, not headcount — Chirayu drives continuous development on `feature/chirayu`, while Sagar and Prakash contribute focused, single-pass merges (testing, and docs/API key research respectively).
+## ⚙️ Environment Configuration
 
-```mermaid
-gitGraph
-   commit id: "init"
-   branch dev
-   checkout dev
-   commit id: "dev-init"
-   branch feature/chirayu
-   checkout feature/chirayu
-   commit id: "c-10"
-   commit id: "c-12"
-   commit id: "c-3a"
-   commit id: "c-4a"
-   commit id: "c-3b"
-   checkout dev
-   merge feature/chirayu id: "C1"
-   checkout feature/chirayu
-   commit id: "c-4b"
-   commit id: "c-5"
-   commit id: "c-6"
-   checkout dev
-   merge feature/chirayu id: "C2"
-   checkout feature/chirayu
-   commit id: "testing"
-   checkout dev
-   merge feature/chirayu id: "testing pass"
-   checkout feature/chirayu
-   commit id: "docs + keys"
-   checkout dev
-   merge feature/chirayu id: "docs merge"
-   checkout feature/chirayu
-   commit id: "c-7"
-   commit id: "c-8"
-   commit id: "c-9"
-   checkout dev
-   merge feature/chirayu id: "C3 Integration"
-   checkout main
-   merge dev id: "Release"
+Create `.env.local` in the project root:
+
+```env
+# Mode Selection (true = Local Browser Storage, false = Supabase Cloud)
+NEXT_PUBLIC_DEMO_MODE=true
+
+# AI Provider Credentials (Server-only; selects: openai | anthropic | gemini | openrouter)
+ENVOY_AI_PROVIDER=openai
+OPENAI_API_KEY=your_openai_key
+ANTHROPIC_API_KEY=your_anthropic_key
+GEMINI_API_KEY=your_gemini_key
+OPENROUTER_API_KEY=your_openrouter_key
+
+# Supabase Cloud Mode (Required when NEXT_PUBLIC_DEMO_MODE=false)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
-- **`main`** — production-ready, protected, no direct pushes.
-- **`dev`** — integration branch; every finished feature lands here before release.
-- **`feature/<name>`** — one branch per feature, per person.
+---
+
+## 🧪 Testing & Verification
+
+Run the automated test suite and type check:
 
 ```bash
-git checkout -b feature/your-feature-name
-git commit -m "feat: add resume parser module"
-git push origin feature/your-feature-name
-# open a PR into dev
+# Run unit & integration tests
+npm test
+
+# Run TypeScript type check
+npm run typecheck
+
+# Run Next.js linter
+npm run lint
+
+# Build production bundle
+npm run build
 ```
-<br/>
 
-## 🗺️ Roadmap
-- [x] Repository scaffolding & team workflow
-- [ ] Document parser (PDF/DOCX → structured JSON)
-- [ ] Sector & keyword intelligence engine
-- [ ] Agentic rewrite/optimization pipeline
-- [ ] Open template library (v1: 5 resume + 2 CV templates)
-- [ ] One-command portfolio deployment
-- [ ] Public beta
+---
 
-> 📌 **Development to be continued** — this roadmap is actively maintained, not abandoned. Progress has slowed while the maintainer works through other commitments, but each unchecked item above is scoped and designed (see [System Architecture](#-system-architecture)), not just aspirational. Expect checkboxes to keep moving as time frees up.
+## 📜 License & Attribution
 
-<br/>
-
-## 🤝 Contributing
-1. Fork the repo
-2. Branch off `dev`: `git checkout -b feature/AmazingFeature`
-3. Commit: `git commit -m "feat: add AmazingFeature"`
-4. Push: `git push origin feature/AmazingFeature`
-5. Open a Pull Request into `dev`
-
-Full guidelines live in [`CONTRIBUTING.md`](CONTRIBUTING.md). Since the core team's bandwidth is limited right now, PRs against roadmap items — especially the parser and template library — are especially welcome and will be reviewed as promptly as possible.
-<br/>
-
-## 👥 The Builders
-<div align="center">
-
-| | Name | GitHub | Contribution | Focus |
-|---|---|---|---|---|
-| 🧠 📚 🧪 | **Chirayu** | [@Crusty-chirayu](https://github.com/Crusty-chirayu) | **100%** | Core Architecture, Full Development, Design, Testing, Docs & API Keys, Documentation, API key research | QA passes on `feature/chirayu` |
-
-</div>
-<br/>
-
-## 📜 License
-Distributed under the **MIT License**. See [`LICENSE`](LICENSE) — free to use, modify, and distribute, no strings attached.
-<br/>
-
-<div align="center">
-
-**Built because career tools that actually work shouldn't cost a subscription.**
-
-⭐ **Star this repo** if you want to watch Envoy grow from scratch.
-
-<img src="https://user-images.githubusercontent.com/74038190/212257467-871d32b7-e401-42e8-a166-fcfd7baa4c6b.gif" width="100">
-
-</div>
+Distributed under the **MIT License**. Free to use, modify, and distribute for any open-source or commercial project.

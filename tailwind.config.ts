@@ -11,32 +11,41 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ENVOY Design System Tokens
+        // ENVOY Design System Tokens — Red Noir Palette
+        noir: {
+          bg: '#000000',
+          dark: '#0a0304',
+          card: '#0d0d12',
+          surface: '#121218',
+          border: 'rgba(255, 255, 255, 0.1)',
+        },
+        red: {
+          accent: '#ef233c',
+          glow: 'rgba(239, 35, 60, 0.5)',
+          muted: '#8b1725',
+        },
         envoy: {
-          // Workspace chrome (dark)
           bg: {
-            base: '#050507',
-            elevated: '#0c0c10',
+            base: '#000000',
+            elevated: '#0a0a0f',
             overlay: '#111118',
             subtle: '#16161f',
             muted: '#1c1c28',
           },
-          // Borders
           border: {
             subtle: '#1e1e2e',
             default: '#252535',
             strong: '#333350',
           },
-          // AI Accent — cyan/indigo
           accent: {
+            red: '#ef233c',
             cyan: '#00d4ff',
             'cyan-dim': '#0099cc',
             indigo: '#6366f1',
             'indigo-dim': '#4f52c9',
             purple: '#7c3aed',
-            glow: 'rgba(0, 212, 255, 0.12)',
+            glow: 'rgba(239, 35, 60, 0.15)',
           },
-          // Document canvas
           doc: {
             bg: '#ffffff',
             'bg-off': '#fafafa',
@@ -44,14 +53,12 @@ const config: Config = {
             'text-secondary': '#4b5563',
             border: '#e5e7eb',
           },
-          // Status colors
           status: {
             success: '#10b981',
             warning: '#f59e0b',
-            error: '#ef4444',
+            error: '#ef233c',
             info: '#3b82f6',
           },
-          // Text hierarchy
           text: {
             primary: '#f2f2f7',
             secondary: '#9898b3',
@@ -61,6 +68,7 @@ const config: Config = {
         },
       },
       fontFamily: {
+        manrope: ['var(--font-manrope)', 'Manrope', 'sans-serif'],
         sans: ['var(--font-inter)', 'Inter', 'system-ui', 'sans-serif'],
         mono: ['var(--font-mono)', 'JetBrains Mono', 'Consolas', 'monospace'],
         serif: ['Georgia', 'Times New Roman', 'serif'],
@@ -112,8 +120,16 @@ const config: Config = {
           '50%': { opacity: '1' },
         },
         glow: {
-          '0%, 100%': { boxShadow: '0 0 8px rgba(0, 212, 255, 0.3)' },
-          '50%': { boxShadow: '0 0 20px rgba(0, 212, 255, 0.6)' },
+          '0%, 100%': { boxShadow: '0 0 8px rgba(239, 35, 60, 0.4)' },
+          '50%': { boxShadow: '0 0 24px rgba(239, 35, 60, 0.7)' },
+        },
+        'border-spin': {
+          from: { '--gradient-angle': '0deg' },
+          to: { '--gradient-angle': '360deg' },
+        },
+        animStar: {
+          from: { transform: 'translateY(0px)' },
+          to: { transform: 'translateY(-2000px)' },
         },
       },
       animation: {
@@ -127,20 +143,23 @@ const config: Config = {
         pulse: 'pulse 2s ease-in-out infinite',
         'thinking-dots': 'thinking-dots 1.4s ease-in-out infinite',
         glow: 'glow 2s ease-in-out infinite',
+        'border-spin': 'border-spin 2.5s linear infinite',
+        animStar: 'animStar 50s linear infinite',
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'ai-gradient':
-          'linear-gradient(135deg, rgba(0,212,255,0.1) 0%, rgba(99,102,241,0.1) 100%)',
+          'linear-gradient(135deg, rgba(239,35,60,0.1) 0%, rgba(10,3,4,0.8) 100%)',
         shimmer:
           'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%)',
       },
       boxShadow: {
-        'elevation-1': '0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.6)',
-        'elevation-2': '0 4px 12px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.4)',
-        'elevation-3': '0 8px 24px rgba(0,0,0,0.6), 0 4px 8px rgba(0,0,0,0.5)',
-        'ai-glow': '0 0 0 1px rgba(0,212,255,0.3), 0 0 16px rgba(0,212,255,0.1)',
-        'doc-shadow': '0 4px 32px rgba(0,0,0,0.3), 0 1px 8px rgba(0,0,0,0.2)',
+        'elevation-1': '0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.7)',
+        'elevation-2': '0 4px 12px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.5)',
+        'elevation-3': '0 8px 28px rgba(0,0,0,0.8), 0 4px 12px rgba(0,0,0,0.6)',
+        'red-glow': '0 0 25px rgba(239,35,60,0.25)',
+        'ai-glow': '0 0 0 1px rgba(239,35,60,0.3), 0 0 16px rgba(239,35,60,0.2)',
+        'doc-shadow': '0 4px 32px rgba(0,0,0,0.5), 0 1px 8px rgba(0,0,0,0.3)',
       },
     },
   },
