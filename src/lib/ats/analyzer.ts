@@ -223,6 +223,34 @@ function analyzeStructure(
   return { score: Math.max(0, score), issues }
 }
 
+function escapeRegExp(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function matchKeyword(resumeText: string, keyword: string): boolean {
+  const kwLower = keyword.trim().toLowerCase()
+  if (!kwLower) return false
+
+  const escaped = escapeRegExp(kwLower)
+  const pattern = new RegExp(`(?:^|[^a-z0-9+#.#-])${escaped}(?:$|[^a-z0-9+#.-])`, 'i')
+  if (pattern.test(resumeText)) {
+    return true
+  }
+
+  // Handle singular / plural variations (e.g. microservice / microservices, API / APIs)
+  if (kwLower.endsWith('s') && kwLower.length > 3) {
+    const singular = kwLower.slice(0, -1)
+    const singularPattern = new RegExp(`(?:^|[^a-z0-9+#.#-])${escapeRegExp(singular)}(?:$|[^a-z0-9+#.-])`, 'i')
+    if (singularPattern.test(resumeText)) return true
+  } else if (!kwLower.endsWith('s') && kwLower.length > 2) {
+    const plural = kwLower + 's'
+    const pluralPattern = new RegExp(`(?:^|[^a-z0-9+#.#-])${escapeRegExp(plural)}(?:$|[^a-z0-9+#.-])`, 'i')
+    if (pluralPattern.test(resumeText)) return true
+  }
+
+  return false
+}
+
 function analyzeKeywords(
   profile: ProfessionalProfile,
   jobTarget?: JobTarget
@@ -236,22 +264,34 @@ function analyzeKeywords(
     return { score: 70, matches: [], missing: [], matchPercentage: 0, issues: [] }
   }
 
-  const allKeywords = [
+  const rawKeywords = [
     ...jobTarget.extracted.keywords,
     ...jobTarget.extracted.requiredSkills,
     ...jobTarget.extracted.technologies,
   ]
 
-  for (const keyword of allKeywords) {
-    if (resumeText.includes(keyword.toLowerCase())) {
+  // Deduplicate case-insensitively while preserving clean display casing
+  const seen = new Set<string>()
+  const uniqueKeywords: string[] = []
+
+  for (const kw of rawKeywords) {
+    const normalized = kw.trim().toLowerCase()
+    if (normalized && !seen.has(normalized)) {
+      seen.add(normalized)
+      uniqueKeywords.push(kw.trim())
+    }
+  }
+
+  for (const keyword of uniqueKeywords) {
+    if (matchKeyword(resumeText, keyword)) {
       matches.push(keyword)
     } else {
       missing.push(keyword)
     }
   }
 
-  const matchPercentage = allKeywords.length > 0
-    ? Math.round((matches.length / allKeywords.length) * 100)
+  const matchPercentage = uniqueKeywords.length > 0
+    ? Math.round((matches.length / uniqueKeywords.length) * 100)
     : 0
 
   const score = matchPercentage
@@ -262,7 +302,7 @@ function analyzeKeywords(
       category: 'keywords',
       severity: 'critical',
       title: `Low keyword match: ${matchPercentage}%`,
-      description: `Your resume only matches ${matchPercentage}% of the job's key terms. ATS systems may filter you out before a human sees your resume.`,
+      description: `Your resume matches ${matchPercentage}% of the job's key terms (${matches.length} matched, ${missing.length} missing).`,
       suggestion: `Incorporate these missing keywords naturally: ${missing.slice(0, 8).join(', ')}`,
     })
   } else if (matchPercentage < 60) {

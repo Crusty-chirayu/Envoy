@@ -41,6 +41,7 @@ export default function DashboardPage() {
 
   // Document Ingestion state & handler
   const [isIngesting, setIsIngesting] = useState(false)
+  const [pendingImportProfile, setPendingImportProfile] = useState<ProfessionalProfile | null>(null)
 
   const handleIngestFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -70,16 +71,26 @@ export default function DashboardPage() {
         userId: user?.id || 'demo-user-id-1234'
       }
 
-      await dbProfile.save(finalProfile)
-      setProfileState(finalProfile)
-      showNotification('Resume parsed and master profile updated successfully!', 'success')
+      // Present preview to user for explicit confirmation before mutating Master Profile
+      setPendingImportProfile(finalProfile)
+      showNotification('Resume parsed successfully! Review and confirm changes.', 'success')
     } catch (err: unknown) {
       console.error('Ingestion failed:', err)
       showNotification(err instanceof Error ? err.message : 'Ingestion failed', 'error')
       alert(`Resume ingestion failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
     } finally {
       setIsIngesting(false)
+      // Reset input value so the same file can be selected again if needed
+      e.target.value = ''
     }
+  }
+
+  const handleConfirmImport = async () => {
+    if (!pendingImportProfile) return
+    await dbProfile.save(pendingImportProfile)
+    setProfileState(pendingImportProfile)
+    setPendingImportProfile(null)
+    showNotification('Master Profile updated from imported resume!', 'success')
   }
 
   // Close the create-document modal with the Escape key (keyboard accessibility)
@@ -1469,6 +1480,99 @@ export default function DashboardPage() {
                 className="btn btn-primary btn-sm envoy-btn-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff]"
               >
                 Create Document
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* IMPORT PREVIEW CONFIRMATION MODAL */}
+      {pendingImportProfile && (
+        <div
+          className="fixed inset-0 bg-[#000000]/70 backdrop-blur-sm z-50 flex items-center justify-center p-6 envoy-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setPendingImportProfile(null)
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="import-preview-title"
+            className="surface-card accent-hairline w-full max-w-lg p-6 space-y-6 animate-scale-in"
+          >
+            <div>
+              <div className="flex items-center gap-2 text-[#00d4ff] text-xs font-bold uppercase tracking-wider mb-1">
+                <CheckCircle size={14} />
+                <span>Resume Import Preview</span>
+              </div>
+              <h3 id="import-preview-title" className="text-lg font-bold text-[#f2f2f7]">
+                Review Parsed Profile Data
+              </h3>
+              <p className="text-xs text-[#9898b3] mt-1">
+                Envoy AI extracted the following structure from your document. Confirm to apply it to your Master Profile.
+              </p>
+            </div>
+
+            <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
+              <div className="bg-[#111118] border border-[#252535] rounded-md p-3 space-y-1">
+                <span className="text-[11px] font-semibold text-[#9898b3] uppercase">Identity</span>
+                <p className="text-sm font-bold text-[#f2f2f7]">{pendingImportProfile.identity.name || 'Unnamed Candidate'}</p>
+                <p className="text-xs text-[#00d4ff]">{pendingImportProfile.identity.headline || 'No headline'}</p>
+                <div className="text-xs text-[#9898b3] flex flex-wrap gap-x-4 gap-y-1 pt-1">
+                  {pendingImportProfile.identity.email && <span>Email: {pendingImportProfile.identity.email}</span>}
+                  {pendingImportProfile.identity.phone && <span>Phone: {pendingImportProfile.identity.phone}</span>}
+                  {pendingImportProfile.identity.location && <span>Location: {pendingImportProfile.identity.location}</span>}
+                </div>
+              </div>
+
+              {pendingImportProfile.summary && (
+                <div className="bg-[#111118] border border-[#252535] rounded-md p-3 space-y-1">
+                  <span className="text-[11px] font-semibold text-[#9898b3] uppercase">Summary</span>
+                  <p className="text-xs text-[#d1d1e0] line-clamp-3">{pendingImportProfile.summary}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-[#111118] border border-[#252535] rounded-md p-3">
+                  <span className="text-[11px] font-semibold text-[#9898b3] uppercase">Experience</span>
+                  <p className="text-lg font-bold text-[#f2f2f7]">{pendingImportProfile.experience.length} entries</p>
+                </div>
+                <div className="bg-[#111118] border border-[#252535] rounded-md p-3">
+                  <span className="text-[11px] font-semibold text-[#9898b3] uppercase">Education</span>
+                  <p className="text-lg font-bold text-[#f2f2f7]">{pendingImportProfile.education.length} entries</p>
+                </div>
+                <div className="bg-[#111118] border border-[#252535] rounded-md p-3">
+                  <span className="text-[11px] font-semibold text-[#9898b3] uppercase">Skills</span>
+                  <p className="text-lg font-bold text-[#f2f2f7]">{pendingImportProfile.skills.length} categories</p>
+                </div>
+                <div className="bg-[#111118] border border-[#252535] rounded-md p-3">
+                  <span className="text-[11px] font-semibold text-[#9898b3] uppercase">Projects</span>
+                  <p className="text-lg font-bold text-[#f2f2f7]">{pendingImportProfile.projects.length} entries</p>
+                </div>
+              </div>
+
+              {profile && (profile.experience.length > 0 || profile.education.length > 0) && (
+                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-md text-xs text-amber-300 flex items-start gap-2">
+                  <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                  <span>Notice: Applying this resume will update your active Master Profile. Existing records will be replaced.</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#1e1e2e]">
+              <button
+                type="button"
+                onClick={() => setPendingImportProfile(null)}
+                className="btn btn-ghost btn-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff]"
+              >
+                Discard
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmImport}
+                className="btn btn-primary btn-sm envoy-btn-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff]"
+              >
+                Apply to Master Profile
               </button>
             </div>
           </div>
