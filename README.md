@@ -541,5 +541,6 @@ Distributed under the **MIT License**. See [`LICENSE`](https://github.com/Crusty
 </div>
 
 Deployed at: https://envoy-i02z.onrender.com/
-   *-To be improved and updated in pipeline as well as orchestrator*
+
+   *-To be improved and updated in pipeline as well as orchestrator.*
    
