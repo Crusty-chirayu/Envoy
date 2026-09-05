@@ -64,8 +64,11 @@ export function generatePlainText(
         lines.push(item.title ? item.title.toUpperCase() : 'WORK EXPERIENCE')
         lines.push('-'.repeat(15))
         for (const exp of profile.experience) {
-          lines.push(`${exp.role.toUpperCase()} | ${exp.company} | ${exp.location || ''}`)
-          lines.push(`${exp.startDate} - ${exp.current ? 'Present' : exp.endDate || ''}`)
+          const titleLine = [exp.role.toUpperCase(), exp.company, exp.location].filter(Boolean).join(' | ')
+          lines.push(titleLine)
+          if (exp.startDate || exp.endDate || exp.current) {
+            lines.push(`${exp.startDate || ''}${exp.startDate && (exp.endDate || exp.current) ? ' - ' : ''}${exp.current ? 'Present' : exp.endDate || ''}`)
+          }
           if (exp.technologies && exp.technologies.length > 0) {
             lines.push(`Technologies: ${exp.technologies.join(', ')}`)
           }
@@ -86,7 +89,9 @@ export function generatePlainText(
           lines.push(
             edu.field ? `${edu.degree} in ${edu.field} | ${edu.institution}` : `${edu.degree} | ${edu.institution}`
           )
-          lines.push(`${edu.startDate} - ${edu.current ? 'Present' : edu.endDate || ''}`)
+          if (edu.startDate || edu.endDate || edu.current) {
+            lines.push(`${edu.startDate || ''}${edu.startDate && (edu.endDate || edu.current) ? ' - ' : ''}${edu.current ? 'Present' : edu.endDate || ''}`)
+          }
           lines.push('')
         }
         break
@@ -135,8 +140,9 @@ export function generatePlainText(
         lines.push(item.title ? item.title.toUpperCase() : 'KEY ACHIEVEMENTS')
         lines.push('-'.repeat(16))
         for (const ach of profile.achievements) {
-          lines.push(`${ach.title} | ${ach.organization || ''} ${ach.date ? `(${ach.date})` : ''}`)
-          lines.push(ach.description)
+          const meta = [ach.organization, ach.date ? `(${ach.date})` : ''].filter(Boolean).join(' ')
+          lines.push(meta ? `${ach.title} | ${meta}` : ach.title)
+          if (ach.description) lines.push(ach.description)
           lines.push('')
         }
         break
@@ -146,7 +152,7 @@ export function generatePlainText(
         lines.push(item.title ? item.title.toUpperCase() : 'PUBLICATIONS')
         lines.push('-'.repeat(12))
         for (const pub of profile.publications) {
-          lines.push(`${pub.title} (${pub.date})`)
+          lines.push(pub.date ? `${pub.title} (${pub.date})` : pub.title)
           if (pub.authors && pub.authors.length > 0) {
             lines.push(`Authors: ${pub.authors.join(', ')}`)
           }

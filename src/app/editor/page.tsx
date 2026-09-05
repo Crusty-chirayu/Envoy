@@ -65,18 +65,37 @@ function EditorWorkspace() {
 
   // Rollback to selected snapshot version
   const handleRollbackVersion = async (version: DocumentVersion) => {
-    if (!window.confirm(`Are you sure you want to rollback to version "${version.label}"? All unsaved active changes will be overwritten.`)) {
+    if (!window.confirm(`Are you sure you want to rollback to version "${version.label}"? All active changes will be reverted.`)) {
       return
     }
 
     try {
+      // 1. Create a safety backup checkpoint of the active state before rolling back
+      if (profile && document) {
+        const backupVer = createVersion(
+          `Pre-Rollback Backup (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`,
+          'manual',
+          `Safety snapshot saved automatically before reverting to "${version.label}"`
+        )
+        if (backupVer) {
+          await dbVersions.save(backupVer, document.userId)
+        }
+      }
+
+      // 2. Revert profile and document state to selected snapshot
       setProfile(version.profileSnapshot)
       setDocument(version.documentSnapshot)
 
       await dbProfile.save(version.profileSnapshot)
       await dbDocuments.save(version.documentSnapshot)
 
-      alert('Rollback successful! The workspace has been reverted to the selected snapshot.')
+      // 3. Refresh version history list
+      if (document) {
+        const updatedList = await dbVersions.getForDocument(document.id)
+        setVersions(updatedList)
+      }
+
+      alert('Rollback successful! A safety backup of your previous state has been created in Version History.')
       setShowVersionsModal(false)
       setSelectedVersion(null)
     } catch (err: unknown) {

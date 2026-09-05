@@ -158,4 +158,41 @@ describe('generatePlainText — export correctness', () => {
     expect(summaryIndex).toBeGreaterThan(-1)
     expect(expIndex).toBeLessThan(summaryIndex)
   })
+
+  it('renders experience title line without trailing separators when location is missing', () => {
+    const text = generatePlainText(
+      makeProfile({
+        experience: [
+          {
+            id: 'exp-1',
+            role: 'Senior Staff Engineer',
+            company: 'TechCorp',
+            location: '',
+            startDate: '2021-01',
+            current: true,
+            bullets: [],
+          },
+        ],
+      })
+    )
+    expect(text).toContain('SENIOR STAFF ENGINEER | TechCorp')
+    expect(text).not.toContain('SENIOR STAFF ENGINEER | TechCorp |')
+  })
+
+  it('renders publications without empty parentheses when date is missing', () => {
+    const text = generatePlainText(
+      makeProfile({
+        publications: [
+          {
+            id: 'pub-1',
+            title: 'Distributed Consensus Protocols',
+            authors: [],
+            date: '',
+          },
+        ],
+      })
+    )
+    expect(text).toContain('Distributed Consensus Protocols')
+    expect(text).not.toContain('Distributed Consensus Protocols ()')
+  })
 })

@@ -142,13 +142,13 @@ export async function generateDocxBlob(
                   font: 'Arial',
                 }),
                 new TextRun({
-                  text: `${exp.company} (${exp.location || 'Remote'})`,
+                  text: exp.location ? `${exp.company} (${exp.location})` : exp.company,
                   italics: true,
                   size: 20,
                   font: 'Arial',
                 }),
                 new TextRun({
-                  text: `\t${exp.startDate} - ${exp.current ? 'Present' : exp.endDate || ''}`,
+                  text: `\t${exp.startDate || ''}${exp.startDate && (exp.endDate || exp.current) ? ' - ' : ''}${exp.current ? 'Present' : exp.endDate || ''}`,
                   bold: true,
                   size: 18,
                   font: 'Arial',
@@ -354,7 +354,7 @@ export async function generateDocxBlob(
             new Paragraph({
               spacing: { after: 40 },
               children: [
-                new TextRun({ text: `${pub.title} (${pub.date})`, bold: true, size: 20, font: 'Arial' }),
+                new TextRun({ text: pub.date ? `${pub.title} (${pub.date})` : pub.title, bold: true, size: 20, font: 'Arial' }),
               ],
             })
           )
@@ -381,12 +381,13 @@ export async function generateDocxBlob(
         if (!profile.volunteering || profile.volunteering.length === 0) return
         addSectionTitle(item.title || 'Volunteer Work')
         for (const vol of profile.volunteering) {
+          const dates = vol.startDate ? `(${vol.startDate} - ${vol.current ? 'Present' : vol.endDate || ''})` : ''
           children.push(
             new Paragraph({
               spacing: { after: 40 },
               children: [
                 new TextRun({ text: `${vol.role} - ${vol.organization} `, bold: true, size: 20, font: 'Arial' }),
-                new TextRun({ text: `(${vol.startDate} - ${vol.current ? 'Present' : vol.endDate || ''})`, size: 18, font: 'Arial' }),
+                ...(dates ? [new TextRun({ text: dates, size: 18, font: 'Arial' })] : []),
               ],
             })
           )
