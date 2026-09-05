@@ -521,9 +521,8 @@ Full guidelines live in [`CONTRIBUTING.md`](https://github.com/Crusty-chirayu/En
 
 | | Name | GitHub | Contribution | Focus |
 |---|---|---|---|---|
-| 🧠 | **Chirayu** | [@Crusty-chirayu](https://github.com/Crusty-chirayu) | **95%** | Core Architecture, Full Development, Design |
-| 🎯 | **Sagar Khanal Sharma** | [@Sagar-Khanal](https://github.com/Sagar-Khanal) | 3% | Testing, Structure Planning |
-| ⚙️ | **Prakash Bohara** | [@Prakash0788](https://github.com/Prakash0788) | 2% | Documentation, Free API Key Research |
+| 🧠 | **Chirayu** | [@Crusty-chirayu](https://github.com/Crusty-chirayu) | **100%** | Core Architecture, Full Development, Design & *all*|
+
 
 <br/>
 
