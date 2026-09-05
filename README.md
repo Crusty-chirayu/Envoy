@@ -539,3 +539,7 @@ Distributed under the **MIT License**. See [`LICENSE`](https://github.com/Crusty
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:EF233C,50:5C0011,100:000000&height=120&section=footer" width="100%"/>
 
 </div>
+
+Deployed at: https://envoy-i02z.onrender.com/
+   *-To be improved and updated in pipeline as well as orchestrator*
+   
